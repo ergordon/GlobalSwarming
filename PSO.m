@@ -92,7 +92,7 @@ for d=1:D
     
     %get the length of the dimension
     dimension_size = dimension(d,end) - dimension(d,1);
-    dimension_center = dimension_size/2;
+    dimension_center = (dimension(d,end) + dimension(d,1))/2
     
     %for each particle
     for i=1:numParticles
