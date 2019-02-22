@@ -1,7 +1,5 @@
 clc;clear;close all;
 
-
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % This swarm controller is based on 
 % Distributed UAV Swarm Formation Control via
@@ -16,7 +14,7 @@ clc;clear;close all;
 
 %number of agents (swarm size)
 numAgents = 10;
-agentRange = 5;
+agentRange = 500;
 
 %number of obstacles
 numObstacles = 2;
@@ -52,7 +50,6 @@ for i=1:numObstacles
 end
 
 
-
 %randomly place the swarm agents within the 1st quarter of the space
 for i=1:numAgents
         
@@ -70,9 +67,10 @@ for i=1:numAgents
         agent(i) = Agent(position,agentRange); 
         
         %upate the target state while we are here
+        %this function (for now) automatically accounts for the target
+        %being within range
         agent(i) = agent(i).updateTargetState(target);
 end
-
 
 
 
@@ -84,7 +82,6 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Begin Main Algorithm
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    
-
 
 
 
