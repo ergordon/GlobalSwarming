@@ -4,6 +4,6 @@
 %this also currently doesnt handle orientation of the body in any way.
 classdef Action
    enumeration
-        move_plusX, move_minusX, move_plusY, move_minusY, move_plusZ, move_minusZ, stay
+        move_plusX, move_minusX, move_plusY, move_minusY, stay %move_plusZ, move_minusZ, stay
    end
 end
