@@ -21,7 +21,7 @@ agt2 = agent.Agent([2,2])
 #testMod.startTracking(agt1)
 #print(testMod.tracked_agents[0].position)
 
-agt1.modules[0].startTracking(agt2)
+agt1.modules[0].start_tracking(agt2)
 
 # testMod.startTracking(agt2)
 # print(testMod.tracked_agents[0].position)
@@ -29,5 +29,5 @@ agt1.modules[0].startTracking(agt2)
 
 print(agt1.modules[0].tracked_agents[0].position)
 
-agt1.modules[0].updateState(agt1)
+agt1.modules[0].update_state()
 print(agt1.modules[0].state)

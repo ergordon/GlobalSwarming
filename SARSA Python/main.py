@@ -5,68 +5,90 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import time
 
-#simulation variables
-numAgents = 10
 
-numEpisodes = 1 #number of times to run the training scenario
-episodeLength = 10 #number of timesteps in each traning scenario
+##############################################################################
+#   Simulation Variables
+##############################################################################
+
+
+num_agents = 10 #number of agents to simulate
+
+num_episodes = 1 #number of times to run the training scenario
+episode_length = 10 #number of timesteps in each traning scenario
 
 #bounds to initialize the agents inside of
-initSpace = [[0,10],
+init_space = [[0,10],
              [0,10]]
+
+
+##############################################################################
+#   Initialization
+##############################################################################
+
 
 agents = list() #list of agents
 
-
 #initialize agent positions
-for i in range(0,numAgents):
+for i in range(0,num_agents):
     position = np.array([i,i], dtype='f')
     agents.append(Agent(position))
     print(agents[i].position)
 
 #initialize module paramters such as who each agent is tracking
 #TODO make it so the tracked agents are based on range and upated every iteration
-for i in range(0,numAgents):
-    for j in range(0,numAgents):
+for i in range(0,num_agents):
+    for j in range(0,num_agents):
         if(i != j):
            #loop through each module
            for m in range(0,len(agents[i].modules)):
-                agents[i].module[m].startTracking(agents[j])
+                agents[i].modules[m].start_tracking(agents[j])
+            #TODO initialize the module state as well???
 
+#initialize module state parameters
+for i in range(0,num_agents):
+    #loop through each module
+    for m in range(0,len(agents[i].modules)):
+        agents[i].modules[m].update_state()
+        agents[i].modules[m].state_prime = agents[i].modules[m].state
 
-
-#main algorithm
-
-frameRate = 1
+##############################################################################
+#   main algorithm
+##############################################################################
+frame_rate = 1
 plt.plot([1,2,3,4])
 plt.draw()
-plt.pause(1/frameRate)
+plt.pause(1/frame_rate)
 plt.clf()
 plt.cla()
 
-for e in range(0,numEpisodes):
-    for t in range(0,episodeLength):
+for e in range(0,num_episodes):
+    for t in range(0,episode_length):
         for agnt in agents:
             #take the action determined in the last step
             #update agent positions on plots
-            agnt.changePos(agnt.position + np.array([1,.5]))
+            agnt.change_position(agnt.position + np.array([1,.5]))
             plt.plot(agnt.position[0],agnt.position[1],'ro')
             
+        #softmax to find action_prime
+
         for agnt in agents:
-            #update state_prime
+            for mod in agnt.modules:
+                #update state_prime
+                mod.update_state_prime()
+                
+                #update instantaneous rewards
 
 
-            #collect total reward
+                #collect total reward (move this to after iterating through each object???)
 
-            #softmax to find action_prime
+                #update Q
+                print('Updating Q!')
 
-            #update each module(need a for loop)
-            print('do something here!')
-
-            
+        #dont forget to set action = action_prime
+        #dont forget to set state = state_prime
         
         plt.draw()
-        plt.pause(1/frameRate)
+        plt.pause(1/frame_rate)
         plt.clf()
         plt.cla()
     
