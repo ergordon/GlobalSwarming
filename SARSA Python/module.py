@@ -8,17 +8,23 @@ class Module:
     gamma = 0 #discount rate
     
 
-
     #constructor
     def __init__(self,parent_agt):
 
-        #TODO include a refernce to the parent agent referencing this object?
         self.parent_agent = parent_agt #the agent that created and is storing this module instance
         self.tracked_agents = [] #list of agents being tracked by this module 
         self.instant_reward = [] #list of instantaneous rewards earned by the agent. 
 
     def start_tracking(self,agt):
         self.tracked_agents.append(agt)
+
+    def update_total_reward(self):
+        reward = 0
+        # for i in range(0,len(self.instant_reward)):
+        #     reward = reward + self.instant_reward[i]
+        reward = reward + self.instant_reward
+
+        self.parent_agent.add_total_reward(reward)
 
 #module to make the agents swarm together
 class CohesionModule(Module):
@@ -32,8 +38,8 @@ class CohesionModule(Module):
     #the discrete ranges at which the agent can collect rewards
     ranges_squared = [2,4]
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self,parent_agt):
+        super().__init__(parent_agt)
         
         self.state = np.array([]) #the vector from the agent to the centroid of it and the tracked agents 
         self.state_prime = np.array([]) #same as state but for the next step. used for qlearning before assigning to state
@@ -44,11 +50,11 @@ class CohesionModule(Module):
         centroid = np.array(self.parent_agent.position)
         for i in range(0,len(self.tracked_agents)):
             centroid = centroid + self.tracked_agents[i].position 
-            
-        print(centroid)
+        
         centroid = centroid / (len(self.tracked_agents)+1)
-        self.state = centroid - self.parent_agent.position
-        print(self.state) 
+        # print(centroid)
+        self.state = np.round(centroid - self.parent_agent.position,0) #round to whole numbers for discretization
+        # print(self.state) 
     
     def update_state_prime(self):
         #find the centroid
@@ -57,7 +63,7 @@ class CohesionModule(Module):
             centroid = centroid + self.tracked_agents[i].position 
 
         centroid = centroid / (len(self.tracked_agents)+1)
-        self.state_prime = centroid - self.parent_agent.position
+        self.state_prime = np.round(centroid - self.parent_agent.position,0) #round to whole numbers for discretization
         print(self.state_prime)
 
     #there is a reward for each state
@@ -70,7 +76,7 @@ class CohesionModule(Module):
         #use distance squared for range comparisons
         dist_squared = 0
         for i in range(0,len(self.state_prime)):
-            dist_squared = dist_squared + self.state_prime[i]^2
+            dist_squared = dist_squared + self.state_prime[i]**2
 
         #loop through each range to give the appropriate reward
         rewarded = False
@@ -83,6 +89,7 @@ class CohesionModule(Module):
         #not in range, apply last reward (punishment)
         if rewarded == False:
             self.instant_reward = CohesionModule.rewards[-1]
+
 
 
 #module to prevent agents from hitting each other

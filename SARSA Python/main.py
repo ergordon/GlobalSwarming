@@ -77,9 +77,11 @@ for e in range(0,num_episodes):
                 mod.update_state_prime()
                 
                 #update instantaneous rewards
-
-
-                #collect total reward (move this to after iterating through each object???)
+                mod.update_instant_reward()
+                
+                #update the total reward 
+                mod.update_total_reward()
+                # print(mod.parent_agent.total_reward)
 
                 #update Q
                 print('Updating Q!')
