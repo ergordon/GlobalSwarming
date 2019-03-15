@@ -29,6 +29,10 @@ class Agent:
         else: #act == action.Action.STAY
             self.position = self.position + [0,0]
 
+    def update_q(self):
+        for i in range(0,len(self.modules)):
+            self.modules[i].update_q()
+
     #TODO keep a history of the reward over time
     def add_total_reward(self,reward):
         self.total_reward = self.total_reward + reward

@@ -58,3 +58,6 @@ matrix = np.vstack([matrix,empty_row])
 print(matrix)
 matrix = np.vstack([matrix,empty_row])
 print(matrix)
+
+act = action.Action.STAY
+print(act.value)

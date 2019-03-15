@@ -70,21 +70,36 @@ for e in range(0,num_episodes):
             plt.plot(agnt.position[0],agnt.position[1],'ro')
             
         #softmax to find action_prime
-
+        #TODO implement
+        print('Softmax!')
+         
         for agnt in agents:
             for mod in agnt.modules:
+                mod.select_next_action()
+
+                print('Updating state prime!')
                 #update state_prime
                 mod.update_state_prime()
                 
+                print('Updating instant reward!')                   
                 #update instantaneous rewards
                 mod.update_instant_reward()
                 
+                print('Updating total reward!')
                 #update the total reward 
                 mod.update_total_reward()
                 # print(mod.parent_agent.total_reward)
 
-                #update Q
+                
                 print('Updating Q!')
+                print(mod.action)
+                print(mod.action_prime)
+                #update Q
+                mod.update_q()
+
+                
+                mod.action = mod.action_prime
+                mod.state  = mod.state_prime
 
         #dont forget to set action = action_prime
         #dont forget to set state = state_prime
