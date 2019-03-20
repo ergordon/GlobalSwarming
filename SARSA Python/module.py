@@ -2,6 +2,12 @@ import numpy as np
 from qlearning import Qlearning
 
 from action import Action
+import random
+from scipy.stats import rv_discrete
+
+import os.path
+import sys
+import pickle
 
 #Base class that all other modules should inherit from
 class Module:
@@ -44,7 +50,7 @@ class CohesionModule(Module):
     #the last entry is the reward (punishment) for being out of range
     rewards = [2,1,-1] 
     #the discrete ranges at which the agent can collect rewards
-    ranges_squared = [2,4]
+    ranges_squared = [2,16]
 
     
 
@@ -54,6 +60,18 @@ class CohesionModule(Module):
         self.state = np.array([]) #the vector from the agent to the centroid of it and the tracked agents 
         self.state_prime = np.array([]) #same as state but for the next step. used for qlearning before assigning to state
         self.Q = Qlearning()    #define a Qleaning object for each module instance        
+        self.q_filename = 'cohesion_q.pkl'
+
+        # check if a q table already exists and load it if it does
+        if(os.path.isfile(self.q_filename)):
+            print("Q learining data found for table, loading it now")
+            
+            with open('cohesion_q.pkl', 'rb') as f:
+                q_table, q_states = pickle.load(f)
+
+            self.Q.q_table = q_table
+            self.Q.q_states = q_states
+
 
         self.action = Action.STAY
         self.action_prime = Action.STAY
@@ -62,10 +80,8 @@ class CohesionModule(Module):
 
     def update_q(self):
         for i in range(0,len(self.tracked_agents)):
-            print('stuff')
             self.Q.update_q(self.state,self.state_prime,self.action,self.action_prime,self.alpha,self.gamma,self.instant_reward)
-        # def update_q(self, state, state_prime, action, action_prime, alpha, gamma, reward):
-
+        
     def update_state(self):
         #find the centroid
         centroid = np.array(self.parent_agent.position)
@@ -73,9 +89,11 @@ class CohesionModule(Module):
             centroid = centroid + self.tracked_agents[i].position 
         
         centroid = centroid / (len(self.tracked_agents)+1)
+        # print("swarm centroid is:")
         # print(centroid)
         self.state = np.round(centroid - self.parent_agent.position,0) #round to whole numbers for discretization
-        # print(self.state) 
+        print("Agent state is:")
+        print(self.state) 
     
     def update_state_prime(self):
         #find the centroid
@@ -85,6 +103,7 @@ class CohesionModule(Module):
 
         centroid = centroid / (len(self.tracked_agents)+1)
         self.state_prime = np.round(centroid - self.parent_agent.position,0) #round to whole numbers for discretization
+        print('state prime is')
         print(self.state_prime)
 
     #there is a reward for each state
@@ -117,32 +136,59 @@ class CohesionModule(Module):
         action_weights = np.zeros(len(Action))#, deftype='f')
         
         for i in range (0,len(Action)):
-            
+            # print("fetching q row")
             Qrow = self.Q.fetch_row_by_state(self.state) 
-            print(Qrow)
-            Q = Qrow[i]
-            print(Q)
+            # print("q row is")
+            # print(Qrow)
+            # print("Q is")
+            Qval = Qrow[i]
+            # print(Q)
 
             #greedy vs exploration constant
             #big T encourages exploration
             #small T encourages exploitation
             T = 1
-            
-            action_weights[i] = np.exp(Q/T)
+
+            action_weights[i] = np.exp(Qval/T)
             # print(self.Q.fetch_row_by_state(self.state)[self.action])
             # action_weights[i] = self.Q.fetch_row_by_state(self.state)[self.action]
-        
+            
+
         if(np.sum(action_weights) != 0):
             action_weights = action_weights / np.sum(action_weights)
 
-        print("action_weights are")
+        # print("action_weights are")
+        # print(action_weights)
+        # print("arg max is ")
+        # print(np.argmax(action_weights))
+        # print("action is ")
+        # print(Action(np.argmax(action_weights)))
+        # self.action_prime = Action(np.argmax(action_weights))
+    
+        #TODO fix this with an actual PMF
+        
+
+        x=list(map(int,Action))
+        px=action_weights
+
+        print('x is')
+        print(x)
+        print('action weiths are')
         print(action_weights)
-        print("arg max is ")
-        print(np.argmax(action_weights))
-        print("action is ")
-        print(Action(np.argmax(action_weights)))
-        self.action_prime = Action(np.argmax(action_weights))
-        # self.action_prime = Action.MOVE_PLUS_X
+
+        sample=rv_discrete(values=(x,px)).rvs(size=1)
+        print('sample is')
+        print(sample)
+
+        
+        self.action_prime = Action(sample)
+
+        # best_actions = np.argwhere(action_weights == np.amax(action_weights))
+        # print('index of best actions are: ')
+        # print(best_actions)
+        # self.action_prime = Action(random.choice(best_actions))
+        # print('selected action is: ')
+        # print(self.action_prime)
 
 #module to prevent agents from hitting each other
 class CollisionModule(Module):
