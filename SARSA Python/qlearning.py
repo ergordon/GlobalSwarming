@@ -6,7 +6,7 @@ class Qlearning:
 
     def __init__(self):
         print('q constructor')
-        #store Q table (This table is shared by all agents in the same module)
+        #store Q table 
         self.q_table = np.array([])
         #store state->Q table association
         self.q_states = np.array([])
@@ -14,11 +14,43 @@ class Qlearning:
 
     #update 
     def update_q(self, state, state_prime, action, action_prime, alpha, gamma, reward):
-        # print("think about if i really want to do it this way...")
+        # TODO think about if i really want to do it this way...        
         
         s_index = self.fetch_row_index_by_state(state)
         Q_s = self.fetch_row_by_state(state)
         Q_s_p = self.fetch_row_by_state(state_prime)
+        
+
+        # print('state is')
+        # print(state)
+        # print('state prime is')
+        # print(state_prime)
+        # print('action is')
+        # print(action)
+        # print('action prime is')
+        # print(action_prime) 
+        # print('alpha is')
+        # print(alpha)
+        # print('gamma is')
+        # print(gamma)
+        # print('reward is')
+        # print(reward)
+
+        # print('Q table is')
+        # print(self.q_table)
+        # print('Q states is')
+        # print(self.q_states)
+
+        # print('state index is')
+        # print(s_index)
+        
+
+        # print('Q_s is ')
+        # print(Q_s)
+        # print('Q_s_p is ')
+        # print(Q_s_p)
+
+
         
         # print(action)
         # print(action_prime)
@@ -32,8 +64,12 @@ class Qlearning:
         # print(Q_s[a_index])
         # print(alpha*(reward + gamma*Q_s_p[a_index] - Q_s[a_index]))
         
-        self.q_table[s_index, a_p_index]  = Q_s[a_index] + alpha*(reward + gamma*Q_s_p[a_index] - Q_s[a_index])
+        # self.q_table[s_index, a_p_index]  = Q_s[a_index] + alpha*(reward + gamma*Q_s_p[a_index] - Q_s[a_index])
+        self.q_table[s_index, a_index]  = Q_s[a_index] + alpha*(reward + gamma*Q_s_p[a_p_index] - Q_s[a_index])
 
+
+        # print('updated q_s is')
+        # print(self.q_table[s_index,])
 
     #fetch the index of the row in the Q table that corresponds
     #to a given state. If now row exist for the state,  

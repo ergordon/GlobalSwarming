@@ -5,8 +5,7 @@ import module as module
 class Agent:
     
     module_weights = [1] #these are the weights for each module. they should sum to 1
-    total_reward = 0 #the total reward accumulated by the agent 
-
+    
     def __init__(self,pos):
         self.position = pos
         self.total_reward = 0 #running reward received by the agent
@@ -29,9 +28,6 @@ class Agent:
         else: #act == action.Action.STAY
             self.position = self.position + [0,0]
 
-    def update_q(self):
-        for i in range(0,len(self.modules)):
-            self.modules[i].update_q()
 
     #TODO keep a history of the reward over time
     def add_total_reward(self,reward):
