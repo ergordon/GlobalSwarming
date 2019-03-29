@@ -18,10 +18,14 @@ def checkInBounds(position,bounds):
 
     return True
 
+#TODO actually use bounds
 def ReinitializeAgents(agents,bounds):
     #initialize agent positions
     for i in range(0,len(agents)):
-        agents[i].position = np.array([i,i], dtype='f')
+        agents[i].position = np.array([2*i,2*i], dtype='f')
+        agents[i].total_reward = 0
+        agents[i].modules[0].action = Action.STAY
+        agents[i].modules[0].action_prime = Action.STAY
 
     #initialize module state parameters
     for i in range(0,num_agents):
@@ -36,19 +40,20 @@ def ReinitializeAgents(agents,bounds):
 ##############################################################################
 
 
-num_agents = 4 #number of agents to simulate
+num_agents = 10 #number of agents to simulate
 
-num_episodes = 10 #number of times to run the training scenario
-episode_length = 200 #number of timesteps in each traning scenario
+num_episodes = 100 #number of times to run the training scenario
+episode_length = 100 #number of timesteps in each traning scenario
 
 #bounds to initialize the agents inside of
-init_space = [[-0,10],
+init_space = [[0,10],
              [0,10]]
-search_space = [[-5,15],
-                [-5,15]]
+search_space = [[-10,30],
+                [-10,30]]
 
-visualize = True
+visualize = False
 
+agent_rewards = np.array([])# np.zeros(num_agents) # list of total reward values for the 4th agent 
 
 ##############################################################################
 #   Initialization
@@ -225,11 +230,24 @@ for e in range(0,num_episodes):
             plt.cla()
 
 
-    # print('Qstates')
-    # print(agents[0].modules[0].Q.q_states)
-    # print('Qtable')
-    # print(agents[0].modules[0].Q.q_table)
+    print('Final Qstates (agent 0)')
+    print(agents[0].modules[0].Q.q_states)
+    print('Final Qtable (agent 0)')
+    print(agents[0].modules[0].Q.q_table)
 
+    episode_rewards = np.zeros(num_agents) 
+    for a in range(0,num_agents):
+        episode_rewards[a] = agents[a].total_reward
+
+    # print('episode rewards are:')
+    # print(episode_rewards)
+    # print('updated agent_rewards are: ')
+    
+    if agent_rewards.size == 0:
+        agent_rewards = episode_rewards
+    else:
+        agent_rewards = np.vstack([agent_rewards,episode_rewards])
+        
     ReinitializeAgents(agents,init_space)
 
     # for agnt in agents:
@@ -244,9 +262,21 @@ for e in range(0,num_episodes):
     with open(agent_filename,'wb') as f:
         pickle.dump(agents,f)
 
+print('agent 1 rewards')
+print(agent_rewards[:,0])
 
+plt.close()
+iterations = np.arange(num_episodes)
+agent_reward_filename = 'agent_rewards.pkl'
+with open(agent_reward_filename,'wb') as f:
+    pickle.dump(agent_rewards,f)  
+
+for i in range(0,num_agents):
+    plt.plot(iterations,agent_rewards[:,i])
+plt.show()
     #     np.savetxt('q_table.txt', mod.Q.q_table)
     #     np.savetxt('q_states.txt', mod.Q.q_states)
-    
+
+  
     
 

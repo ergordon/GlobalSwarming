@@ -50,11 +50,11 @@ class CohesionModule(Module):
     #rewards for being within (or out of) range. 1st entry is the reward 
     # for being within the range specified by the first entry in ranges_squared
     #the last entry is the reward (punishment) for being out of range
-    rewards = [2,-1,-2] 
+    rewards = [2,1,0,-1,-2] 
     #the discrete ranges at which the agent can collect rewards
-    ranges_squared = [8,18]
+    ranges_squared = [8,18,32,50]
 
-    
+
 
     def __init__(self,parent_agt):
         super().__init__(parent_agt)
@@ -79,7 +79,7 @@ class CohesionModule(Module):
 
         self.action = Action.STAY
         self.action_prime = Action.STAY
-        self.gamma = 0.0
+        self.gamma = 0.01
 
 
     def update_q(self):
@@ -114,17 +114,13 @@ class CohesionModule(Module):
     #there is a reward for each state
     #there is only one state for the cohesion module so it is a single number 
     def update_instant_reward(self):
-        #im using state_prime to calculate the reward
-        #using state may be the correct thing to do, paper is ambiguous, investigate later
         
         #the state is the vector to the swarm centroid
         #use distance squared for range comparisons
         dist_squared = 0
         for i in range(0,len(self.state_prime)):
             dist_squared = dist_squared + self.state_prime[i]**2
-        # for i in range(0,len(self.state)):
-        #     dist_squared = dist_squared + self.state[i]**2
-
+        
 
         #loop through each range to give the appropriate reward
         rewarded = False
@@ -137,6 +133,11 @@ class CohesionModule(Module):
         #not in range, apply last reward (punishment)
         if rewarded == False:
             self.instant_reward = CohesionModule.rewards[-1]
+
+        #continuous reward scheme
+        self.instant_reward = 2 - .1*dist_squared
+
+
 
     #softmax porabability function to select next action for this module
     def select_next_action(self):

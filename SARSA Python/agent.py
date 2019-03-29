@@ -17,14 +17,15 @@ class Agent:
         self.position = pos
 
     def take_action(self,act):
+        step_size = 2
         if act == action.Action.MOVE_PLUS_X :
-            self.position = self.position + [1,0]
+            self.position = self.position + [step_size,0]
         elif  act == action.Action.MOVE_MINUS_X :
-            self.position = self.position + [-1,0]
+            self.position = self.position + [-step_size,0]
         elif  act == action.Action.MOVE_PLUS_Y :
-            self.position = self.position + [0,1]
+            self.position = self.position + [0,step_size]
         elif  act == action.Action.MOVE_MINUS_Y :
-            self.position = self.position + [0,-1]
+            self.position = self.position + [0,-step_size]
         else: #act == action.Action.STAY
             self.position = self.position + [0,0]
 
