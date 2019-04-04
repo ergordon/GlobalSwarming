@@ -80,7 +80,7 @@ print('initializing agents')
 
 agents = list() #list of agents
 
-#check if a file containint a list of agents arleady exits
+#check if a file containing a list of agents already exits
 if(os.path.isfile('agents.pkl')):
     #if so, load it
     print("Q learining data found, loading it now")
@@ -95,8 +95,8 @@ else:
         agents.append(Agent(position))
         print(agents[i].position)
 
-    #initialize module paramters such as who each agent is tracking
-    #TODO make it so the tracked agents are based on range and upated every iteration
+    #initialize module parameters such as who each agent is tracking
+    #TODO make it so the tracked agents are based on range and updated every iteration
     for i in range(0,num_agents):
         for j in range(0,num_agents):
             if(i != j):
