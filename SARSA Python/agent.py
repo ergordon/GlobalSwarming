@@ -16,7 +16,7 @@ class Agent:
         self.position = pos         #the positon of the agent
         self.total_reward = 0       #running reward received by the agent
         self.modules = []           #a list of modules that the agent carries out
-        self.modules.append(module.CohesionModule(self)) #cohesioun module makes the agents stay together as a swarm
+        self.modules.append(module.CohesionModule(self)) #cohesion module makes the agents stay together as a swarm
         #self.modules.append(module.CollisionModule(self))
 
     #change the agent's position based on the action passed in

@@ -62,15 +62,15 @@ class CohesionModule(Module):
         super().__init__(parent_agt) #inherited class initialization
         
         self.state = np.array([]) #the vector from the agent to the centroid of it and the tracked agents 
-        self.state_prime = np.array([]) #same as state but for the next step. used for qlearning before assigning to state
-        self.Q = Qlearning()    #define a Qleaning object for each module instance        
+        self.state_prime = np.array([]) #same as state but for the next step. used for Q-learning before assigning to state
+        self.Q = Qlearning()    #define a Q-learning object for each module instance        
         
         self.init_time = time.time() #store the time at which the agent was initialized
         #in seconds TODO change the name of this
-        self.exploitation_rise_time = 120 #the amount of time over which we tranistion from exploration to exploitation 
+        self.exploitation_rise_time = 120 #the amount of time over which we transition from exploration to exploitation 
 
-        self.action = Action.STAY          #safest not to do anyting for first action
-        self.action_prime = Action.STAY     #safest not to do anyting for first action
+        self.action = Action.STAY          #safest not to do anything for first action
+        self.action_prime = Action.STAY     #safest not to do anything for first action
         self.gamma = 0.01                   #discount factor. keep in range [0,1]. can be tuned to affect Q learning
 
 
@@ -194,4 +194,21 @@ class CollisionModule(Module):
 
 ##############################################################################
 #   End Collision Module Class
+##############################################################################
+
+##############################################################################
+#   Begin Target Seek Module Class
+##############################################################################
+
+#module to prevent agents from hitting each other
+class TargetSeekModule(Module):
+    
+    gamma = 0
+
+    def __init__(self):
+        super().__init__()
+        print(CollisionModule.gamma)
+
+##############################################################################
+#   End Target Seek Module Class
 ##############################################################################
