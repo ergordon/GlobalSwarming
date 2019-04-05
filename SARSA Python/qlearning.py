@@ -34,11 +34,10 @@ class Qlearning:
         #update the Q table at the state,action index pair
         self.q_table[s_index, a_index]  = Q_s[a_index] + alpha*(reward + gamma*Q_s_p[a_p_index] - Q_s[a_index])
 
-
     #fetch the index of the row in the Q table that corresponds
     #to a given state. If now row exist for the state, make one
     def fetch_row_index_by_state(self, state):
-        #TODO research a better (more efficeint) way of doing this
+        #TODO research a better (more efficient) way of doing this
         
         if self.q_states.size != 0: #check for empty matrix
             for i in range(0,self.q_states.shape[0]): #iterate over each row

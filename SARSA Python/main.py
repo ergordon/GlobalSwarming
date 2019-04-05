@@ -51,10 +51,10 @@ def ReinitializeAgents(agents,bounds):
 ##############################################################################
 
 
-num_agents = 10 #number of agents to simulate
+num_agents = 3 #number of agents to simulate
 
-num_episodes = 2 #number of times to run the training scenario
-episode_length = 100 #number of timesteps in each traning scenario
+num_episodes = 50 #number of times to run the training scenario
+episode_length = 100 #number of time steps in each training scenario
 
 #bounds to initialize the agents inside of
 init_space = [[0,10],
@@ -65,7 +65,7 @@ init_space = [[0,10],
 search_space = [[-50,50],
                 [-50,50]]
 
-visualize = True    #whether to show a plot animation of the agent positions
+visualize = False    #whether to show a plot animation of the agent positions
 
 agent_rewards = np.array ([])   # matrix containing total reward values for each agent for each episode
 
@@ -93,7 +93,7 @@ else:
     for i in range(0,num_agents):
         position = np.array([i,i], dtype='f')
         agents.append(Agent(position))
-        print(agents[i].position)
+        #print(agents[i].position)
 
     #initialize module parameters such as who each agent is tracking
     #TODO make it so the tracked agents are based on range and updated every iteration
@@ -120,7 +120,7 @@ else:
 
 #plotting for visualization
 if(visualize):
-    frame_rate = 10
+    frame_rate = 100
     axis_bounds = [search_space[0][0], search_space[0][1], search_space[1][0], search_space[1][1]]
     plt.axis(axis_bounds)
     plt.draw()
@@ -128,7 +128,7 @@ if(visualize):
     plt.clf()
     plt.cla()
 
-print('begnning training')
+print('beginning training')
 for e in range(0,num_episodes):
     print("beginning episode #" + str(e+1))
 
@@ -150,6 +150,7 @@ for e in range(0,num_episodes):
 
             if(visualize):
                 plt.plot(agnt.position[0],agnt.position[1],'ro')
+                plt.plot(-40,33,'bo')
                 plt.axis(axis_bounds)
 
         #criteria for ending the episode early.
