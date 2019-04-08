@@ -199,6 +199,13 @@ class CollisionModule(Module):
 #module to encourage agents to track target (Future: moving target?)
 class TargetSeekModule(Module):
 
+    #rewards for being within (or out of) range. 1st entry is the reward 
+    # for being within the range specified by the first entry in ranges_squared
+    #the last entry is the reward (punishment) for being out of range
+    rewards = [10,-1] 
+    #the discrete ranges at which the agent can collect rewards
+    ranges_squared = [8]
+
     #class constructor
     def __init__(self,parent_agt):
         super().__init__(parent_agt) #inherited class initialization
@@ -209,7 +216,7 @@ class TargetSeekModule(Module):
         
         self.init_time = time.time() #store the time at which the agent was initialized
         #in seconds TODO change the name of this
-        self.exploitation_rise_time = 120 #the amount of time over which we transition from exploration to exploitation 
+        self.exploitation_rise_time = 220 #the amount of time over which we transition from exploration to exploitation 
 
         self.action = Action.STAY          #safest not to do anything for first action
         self.action_prime = Action.STAY     #safest not to do anything for first action
@@ -225,7 +232,7 @@ class TargetSeekModule(Module):
     #for this module, it is the vector pointing from the agent to the target
     def update_state(self):
         #known target location
-        target = np.array([-40,33])
+        target = np.array([-10,13])
         #round to whole numbers for discretization
         self.state = np.round(target - self.parent_agent.position, 0) 
 
@@ -235,7 +242,7 @@ class TargetSeekModule(Module):
     #TODO use the centroid of the agents within a defined range
     def update_state_prime(self): # CHECK THIS FUNCTION IF SWARM DOES NOT BEHAVE AS PLANNED
         #known target location
-        target = np.array([-40,33])
+        target = np.array([-10,13])
         #round to whole numbers for discretization
         self.state_prime = np.round(target - self.parent_agent.position, 0)
 
@@ -248,10 +255,19 @@ class TargetSeekModule(Module):
         dist_squared = 0
         for i in range(0,len(self.state_prime)):
             dist_squared = dist_squared + self.state_prime[i]**2
-        
-        #continuous reward scheme
-        self.instant_reward = 60 - .01*dist_squared
 
+        # tiered reward scheme
+        #loop through each range to give the appropriate reward
+        rewarded = False
+        for i in range(0,len(TargetSeekModule.ranges_squared)):
+            if dist_squared <= TargetSeekModule.ranges_squared[i]:
+                self.instant_reward = TargetSeekModule.rewards[i]
+                rewarded = True    
+                break
+        
+        #not in range, apply last reward (punishment)
+        if rewarded == False:
+            self.instant_reward = TargetSeekModule.rewards[-1]
 
     #select next action for this module with a soft max probability mass function
     def select_next_action(self):
@@ -279,6 +295,7 @@ class TargetSeekModule(Module):
             action_weights[i] = np.exp(Qval/T)
         #normalize the weights to create probabilities
         #TODO: If all action = 0, give a random action
+
         if(np.sum(action_weights) != 0):
             action_weights = action_weights / np.sum(action_weights)
 

@@ -53,8 +53,8 @@ def ReinitializeAgents(agents,bounds):
 
 num_agents = 3 #number of agents to simulate
 
-num_episodes = 50 #number of times to run the training scenario
-episode_length = 100 #number of time steps in each training scenario
+num_episodes = 5 #number of times to run the training scenario
+episode_length = 200 #number of time steps in each training scenario
 
 #bounds to initialize the agents inside of
 init_space = [[0,10],
@@ -83,7 +83,7 @@ agents = list() #list of agents
 #check if a file containing a list of agents already exits
 if(os.path.isfile('agents.pkl')):
     #if so, load it
-    print("Q learining data found, loading it now")
+    print("Q learning data found, loading it now")
     #TODO handle if the desired number of agents is different from the number of agents saved to disk
     with open('agents.pkl', 'rb') as f:
         agents = pickle.load(f)
@@ -150,7 +150,7 @@ for e in range(0,num_episodes):
 
             if(visualize):
                 plt.plot(agnt.position[0],agnt.position[1],'ro')
-                plt.plot(-40,33,'bo')
+                plt.plot(-10,13,'bo')
                 plt.axis(axis_bounds)
 
         #criteria for ending the episode early.
