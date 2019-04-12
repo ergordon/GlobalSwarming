@@ -39,7 +39,8 @@ class Qlearning:
     #to a given state. If now row exist for the state, make one
     def fetch_row_index_by_state(self, state):
         #TODO research a better (more efficeint) way of doing this
-        
+        index = -1
+
         if self.q_states.size != 0: #check for empty matrix
             for i in range(0,self.q_states.shape[0]): #iterate over each row
                 if np.array_equal(state, self.q_states[i]): #if a row matches

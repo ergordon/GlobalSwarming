@@ -51,9 +51,9 @@ def ReinitializeAgents(agents,bounds):
 ##############################################################################
 
 
-num_agents = 10 #number of agents to simulate
+num_agents = 3 #number of agents to simulate
 
-num_episodes = 2 #number of times to run the training scenario
+num_episodes = 15 #number of times to run the training scenario
 episode_length = 100 #number of timesteps in each traning scenario
 
 #bounds to initialize the agents inside of
@@ -65,7 +65,7 @@ init_space = [[0,10],
 search_space = [[-50,50],
                 [-50,50]]
 
-visualize = True    #whether to show a plot animation of the agent positions
+visualize = False    #whether to show a plot animation of the agent positions
 
 agent_rewards = np.array ([])   # matrix containing total reward values for each agent for each episode
 
@@ -141,16 +141,18 @@ for e in range(0,num_episodes):
             #TODO use action across multiple modules
             agnt.take_action(agnt.modules[0].action)
 
-
             #check if any agent went out of search space.
             #terminate episode if so
             if not (checkInBounds(agnt.position,search_space)):
                 print("agent left search space, ending episode")
                 agent_out_of_bounds = True
 
-            if(visualize):
+        if(visualize):
+            for agnt in agents:
                 plt.plot(agnt.position[0],agnt.position[1],'ro')
                 plt.axis(axis_bounds)
+                for mod in agnt.modules:
+                    mod.visualize()
 
         #criteria for ending the episode early.
         if(agent_out_of_bounds):
@@ -160,6 +162,7 @@ for e in range(0,num_episodes):
         for agnt in agents:
             for mod in agnt.modules:
                 
+                #TODO move this up a level. Will only select one action based on all modules
                 #select the next action (action_prime) for the agent to take 
                 mod.select_next_action()
                 
@@ -183,7 +186,7 @@ for e in range(0,num_episodes):
  
         #plotting for visualization
         if(visualize):
-            plt.draw()
+            # plt.draw()
             plt.pause(1/frame_rate)
             plt.clf()
             plt.cla()

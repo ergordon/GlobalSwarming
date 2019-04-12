@@ -17,7 +17,7 @@ else:
 #testMod = module.Module()
 
 agt1 = agent.Agent([1,1])
-agt2 = agent.Agent([2,2])
+agt2 = agent.Agent([3,3])
 
 #testMod.startTracking(agt1)
 #print(testMod.tracked_agents[0].position)
@@ -61,3 +61,12 @@ print(matrix)
 
 act = action.Action.STAY
 print(act.value)
+
+test_matrix = np.zeros(len(action.Action))
+
+print(test_matrix)
+
+print('value is')
+print(76.21392)
+print('exp is')
+print(np.exp(7600.21392))
