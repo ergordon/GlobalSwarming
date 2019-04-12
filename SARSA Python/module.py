@@ -10,7 +10,7 @@ import sys
 import pickle
 
 import time
-
+import matplotlib.pyplot as plt
 ##############################################################################
 #   Module Base Class
 ##############################################################################
@@ -36,6 +36,10 @@ class Module:
         reward = self.instant_reward
         self.parent_agent.add_total_reward(reward)
 
+    #method for implementing visualization of the module
+    #implement should be done in inherited class
+    def visualize(self):
+        pass
 
 ##############################################################################
 #   Module Base Class
@@ -131,7 +135,7 @@ class CohesionModule(Module):
         self.instant_reward = 2 - .1*dist_squared
 
 
-    #select next action for this module with a softmax porabability mass function
+    #select next action for this module with a softmax probability mass function
     def select_next_action(self):
         
         #create a set of probabilities for each action
@@ -139,7 +143,7 @@ class CohesionModule(Module):
         
         #for each possible agent action
         for i in range (0,len(Action)):
-            #get the appropiate Q value Q table row corresponding to the current state 
+            #get the appropriate Q value Q table row corresponding to the current state 
             #and the action being iterated over
             Qrow = self.Q.fetch_row_by_state(self.state) 
             Qval = Qrow[i]
@@ -204,7 +208,10 @@ class TargetSeekModule(Module):
     #the last entry is the reward (punishment) for being out of range
     rewards = [10,-1] 
     #the discrete ranges at which the agent can collect rewards
-    ranges_squared = [8]
+    ranges_squared = [25]
+    #known target location
+    target = np.array([0,0])
+
 
     #class constructor
     def __init__(self,parent_agt):
@@ -222,6 +229,22 @@ class TargetSeekModule(Module):
         self.action_prime = Action.STAY     #safest not to do anything for first action
         self.gamma = 0.90                   #discount factor. keep in range [0,1]. can be tuned to affect Q learning
 
+    #visualization for this module. 
+    # draw a transparent circle for each tracked agent for each reward range 
+    def visualize(self):
+        super().visualize() #inherited class function
+        #for each reward tier range
+        for i in range(0,len(TargetSeekModule.ranges_squared)):
+            
+            #set marker size to be the diameter of the range
+            #mkr_size = np.sqrt(TargetSeekModule.ranges_squared[i])*2
+
+            mkr_size = TargetSeekModule.ranges_squared[i]*2
+            plt.plot(TargetSeekModule.target[0],TargetSeekModule.target[1],'bo',markersize=mkr_size,color='purple', alpha=0.01)
+
+            #plot the marker for each agent
+            for agnt in self.tracked_agents:
+                plt.plot(agnt.position[0],agnt.position[1],'ro')
 
     #update the Q table for this module
     def update_q(self):
@@ -231,20 +254,16 @@ class TargetSeekModule(Module):
     #update the state that the agent is currently in
     #for this module, it is the vector pointing from the agent to the target
     def update_state(self):
-        #known target location
-        target = np.array([-10,13])
         #round to whole numbers for discretization
-        self.state = np.round(target - self.parent_agent.position, 0) 
+        self.state = np.round(TargetSeekModule.target - self.parent_agent.position, 0) 
 
     #update the state that agent is in. Store it in state_prime because it is called after 
     #executing an action and the Q object needs both the original state and the state after execution 
     #for this module, it is the vector pointing from the agent to the swarm centroid
     #TODO use the centroid of the agents within a defined range
     def update_state_prime(self): # CHECK THIS FUNCTION IF SWARM DOES NOT BEHAVE AS PLANNED
-        #known target location
-        target = np.array([-10,13])
         #round to whole numbers for discretization
-        self.state_prime = np.round(target - self.parent_agent.position, 0)
+        self.state_prime = np.round(TargetSeekModule.target - self.parent_agent.position, 0)
 
     #determine the reward for executing the action (not prime) in the state (not prime)
     #action (not prime) brings agent from state (not prime) to state_prime, and reward is calculated based on state_prime
@@ -293,9 +312,12 @@ class TargetSeekModule(Module):
                 T = 0.1
             #calculate the weight for this action
             action_weights[i] = np.exp(Qval/T)
-        #normalize the weights to create probabilities
-        #TODO: If all action = 0, give a random action
 
+            #set the weight to the max float size in case it is beyond pythons max float size
+            if(action_weights[i] == float('inf')):
+                action_weights[i] = 1.7976931348623157e+308
+
+        #normalize the weights to create probabilities
         if(np.sum(action_weights) != 0):
             action_weights = action_weights / np.sum(action_weights)
 

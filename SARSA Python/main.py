@@ -51,9 +51,9 @@ def ReinitializeAgents(agents,bounds):
 ##############################################################################
 
 
-num_agents = 3 #number of agents to simulate
+num_agents = 5 #number of agents to simulate
 
-num_episodes = 5 #number of times to run the training scenario
+num_episodes = 1 #number of times to run the training scenario
 episode_length = 200 #number of time steps in each training scenario
 
 #bounds to initialize the agents inside of
@@ -65,7 +65,7 @@ init_space = [[0,10],
 search_space = [[-50,50],
                 [-50,50]]
 
-visualize = False    #whether to show a plot animation of the agent positions
+visualize = True   #whether to show a plot animation of the agent positions
 
 agent_rewards = np.array ([])   # matrix containing total reward values for each agent for each episode
 
@@ -149,9 +149,11 @@ for e in range(0,num_episodes):
                 agent_out_of_bounds = True
 
             if(visualize):
+               for agnt in agents:
                 plt.plot(agnt.position[0],agnt.position[1],'ro')
-                plt.plot(-10,13,'bo')
                 plt.axis(axis_bounds)
+                for mod in agnt.modules:
+                    mod.visualize()
 
         #criteria for ending the episode early.
         if(agent_out_of_bounds):
@@ -201,7 +203,7 @@ for e in range(0,num_episodes):
     else:
         agent_rewards = np.vstack([agent_rewards,episode_rewards])
 
-    #reset the agents (except for the Q tables and Q states) to start fesh for the next episode         
+    #reset the agents (except for the Q tables and Q states) to start fresh for the next episode         
     ReinitializeAgents(agents,init_space)
 
     #save the trained agents to a file
