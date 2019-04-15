@@ -201,9 +201,9 @@ class CollisionModule(Module):
     #rewards (punishements) for keeping distance to other agents. 1st entry is the punishemnt 
     #for being within the range specified by the first entry in ranges_squared
     #the last entry is the reward (punishment) for being out of range
-    rewards = [-100,-1,1] 
+    rewards = [-100,-1,0] 
     #the discrete ranges at which the agent can collect rewards
-    ranges_squared = [9,25]
+    ranges_squared = [16,49]
 
 
     #class constructor
@@ -220,7 +220,7 @@ class CollisionModule(Module):
 
         self.action = Action.STAY          #safest not to do anyting for first action
         self.action_prime = Action.STAY     #safest not to do anyting for first action
-        self.gamma = 0                   #discount factor. keep in range [0,1]. can be tuned to affect Q learning
+        self.gamma = 0.1                   #discount factor. keep in range [0,1]. can be tuned to affect Q learning
 
 
     
@@ -230,13 +230,14 @@ class CollisionModule(Module):
         super().visualize() #inherited class function
         #for each reward tier range
         for i in range(0,len(CollisionModule.ranges_squared)):
-            
+            pass
             #set marker size to be the diameter of the range
-            mkr_size = CollisionModule.ranges_squared[i]*2
-
-            #plot the marker for each agent
-            for agnt in self.tracked_agents:
-                plt.plot(agnt.position[0],agnt.position[1],'ro',markersize=mkr_size,color='purple', alpha=0.01)
+            # mkr_size = (np.sqrt(CollisionModule.ranges_squared[i])/2)**2*3.14
+            # mkr_size = np.sqrt(20**2*3.14)
+            # plt.plot(0,0,'ro',markersize=mkr_size,color='red', alpha=0.1)
+            # #plot the marker for each agent
+            # for agnt in self.tracked_agents:
+            #     plt.plot(agnt.position[0],agnt.position[1],'ro',markersize=mkr_size,color='purple', alpha=0.01)
             
 
     #add an agent to the list of agents to be tracked by this module
@@ -344,6 +345,9 @@ class CollisionModule(Module):
         action_weights = np.zeros(len(Action))
         #sum the action tables for every tracked agent
         for i in range (0,len(self.tracked_agents)):
+            # print("Q row is")
+            # print(i)
+            # print(self.Q.fetch_row_by_state(self.state[i]))
             action_weights = action_weights + self.Q.fetch_row_by_state(self.state[i])
 
         # print('summed Qrow is')

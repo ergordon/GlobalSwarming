@@ -2,6 +2,7 @@ import numpy as np
 import module as module
 import agent as agent
 import action as action
+import matplotlib.pyplot as plt
 
 vec1 = np.array([[1,3,1],
                  [1,1,1]])
@@ -70,3 +71,5 @@ print('value is')
 print(76.21392)
 print('exp is')
 print(np.exp(7600.21392))
+
+

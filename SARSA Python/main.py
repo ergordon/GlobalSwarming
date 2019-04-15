@@ -51,9 +51,9 @@ def ReinitializeAgents(agents,bounds):
 ##############################################################################
 
 
-num_agents = 3 #number of agents to simulate
+num_agents = 5 #number of agents to simulate
 
-num_episodes = 15 #number of times to run the training scenario
+num_episodes = 100 #number of times to run the training scenario
 episode_length = 100 #number of timesteps in each traning scenario
 
 #bounds to initialize the agents inside of
@@ -144,8 +144,11 @@ for e in range(0,num_episodes):
             #check if any agent went out of search space.
             #terminate episode if so
             if not (checkInBounds(agnt.position,search_space)):
-                print("agent left search space, ending episode")
-                agent_out_of_bounds = True
+                # print("agent left search space, ending episode")
+                # agent_out_of_bounds = True
+                # instead, move agent back in bounds.
+                agnt.position = np.array([0,0], dtype='f')
+
 
         if(visualize):
             for agnt in agents:
@@ -155,8 +158,8 @@ for e in range(0,num_episodes):
                     mod.visualize()
 
         #criteria for ending the episode early.
-        if(agent_out_of_bounds):
-            break
+        # if(agent_out_of_bounds):
+        #     break
 
 
         for agnt in agents:
