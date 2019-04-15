@@ -206,11 +206,11 @@ class TargetSeekModule(Module):
     #rewards for being within (or out of) range. 1st entry is the reward 
     # for being within the range specified by the first entry in ranges_squared
     #the last entry is the reward (punishment) for being out of range
-    rewards = [10,-1] 
+    rewards = [10,2,-1,-5] 
     #the discrete ranges at which the agent can collect rewards
-    ranges_squared = [25]
+    ranges_squared = [25,225,625]
     #known target location
-    target = np.array([0,0])
+    target = np.array([-20,25])
 
 
     #class constructor
@@ -223,7 +223,7 @@ class TargetSeekModule(Module):
         
         self.init_time = time.time() #store the time at which the agent was initialized
         #in seconds TODO change the name of this
-        self.exploitation_rise_time = 220 #the amount of time over which we transition from exploration to exploitation 
+        self.exploitation_rise_time = 120 #the amount of time over which we transition from exploration to exploitation 
 
         self.action = Action.STAY          #safest not to do anything for first action
         self.action_prime = Action.STAY     #safest not to do anything for first action
@@ -237,10 +237,15 @@ class TargetSeekModule(Module):
         for i in range(0,len(TargetSeekModule.ranges_squared)):
             
             #set marker size to be the diameter of the range
-            #mkr_size = np.sqrt(TargetSeekModule.ranges_squared[i])*2
+            mkr_size = np.sqrt(TargetSeekModule.ranges_squared[i])
 
-            mkr_size = TargetSeekModule.ranges_squared[i]*2
-            plt.plot(TargetSeekModule.target[0],TargetSeekModule.target[1],'bo',markersize=mkr_size,color='purple', alpha=0.01)
+            #plot target
+            plt.plot(TargetSeekModule.target[0],TargetSeekModule.target[1],'bo')
+
+            #plot range circle, mkrsize is the radius.
+            circle = plt.Circle((TargetSeekModule.target[0],TargetSeekModule.target[1]), mkr_size, color='purple', alpha=0.01)
+            ax = plt.gca()
+            ax.add_artist(circle)
 
             #plot the marker for each agent
             for agnt in self.tracked_agents:
