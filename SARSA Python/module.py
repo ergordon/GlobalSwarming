@@ -206,7 +206,7 @@ class TargetSeekModule(Module):
     #rewards for being within (or out of) range. 1st entry is the reward 
     # for being within the range specified by the first entry in ranges_squared
     #the last entry is the reward (punishment) for being out of range
-    rewards = [10,2,-1,-5] 
+    rewards = [5,2,-1,-2] 
     #the discrete ranges at which the agent can collect rewards
     ranges_squared = [25,225,625]
     #known target location
@@ -223,7 +223,7 @@ class TargetSeekModule(Module):
         
         self.init_time = time.time() #store the time at which the agent was initialized
         #in seconds TODO change the name of this
-        self.exploitation_rise_time = 120 #the amount of time over which we transition from exploration to exploitation 
+        self.exploitation_rise_time = 220 #the amount of time over which we transition from exploration to exploitation 
 
         self.action = Action.STAY          #safest not to do anything for first action
         self.action_prime = Action.STAY     #safest not to do anything for first action
@@ -247,9 +247,9 @@ class TargetSeekModule(Module):
             ax = plt.gca()
             ax.add_artist(circle)
 
-            #plot the marker for each agent
-            for agnt in self.tracked_agents:
-                plt.plot(agnt.position[0],agnt.position[1],'ro')
+        #plot the marker for each agent
+        for agnt in self.tracked_agents:
+            plt.plot(agnt.position[0],agnt.position[1],'ro')
 
     #update the Q table for this module
     def update_q(self):

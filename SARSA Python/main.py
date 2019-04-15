@@ -20,13 +20,11 @@ def checkInBounds(position,bounds):
     for i in range(0,len(position)):
         if not ( bounds[i][0] <= position[i] <= bounds[i][1]):
             return False
-
     return True
 
 #TODO actually use bounds
 #reset the agents to initial conditions (except for the Q states and tables)
 def ReinitializeAgents(agents,bounds):
-    
     #initialize agent parameters
     for i in range(0,len(agents)):
         #TODO make this initial position randomized
@@ -52,9 +50,8 @@ def ReinitializeAgents(agents,bounds):
 
 
 num_agents = 5 #number of agents to simulate
-
-num_episodes = 100 #number of times to run the training scenario
-episode_length = 100 #number of time steps in each training scenario
+num_episodes = 1 #number of times to run the training scenario
+episode_length = 200 #number of time steps in each training scenario
 
 #bounds to initialize the agents inside of
 init_space = [[0,10],
@@ -65,7 +62,7 @@ init_space = [[0,10],
 search_space = [[-50,50],
                 [-50,50]]
 
-visualize = False   #whether to show a plot animation of the agent positions
+visualize = True   #whether to show a plot animation of the agent positions
 
 agent_rewards = np.array ([])   # matrix containing total reward values for each agent for each episode
 
@@ -120,7 +117,7 @@ else:
 
 #plotting for visualization
 if(visualize):
-    frame_rate = 100
+    frame_rate = 60
     axis_bounds = [search_space[0][0], search_space[0][1], search_space[1][0], search_space[1][1]]
     plt.axis(axis_bounds)
     plt.draw()
@@ -141,7 +138,6 @@ for e in range(0,num_episodes):
             #TODO use action across multiple modules
             agnt.take_action(agnt.modules[0].action)
 
-
             #check if any agent went out of search space.
             #terminate episode if so
             if not (checkInBounds(agnt.position,search_space)):
@@ -149,11 +145,11 @@ for e in range(0,num_episodes):
                 agent_out_of_bounds = True
 
             if(visualize):
-               for agnt in agents:
-                plt.plot(agnt.position[0],agnt.position[1],'ro')
-                plt.axis(axis_bounds)
-                for mod in agnt.modules:
-                    mod.visualize()
+                for agnt in agents:
+                    plt.plot(agnt.position[0],agnt.position[1],'ro')
+                    plt.axis(axis_bounds)
+                    for mod in agnt.modules:
+                        mod.visualize()
 
         #criteria for ending the episode early.
         if(agent_out_of_bounds):
