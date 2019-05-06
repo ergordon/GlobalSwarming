@@ -247,10 +247,6 @@ class TargetSeekModule(Module):
             ax = plt.gca()
             ax.add_artist(circle)
 
-        #plot the marker for each agent
-        for agnt in self.tracked_agents:
-            plt.plot(agnt.position[0],agnt.position[1],'ro')
-
     #update the Q table for this module
     def update_q(self):
         #accessed through the Qlearning object

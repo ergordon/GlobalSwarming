@@ -50,7 +50,7 @@ def ReinitializeAgents(agents,bounds):
 
 
 num_agents = 5 #number of agents to simulate
-num_episodes = 1 #number of times to run the training scenario
+num_episodes = 2 #number of times to run the training scenario
 episode_length = 200 #number of time steps in each training scenario
 
 #bounds to initialize the agents inside of
@@ -124,6 +124,7 @@ if(visualize):
     plt.pause(1/frame_rate)
     plt.clf()
     plt.cla()
+    plt.axis('equal')
 
 print('beginning training')
 for e in range(0,num_episodes):
@@ -145,11 +146,10 @@ for e in range(0,num_episodes):
                 agent_out_of_bounds = True
 
             if(visualize):
-                for agnt in agents:
-                    plt.plot(agnt.position[0],agnt.position[1],'ro')
-                    plt.axis(axis_bounds)
-                    for mod in agnt.modules:
-                        mod.visualize()
+                plt.plot(agnt.position[0],agnt.position[1],'ro')
+                plt.axis(axis_bounds)
+                for mod in agnt.modules:
+                    mod.visualize()
 
         #criteria for ending the episode early.
         if(agent_out_of_bounds):
