@@ -7,6 +7,7 @@ import time
 import sys
 import pickle
 import os.path
+import copy as cp
 
 
 ##############################################################################
@@ -40,7 +41,7 @@ def ReinitializeAgents(agents,bounds):
             agents[i].modules[m].action = Action.STAY
             agents[i].modules[m].action_prime = Action.STAY
             agents[i].modules[m].update_state()
-            agents[i].modules[m].state_prime = agents[i].modules[m].state
+            agents[i].modules[m].state_prime = np.copy(agents[i].modules[m].state)
 
 ##############################################################################
 #   Helper Functions
@@ -51,9 +52,9 @@ def ReinitializeAgents(agents,bounds):
 ##############################################################################
 
 
-num_agents = 5 #number of agents to simulate
+num_agents = 2 #number of agents to simulate
 
-num_episodes = 100 #number of times to run the training scenario
+num_episodes = 50 #number of times to run the training scenario
 episode_length = 100 #number of timesteps in each traning scenario
 
 #bounds to initialize the agents inside of
@@ -91,7 +92,7 @@ else:
     #if not, initialize a set of agents from scratch
     #initialize agent positions
     for i in range(0,num_agents):
-        position = np.array([i,i], dtype='f')
+        position = np.array([2*i,2*i], dtype='f')
         agents.append(Agent(position))
         print(agents[i].position)
 
@@ -100,6 +101,7 @@ else:
     for i in range(0,num_agents):
         for j in range(0,num_agents):
             if(i != j):
+                #TODO chagne this, not every module will care about tracking other agents
                 #loop through each module
                 for m in range(0,len(agents[i].modules)):
                     agents[i].modules[m].start_tracking(agents[j])
@@ -109,7 +111,7 @@ else:
         #loop through each module
         for m in range(0,len(agents[i].modules)):
             agents[i].modules[m].update_state()
-            agents[i].modules[m].state_prime = agents[i].modules[m].state
+            agents[i].modules[m].state_prime = np.copy(agents[i].modules[m].state)
 ##############################################################################
 #   Initialization
 ##############################################################################
@@ -145,10 +147,9 @@ for e in range(0,num_episodes):
             #terminate episode if so
             if not (checkInBounds(agnt.position,search_space)):
                 # print("agent left search space, ending episode")
-                # agent_out_of_bounds = True
+                agent_out_of_bounds = True
                 # instead, move agent back in bounds.
-                agnt.position = np.array([0,0], dtype='f')
-
+                # agnt.position = np.array([0,0], dtype='f')
 
         if(visualize):
             for agnt in agents:
@@ -157,14 +158,14 @@ for e in range(0,num_episodes):
                 for mod in agnt.modules:
                     mod.visualize()
 
-        #criteria for ending the episode early.
-        # if(agent_out_of_bounds):
-        #     break
-
+        # criteria for ending the episode early.
+        if(agent_out_of_bounds):
+            break
 
         for agnt in agents:
             for mod in agnt.modules:
-                
+            
+
                 #TODO move this up a level. Will only select one action based on all modules
                 #select the next action (action_prime) for the agent to take 
                 mod.select_next_action()
@@ -183,8 +184,8 @@ for e in range(0,num_episodes):
                 mod.update_q()
 
                 #prepare for next time step
-                mod.action = mod.action_prime
-                mod.state  = mod.state_prime
+                mod.action = cp.copy(mod.action_prime)
+                mod.state  = np.copy(mod.state_prime)
 
  
         #plotting for visualization
@@ -193,16 +194,14 @@ for e in range(0,num_episodes):
             plt.pause(1/frame_rate)
             plt.clf()
             plt.cla()
-
-
     
     #store the total reward for each agent at the end of each episode for algorithm performance analysis
     episode_rewards = np.zeros(num_agents) 
     for a in range(0,num_agents):
-        episode_rewards[a] = agents[a].total_reward
+        episode_rewards[a] = cp.copy(agents[a].total_reward)
 
     if agent_rewards.size == 0:
-        agent_rewards = episode_rewards
+        agent_rewards = cp.copy(episode_rewards)
     else:
         agent_rewards = np.vstack([agent_rewards,episode_rewards])
 
@@ -214,6 +213,8 @@ for e in range(0,num_episodes):
     with open(agent_filename,'wb') as f:
         pickle.dump(agents,f)
 
+print('training complete')
+
 ##############################################################################
 #   main algorithm
 ##############################################################################
@@ -221,6 +222,11 @@ for e in range(0,num_episodes):
 ##############################################################################
 #   data 
 ##############################################################################
+
+# mat = agents[0].modules[0].Q.q_table# np.matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+# with open('outfile.txt') as f:
+#     for line in mat:
+#         np.savetxt(f, line, fmt='%.2f')
 
 #store the iterations and total rewards for each agent for each episode
 iterations = np.arange(num_episodes)
@@ -233,6 +239,8 @@ plt.close()
 for i in range(0,num_agents):
     plt.plot(iterations,agent_rewards[:,i])
 plt.show()
+
+
 
 ##############################################################################
 #   data

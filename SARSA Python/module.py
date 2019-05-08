@@ -198,14 +198,6 @@ class CohesionModule(Module):
 #make the agents swarm together
 class CollisionModule(Module):
 
-    #rewards (punishements) for keeping distance to other agents. 1st entry is the punishemnt 
-    #for being within the range specified by the first entry in ranges_squared
-    #the last entry is the reward (punishment) for being out of range
-    rewards = [-100,-1,0] 
-    #the discrete ranges at which the agent can collect rewards
-    ranges_squared = [16,49]
-
-
     #class constructor
     def __init__(self,parent_agt):
         super().__init__(parent_agt) #inherited class initialization
@@ -220,7 +212,7 @@ class CollisionModule(Module):
 
         self.action = Action.STAY          #safest not to do anyting for first action
         self.action_prime = Action.STAY     #safest not to do anyting for first action
-        self.gamma = 0.1                   #discount factor. keep in range [0,1]. can be tuned to affect Q learning
+        self.gamma = 0.0                   #discount factor. keep in range [0,1]. can be tuned to affect Q learning
 
 
     
@@ -228,16 +220,7 @@ class CollisionModule(Module):
     # draw a transparent circle for each tracked agent for each reward range 
     def visualize(self):
         super().visualize() #inherited class function
-        #for each reward tier range
-        for i in range(0,len(CollisionModule.ranges_squared)):
-            pass
-            #set marker size to be the diameter of the range
-            # mkr_size = (np.sqrt(CollisionModule.ranges_squared[i])/2)**2*3.14
-            # mkr_size = np.sqrt(20**2*3.14)
-            # plt.plot(0,0,'ro',markersize=mkr_size,color='red', alpha=0.1)
-            # #plot the marker for each agent
-            # for agnt in self.tracked_agents:
-            #     plt.plot(agnt.position[0],agnt.position[1],'ro',markersize=mkr_size,color='purple', alpha=0.01)
+        pass
             
 
     #add an agent to the list of agents to be tracked by this module
@@ -289,49 +272,13 @@ class CollisionModule(Module):
             #the state is the vector to the tracked agent
             #use distance squared for range comparisons (sqrt is slow)
             dist_squared = 0
-            # print('state prime is')
-            # print(self.state_prime)
-            # print('i is')
-            # print(i)
-            # print('state prime i is')
-            # print(self.state_prime[i])
-            # print('shape of state prime[0] is')
-            # print(self.state_prime[i].shape[0])
-
             for j in range(0,self.state_prime[i].shape[0]):
-                # print('state is')
-                # print(self.state_prime)
-                # # print('i is')
-                # print(i)
-                # print('j is')
-                # print(j)
                 dist_squared = dist_squared + self.state_prime[i,j]**2
-            
-            # print('distance squared is:')
-            # print(dist_squared)
 
-            #tiered reward scheme
-            #loop through each range to give the appropriate reward
-            rewarded = False
-            for j in range(0,len(CollisionModule.ranges_squared)):
-                if dist_squared <= CollisionModule.ranges_squared[j]:
-                    self.instant_reward[i] = CollisionModule.rewards[j]
-                    rewarded = True    
-                    break
-            
-            #not in range, apply last reward
-            if rewarded == False:
-                self.instant_reward[i] = CollisionModule.rewards[-1]
+            # continuous reward scheme that offeres severe punishements for being very close to other agents
+            # the function is always negative but is asymtotic to 0 as dist_squared approaches infinity
+            self.instant_reward[i] = 10.0*(dist_squared/(10.0+dist_squared)-1.0)
 
-            # print('instant reward is')
-            # print(self.instant_reward[i])
-
-            #continuous reward scheme
-            # print('reward is')
-            # print(-(2 - .1*dist_squared))
-            # print('reward i is')
-            # print(self.instant_reward[i])
-            # self.instant_reward[i] = -(2 - .1*dist_squared)
 
     #update parent agents total reward based on the module's current instant reward
     def update_total_reward(self):
@@ -345,14 +292,7 @@ class CollisionModule(Module):
         action_weights = np.zeros(len(Action))
         #sum the action tables for every tracked agent
         for i in range (0,len(self.tracked_agents)):
-            # print("Q row is")
-            # print(i)
-            # print(self.Q.fetch_row_by_state(self.state[i]))
             action_weights = action_weights + self.Q.fetch_row_by_state(self.state[i])
-
-        # print('summed Qrow is')
-        # print(action_weights)
-
         
         #for each possible agent action
         for i in range (0,len(action_weights)):
@@ -367,9 +307,9 @@ class CollisionModule(Module):
             #linearly change T to decrease exploration and increase exploitation over time
             curr_time = time.time()
             if(curr_time - self.init_time < self.exploitation_rise_time):
-                T = 1000.0 - (1000.0-0.1)*(curr_time - self.init_time)/self.exploitation_rise_time
+                T = 1000.0 - (1000.0-1)*(curr_time - self.init_time)/self.exploitation_rise_time
             else:
-                T = 0.1
+                T = 1
 
             #calculate the weight for this action
             action_weights[i] = np.exp(Qval/T)
@@ -378,9 +318,6 @@ class CollisionModule(Module):
             if(action_weights[i] == float('inf')):
                 action_weights[i] = 1.7976931348623157e+308
             
-            # print('action_weights are')
-            # print(action_weights) 
-
         #normalize the weights to create probabilities
         if(np.sum(action_weights) != 0):
             action_weights = action_weights / np.sum(action_weights)
@@ -394,9 +331,6 @@ class CollisionModule(Module):
 
         #set state_prime to be the selected next action
         self.action_prime = Action(sample)
-
-
-
 
 ##############################################################################
 #   End Collision Module Class
