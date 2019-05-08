@@ -234,6 +234,7 @@ class TargetSeekModule(Module):
     def visualize(self):
         super().visualize() #inherited class function
         #for each reward tier range
+        #TO DO: Make this only run for the first agent and then not run it again. Currently runns for all agents.
         for i in range(0,len(TargetSeekModule.ranges_squared)):
             
             #set marker size to be the diameter of the range
@@ -243,8 +244,9 @@ class TargetSeekModule(Module):
             plt.plot(TargetSeekModule.target[0],TargetSeekModule.target[1],'bo')
 
             #plot range circle, mkrsize is the radius.
-            circle = plt.Circle((TargetSeekModule.target[0],TargetSeekModule.target[1]), mkr_size, color='purple', alpha=0.01)
+            circle = plt.Circle((TargetSeekModule.target[0],TargetSeekModule.target[1]), mkr_size, color='purple', alpha=0.1)
             ax = plt.gca()
+            ax.set_aspect('equal')
             ax.add_artist(circle)
 
     #update the Q table for this module
@@ -279,15 +281,18 @@ class TargetSeekModule(Module):
         # tiered reward scheme
         #loop through each range to give the appropriate reward
         rewarded = False
-        for i in range(0,len(TargetSeekModule.ranges_squared)):
-            if dist_squared <= TargetSeekModule.ranges_squared[i]:
-                self.instant_reward = TargetSeekModule.rewards[i]
-                rewarded = True    
-                break
+        #for i in range(0,len(TargetSeekModule.ranges_squared)):
+        #    if dist_squared <= TargetSeekModule.ranges_squared[i]:
+        #        self.instant_reward = TargetSeekModule.rewards[i]
+        #        rewarded = True    
+        #        break
         
         #not in range, apply last reward (punishment)
         if rewarded == False:
-            self.instant_reward = TargetSeekModule.rewards[-1]
+            #self.instant_reward = TargetSeekModule.rewards[-1]
+            #self.instant_reward = TargetSeekModule.rewards[-1] - (1/10000)*(dist_squared)
+            self.instant_reward = 2-(1/10000)*(dist_squared)
+            #print(self.instant_reward)
 
     #select next action for this module with a soft max probability mass function
     def select_next_action(self):

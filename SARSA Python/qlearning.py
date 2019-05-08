@@ -32,7 +32,7 @@ class Qlearning:
         a_p_index = action_prime.value
 
         #update the Q table at the state,action index pair
-        print(self.q_table)
+        #print(self.q_table)
         self.q_table[s_index, a_index]  = Q_s[a_index] + alpha*(reward + gamma*Q_s_p[a_p_index] - Q_s[a_index])
 
     #fetch the index of the row in the Q table that corresponds
