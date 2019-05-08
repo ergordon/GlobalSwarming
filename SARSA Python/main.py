@@ -52,9 +52,9 @@ def ReinitializeAgents(agents,bounds):
 ##############################################################################
 
 
-num_agents = 2 #number of agents to simulate
+num_agents = 5 #number of agents to simulate
 
-num_episodes = 50 #number of times to run the training scenario
+num_episodes = 200 #number of times to run the training scenario
 episode_length = 100 #number of timesteps in each traning scenario
 
 #bounds to initialize the agents inside of
@@ -66,7 +66,7 @@ init_space = [[0,10],
 search_space = [[-50,50],
                 [-50,50]]
 
-visualize = False    #whether to show a plot animation of the agent positions
+visualize = True    #whether to show a plot animation of the agent positions
 
 agent_rewards = np.array ([])   # matrix containing total reward values for each agent for each episode
 
@@ -163,12 +163,15 @@ for e in range(0,num_episodes):
             break
 
         for agnt in agents:
+
+            #select the next action (action_prime) for the agent to take 
+            agnt.select_next_action()
+
             for mod in agnt.modules:
-            
 
                 #TODO move this up a level. Will only select one action based on all modules
                 #select the next action (action_prime) for the agent to take 
-                mod.select_next_action()
+                # mod.select_next_action()
                 
                 #find what the state (state_prime) would be if that action were taken
                 mod.update_state_prime()
@@ -183,10 +186,13 @@ for e in range(0,num_episodes):
                 #update the Q table
                 mod.update_q()
 
+                #run additional functions specific to each module
+                #for example, the collision module uses this to track collisions with other agents 
+                mod.auxilariy_functions()
+
                 #prepare for next time step
                 mod.action = cp.copy(mod.action_prime)
                 mod.state  = np.copy(mod.state_prime)
-
  
         #plotting for visualization
         if(visualize):
@@ -227,6 +233,22 @@ print('training complete')
 # with open('outfile.txt') as f:
 #     for line in mat:
 #         np.savetxt(f, line, fmt='%.2f')
+
+
+
+# #average and save the Q tables for each agent
+# for i in range(0,len(agents[0].modules)):
+#     q_table = np.array([])
+#     q_states = np.array([])
+#     number_experienced = np.array([])
+
+#     for j in range(0,num_agents):
+#         for k in range(0, agents[j].modules[i].Q.q_states):
+#             working_state = agents[j].modules[i].Q.q_states[k]
+#             if(any(np.equal(q_states,working_state).all(1))):
+
+
+
 
 #store the iterations and total rewards for each agent for each episode
 iterations = np.arange(num_episodes)

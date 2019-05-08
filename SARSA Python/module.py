@@ -40,9 +40,20 @@ class Module:
         self.parent_agent.add_total_reward(reward)
 
     #method for implementing visualization of the module
-    #implement should be done in inherited class
+    #implement should be done in derived class
     def visualize(self):
         pass
+
+    #method for implementing additional functionality for the module
+    #will be called once per iteration for each module for each agent
+    #implement should be done in derived class
+    def auxilariy_functions(self):
+        pass
+
+    #get a set of action weights for this module to be used in conjuntion with those of other modules 
+    #with the purpose of selecting a single action for the agent to perform 
+    def get_action_weights(self):
+        sys.exit('get_action_weights not implemented for this module. This function must be implemented for each module in the derived class')
 
 ##############################################################################
 #   Module Base Class
@@ -52,7 +63,7 @@ class Module:
 #   Begin Cohesion Module Class
 ##############################################################################
 
-#module inherited from the base class.
+#module derived from the base class.
 #make the agents swarm together
 class CohesionModule(Module):
 
@@ -141,9 +152,9 @@ class CohesionModule(Module):
         #continuous reward scheme
         self.instant_reward = 2 - .1*dist_squared
 
-
-    #select next action for this module with a softmax porabability mass function
-    def select_next_action(self):
+    #get a set of action weights for this module to be used in conjuntion with those of other modules 
+    #with the purpose of selecting a single action for the agent to perform 
+    def get_action_weights(self):
         
         #create a set of probabilities for each action
         action_weights = np.zeros(len(Action))
@@ -176,6 +187,48 @@ class CohesionModule(Module):
         #normalize the weights to create probabilities
         if(np.sum(action_weights) != 0):
             action_weights = action_weights / np.sum(action_weights)
+        else:
+            action_weights = np.ones(len(Action))/len(Action)
+
+        return action_weights
+
+
+    #select next action for this module with a softmax porabability mass function
+    def select_next_action(self):
+        
+        #create a set of weights for each action
+        action_weights = np.zeros(len(Action))
+        
+        #for each possible agent action
+        for i in range (0,len(Action)):
+            #get the appropiate Q value Q table row corresponding to the current state 
+            #and the action being iterated over
+            Qrow = self.Q.fetch_row_by_state(self.state) 
+            Qval = Qrow[i]
+
+            #exploitation vs exploration constant
+            #big T encourages exploration
+            #small T encourages exploitation
+            T = 1
+            #linearly change T to decrease exploration and increase exploitation over time
+            curr_time = time.time()
+            if(curr_time - self.init_time < self.exploitation_rise_time):
+                T = 1000.0 - (1000.0-0.1)*(curr_time - self.init_time)/self.exploitation_rise_time
+            else:
+                T = 0.1
+
+            #calculate the weight for this action
+            action_weights[i] = np.exp(Qval/T)
+            
+            #set the weight to the max float size in case it is beyond pythons max float size
+            if(action_weights[i] == float('inf')):
+                action_weights[i] = 1.7976931348623157e+308
+
+        #normalize the weights to create probabilities
+        if(np.sum(action_weights) != 0):
+            action_weights = action_weights / np.sum(action_weights)
+        else:
+            action_weights = np.ones(len(Action))/len(Action)
 
         #use a discrete random variable distribution to select the next action
         x=list(map(int,Action))
@@ -194,7 +247,7 @@ class CohesionModule(Module):
 #   Begin Collision Module Class
 ##############################################################################
 
-#module inherited from the base class.
+#module derived from the base class.
 #make the agents swarm together
 class CollisionModule(Module):
 
@@ -214,14 +267,20 @@ class CollisionModule(Module):
         self.action_prime = Action.STAY     #safest not to do anyting for first action
         self.gamma = 0.0                   #discount factor. keep in range [0,1]. can be tuned to affect Q learning
 
-
+        self.collision_count = 0        #number of times this module has recorded a collision (with another agent) for this agent
     
     #visualization for this module. 
     # draw a transparent circle for each tracked agent for each reward range 
     def visualize(self):
         super().visualize() #inherited class function
         pass
-            
+
+    #for the collision module, this is used to check for and track collisions between agents. 
+    def auxilariy_functions(self):
+        super().auxilariy_functions() #inherited class function
+        for i in range(0,len(self.state_prime)):
+            if(np.array_equal(self.state_prime[i],np.array([0,0]))):
+                self.collision_count = self.collision_count + 1
 
     #add an agent to the list of agents to be tracked by this module
     def start_tracking(self,agt):
@@ -244,8 +303,6 @@ class CollisionModule(Module):
         #accessed through the Qlearning object
         for i in range(0,len(self.tracked_agents)):
             self.Q.update_q(self.state[i],self.state_prime[i],self.action,self.action_prime,self.alpha,self.gamma,self.instant_reward[i])
-
-
 
     #update the state that the agent is currently in
     #for this module, it is the the set of vectors pointing from the agent to each other agent in the swarm
@@ -284,6 +341,48 @@ class CollisionModule(Module):
     def update_total_reward(self):
         reward = sum(self.instant_reward)
         self.parent_agent.add_total_reward(reward)
+
+    #get a set of action weights for this module to be used in conjuntion with those of other modules 
+    #with the purpose of selecting a single action for the agent to perform 
+    def get_action_weights(self):
+
+        #create a set of weights for each action
+        action_weights = np.zeros(len(Action))
+        #sum the action tables for every tracked agent
+        for i in range (0,len(self.tracked_agents)):
+            action_weights = action_weights + self.Q.fetch_row_by_state(self.state[i])
+        
+        #for each possible agent action
+        for i in range (0,len(action_weights)):
+            #get the appropiate Q value Q table row corresponding to the current state 
+            #and the action being iterated over
+            Qval = action_weights[i]
+
+            #exploitation vs exploration constant
+            #big T encourages exploration
+            #small T encourages exploitation
+            T = 1
+            #linearly change T to decrease exploration and increase exploitation over time
+            curr_time = time.time()
+            if(curr_time - self.init_time < self.exploitation_rise_time):
+                T = 1000.0 - (1000.0-1)*(curr_time - self.init_time)/self.exploitation_rise_time
+            else:
+                T = 1
+
+            #calculate the weight for this action
+            action_weights[i] = np.exp(Qval/T)
+            
+            #set the weight to the max float size in case it is beyond pythons max float size
+            if(action_weights[i] == float('inf')):
+                action_weights[i] = 1.7976931348623157e+308
+            
+        #normalize the weights to create probabilities
+        if(np.sum(action_weights) != 0):
+            action_weights = action_weights / np.sum(action_weights)
+        else:
+            action_weights = np.ones(len(Action))/len(Action)
+
+        return action_weights
 
     #select next action for this module with a softmax porabability mass function
     def select_next_action(self):

@@ -1,6 +1,9 @@
 import action
 import numpy as np
 import module as module
+import sys
+import random
+from scipy.stats import rv_discrete
 
 ##############################################################################
 #   Agent class
@@ -9,15 +12,28 @@ import module as module
 #the objects that will be trained on and carry out the distributed policy 
 class Agent:
     
-    module_weights = [1] #these are the weights for each module. they should sum to 1
+    #these are the weights for each module. they should sum to 1. 
+    #If they don't, they will be scaled accordingly during initialization
+    #also, there should be a weight entry for each module
+    module_weights = [0.25,0.75] 
     
     #class constructor
     def __init__(self,pos):
         self.position = pos         #the positon of the agent
         self.total_reward = 0       #running reward received by the agent
         self.modules = []           #a list of modules that the agent carries out
-        # self.modules.append(module.CohesionModule(self)) #cohesion module makes the agents stay together as a swarm
+        self.modules.append(module.CohesionModule(self)) #cohesion module makes the agents stay together as a swarm
         self.modules.append(module.CollisionModule(self)) #collision module prevents the agents from hitting each other
+
+        #make sure there is a module weight for each module
+        if(len(self.modules) != len(self.module_weights)):
+            sys.exit('number of module weights and number of modules must be the same. Fix these definitions in the Agent class')
+
+        #make sure the module weight list sums to 1
+        if(sum(self.module_weights) != 1):
+            weight_sum = sum(self.module_weights)
+            for i in range(len(self.module_weights)):   
+                self.module_weights[i] = self.module_weights[i]/weight_sum
 
     #change the agent's position based on the action passed in
     def take_action(self,act):
@@ -37,9 +53,31 @@ class Agent:
     def add_total_reward(self,incremental_reward):
         self.total_reward = self.total_reward + incremental_reward
 
-    # #select the next action to preform based on a softmax of each module
-    # def select_next_action(self):
-    #     print("select the next action please!!!")
+    #select the next action to preform based on a softmax of each module
+    def select_next_action(self):
+        # print("selecting the next action!!!")
+        action_weights = np.zeros(len(action.Action))
+        for i in range(0,len(self.modules)):
+            action_weights = action_weights + self.module_weights[i]*self.modules[i].get_action_weights()
+
+        # print(action_weights)
+        #then select another action here.....
+         #normalize the weights to create probabilities
+        if(np.sum(action_weights) != 0):
+            action_weights = action_weights / np.sum(action_weights)
+        else:
+            action_weights = np.ones(len(action.Action))/len(action.Action)
+
+        #use a discrete random variable distribution to select the next action
+        x=list(map(int,action.Action))
+        px=action_weights
+        sample=rv_discrete(values=(x,px)).rvs(size=1)
+
+        #set state_prime to be the selected next action
+        action_prime = action.Action(sample) 
+
+        for mod in self.modules:
+            mod.action_prime = action_prime  
 
 ##############################################################################
 #   Agent Class
