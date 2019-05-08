@@ -224,7 +224,7 @@ class TargetSeekModule(Module):
         self.action = Action.STAY         # safest not to do anything for first action
         self.action_prime = Action.STAY   # safest not to do anything for first action
         self.gamma = 0.90                 # discount factor. keep in range [0,1]. can be tuned to affect Q learning
-        TargetSeekModule.target = target  # target location
+        self.target = target  # target location
     #visualization for this module. 
     # draw a transparent circle for each tracked agent for each reward range 
     def visualize(self):
@@ -237,10 +237,10 @@ class TargetSeekModule(Module):
             mkr_size = np.sqrt(TargetSeekModule.ranges_squared[i])
 
             #plot target
-            plt.plot(TargetSeekModule.target[0],TargetSeekModule.target[1],'bo')
+            plt.plot(self.target[0],self.target[1],'bo')
 
             #plot range circle, mkrsize is the radius.
-            circle = plt.Circle((TargetSeekModule.target[0],TargetSeekModule.target[1]), mkr_size, color='purple', alpha=0.1)
+            circle = plt.Circle((self.target[0],self.target[1]), mkr_size, color='purple', alpha=0.1)
             ax = plt.gca()
             ax.set_aspect('equal')
             ax.add_artist(circle)
@@ -254,7 +254,7 @@ class TargetSeekModule(Module):
     #for this module, it is the vector pointing from the agent to the target
     def update_state(self):
         #round to whole numbers for discretization
-        self.state = np.round(TargetSeekModule.target - self.parent_agent.position, 0) 
+        self.state = np.round(self.target - self.parent_agent.position, 0) 
         
 
     #update the state that agent is in. Store it in state_prime because it is called after 
@@ -263,7 +263,7 @@ class TargetSeekModule(Module):
     #TODO use the centroid of the agents within a defined range
     def update_state_prime(self): # CHECK THIS FUNCTION IF SWARM DOES NOT BEHAVE AS PLANNED
         #round to whole numbers for discretization
-        self.state_prime = np.round(TargetSeekModule.target - self.parent_agent.position, 0)
+        self.state_prime = np.round(self.target - self.parent_agent.position, 0)
     #determine the reward for executing the action (not prime) in the state (not prime)
     #action (not prime) brings agent from state (not prime) to state_prime, and reward is calculated based on state_prime
     def update_instant_reward(self):

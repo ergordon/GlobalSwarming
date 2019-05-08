@@ -156,6 +156,8 @@ for e in range(0,num_episodes):
 
 
         for agnt in agents:
+
+            
             for mod in agnt.modules:
                 
                 #select the next action (action_prime) for the agent to take 
