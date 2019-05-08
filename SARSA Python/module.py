@@ -291,7 +291,8 @@ class TargetSeekModule(Module):
         if rewarded == False:
             #self.instant_reward = TargetSeekModule.rewards[-1]
             #self.instant_reward = TargetSeekModule.rewards[-1] - (1/10000)*(dist_squared)
-            self.instant_reward = 2-(1/10000)*(dist_squared)
+            #self.instant_reward = 2-(1/10000)*(dist_squared) # Linear Distance Reward
+            self.instant_reward = 5-(10000/(dist_squared)) # Linear Distance Reward
             #print(self.instant_reward)
 
     #select next action for this module with a soft max probability mass function
