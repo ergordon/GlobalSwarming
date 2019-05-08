@@ -49,8 +49,8 @@ def ReinitializeAgents(agents,bounds):
 ##############################################################################
 
 
-num_agents = 5 #number of agents to simulate
-num_episodes = 2 #number of times to run the training scenario
+num_agents = 1 #number of agents to simulate
+num_episodes = 50 #number of times to run the training scenario
 episode_length = 200 #number of time steps in each training scenario
 
 #bounds to initialize the agents inside of
@@ -90,7 +90,6 @@ else:
     for i in range(0,num_agents):
         position = np.array([i,i], dtype='f')
         agents.append(Agent(position))
-        #print(agents[i].position)
 
     #initialize module parameters such as who each agent is tracking
     #TODO make it so the tracked agents are based on range and updated every iteration
@@ -178,7 +177,6 @@ for e in range(0,num_episodes):
                 #prepare for next time step
                 mod.action = mod.action_prime
                 mod.state  = mod.state_prime
-
  
         #plotting for visualization
         if(visualize):

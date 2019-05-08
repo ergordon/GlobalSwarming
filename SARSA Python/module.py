@@ -24,7 +24,6 @@ class Module:
         self.parent_agent = parent_agt #the agent that created and is storing this module instance
         self.tracked_agents = [] #list of agents being tracked by this module 
         self.instant_reward = [] #list of instantaneous rewards earned by the agent. 
-        
         self.alpha = 0.1 #learning rate. keep in range [0,1]. can be tuned to affect Q learning
 
     #add an agent to the list of agents to be tracked by this module
@@ -209,12 +208,9 @@ class TargetSeekModule(Module):
     rewards = [5,2,-1,-2] 
     #the discrete ranges at which the agent can collect rewards
     ranges_squared = [25,225,625]
-    #known target location
-    target = np.array([-20,25])
-
 
     #class constructor
-    def __init__(self,parent_agt):
+    def __init__(self,parent_agt,target):
         super().__init__(parent_agt) #inherited class initialization
         
         self.state = np.array([]) #the vector from the agent to the target
@@ -225,10 +221,10 @@ class TargetSeekModule(Module):
         #in seconds TODO change the name of this
         self.exploitation_rise_time = 220 #the amount of time over which we transition from exploration to exploitation 
 
-        self.action = Action.STAY          #safest not to do anything for first action
-        self.action_prime = Action.STAY     #safest not to do anything for first action
-        self.gamma = 0.90                   #discount factor. keep in range [0,1]. can be tuned to affect Q learning
-
+        self.action = Action.STAY         # safest not to do anything for first action
+        self.action_prime = Action.STAY   # safest not to do anything for first action
+        self.gamma = 0.90                 # discount factor. keep in range [0,1]. can be tuned to affect Q learning
+        TargetSeekModule.target = target  # target location
     #visualization for this module. 
     # draw a transparent circle for each tracked agent for each reward range 
     def visualize(self):
@@ -259,6 +255,7 @@ class TargetSeekModule(Module):
     def update_state(self):
         #round to whole numbers for discretization
         self.state = np.round(TargetSeekModule.target - self.parent_agent.position, 0) 
+        
 
     #update the state that agent is in. Store it in state_prime because it is called after 
     #executing an action and the Q object needs both the original state and the state after execution 
@@ -267,7 +264,6 @@ class TargetSeekModule(Module):
     def update_state_prime(self): # CHECK THIS FUNCTION IF SWARM DOES NOT BEHAVE AS PLANNED
         #round to whole numbers for discretization
         self.state_prime = np.round(TargetSeekModule.target - self.parent_agent.position, 0)
-
     #determine the reward for executing the action (not prime) in the state (not prime)
     #action (not prime) brings agent from state (not prime) to state_prime, and reward is calculated based on state_prime
     def update_instant_reward(self):
@@ -290,10 +286,11 @@ class TargetSeekModule(Module):
         #not in range, apply last reward (punishment)
         if rewarded == False:
             #self.instant_reward = TargetSeekModule.rewards[-1]
-            #self.instant_reward = TargetSeekModule.rewards[-1] - (1/10000)*(dist_squared)
-            #self.instant_reward = 2-(1/10000)*(dist_squared) # Linear Distance Reward
-            self.instant_reward = 5-(10000/(dist_squared)) # Linear Distance Reward
+            #self.instant_reward = TargetSeekModule.rewards[-1] - (1/10000)*(dist_squared) 
+            #self.instant_reward = 2-(1/10000)*(dist_squared) # Distance Only 2
+            self.instant_reward = -5*(dist_squared/(100+dist_squared)-.5) # Distance Only 3
             #print(self.instant_reward)
+           
 
     #select next action for this module with a soft max probability mass function
     def select_next_action(self):

@@ -9,11 +9,23 @@ import pickle
 import os.path
 import copy as cp
 
+import argparse
+
 ##############################################################################
-#   data 
+#   Argument Parser
+##############################################################################
+# EXAMPLE: python plot_data.py --file agent_rewards_DistanceOnly.pkl
+# construct the argument parser and parse the arguments
+ap = argparse.ArgumentParser()
+ap.add_argument("--file", type=str, default="agent_rewards.pkl", required=False,
+	help="file == Test result you want to read.")
+args = vars(ap.parse_args())
+
+##############################################################################
+#   Data 
 ##############################################################################
 
-agent_reward_filename = 'agent_rewards.pkl'
+agent_reward_filename = args["file"]
 agent_rewards = np.array ([])
 
 with open(agent_reward_filename, 'rb') as f:
