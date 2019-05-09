@@ -11,11 +11,11 @@ from scipy.stats import rv_discrete
 
 #the objects that will be trained on and carry out the distributed policy 
 class Agent:
-    
+
     #these are the weights for each module. they should sum to 1. 
     #If they don't, they will be scaled accordingly during initialization
     #also, there should be a weight entry for each module
-    module_weights = [0.25,0.75] 
+    module_weights = [1]#[0.25,0.75] 
     
     #class constructor
     def __init__(self,pos):
@@ -23,7 +23,7 @@ class Agent:
         self.total_reward = 0       #running reward received by the agent
         self.modules = []           #a list of modules that the agent carries out
         self.modules.append(module.CohesionModule(self)) #cohesion module makes the agents stay together as a swarm
-        self.modules.append(module.CollisionModule(self)) #collision module prevents the agents from hitting each other
+        # self.modules.append(module.CollisionModule(self)) #collision module prevents the agents from hitting each other
 
         #make sure there is a module weight for each module
         if(len(self.modules) != len(self.module_weights)):

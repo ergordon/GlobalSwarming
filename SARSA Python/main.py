@@ -51,10 +51,9 @@ def ReinitializeAgents(agents,bounds):
 #   Simulation Variables
 ##############################################################################
 
-
 num_agents = 5 #number of agents to simulate
 
-num_episodes = 200 #number of times to run the training scenario
+num_episodes = 100 #number of times to run the training scenario
 episode_length = 100 #number of timesteps in each traning scenario
 
 #bounds to initialize the agents inside of
@@ -66,9 +65,14 @@ init_space = [[0,10],
 search_space = [[-50,50],
                 [-50,50]]
 
-visualize = True    #whether to show a plot animation of the agent positions
+visualize = False    #whether to show a plot animation of the agent positions
 
 agent_rewards = np.array ([])   # matrix containing total reward values for each agent for each episode
+
+#TODO how to handle if both are set to true??? Right now, the training data will overwrite the agent qlearning data
+#should i just exit with an error?
+load_agents = False #whether to load the agents.pkl file (loads agents exactly as they upon completion of training)
+load_training_data = False #whether to load the agent training data (loads q tables and states into the modules that exist in the agent initialization function)
 
 ##############################################################################
 #   Simulation Variables
@@ -79,16 +83,22 @@ agent_rewards = np.array ([])   # matrix containing total reward values for each
 ##############################################################################
 print('initializing agents')
 
-agents = list() #list of agents
+#store the program start time so we can calculate how long it took for the code to execute
+start_time = time.time() 
 
+agents = list() #list of agents
+initialized = False
 #check if a file containing a list of agents already exits
-if(os.path.isfile('agents.pkl')):
-    #if so, load it
-    print("Q learining data found, loading it now")
-    #TODO handle if the desired number of agents is different from the number of agents saved to disk
-    with open('agents.pkl', 'rb') as f:
-        agents = pickle.load(f)
-else:
+if load_agents:
+    if os.path.isfile('agents.pkl'):
+        #if so, load it
+        print("Agent data found, loading it now")
+        #TODO handle if the desired number of agents is different from the number of agents saved to disk
+        with open('agents.pkl', 'rb') as f:
+            agents = pickle.load(f)
+        initialized = True
+
+if not initialized:
     #if not, initialize a set of agents from scratch
     #initialize agent positions
     for i in range(0,num_agents):
@@ -112,6 +122,26 @@ else:
         for m in range(0,len(agents[i].modules)):
             agents[i].modules[m].update_state()
             agents[i].modules[m].state_prime = np.copy(agents[i].modules[m].state)
+
+if load_training_data:
+    if os.path.isfile('training_data.pkl'):
+        #if so, load it
+        print("Q learning data found, loading it now")
+        with open('training_data.pkl', 'rb') as f:
+            [module_names, tables, states] = pickle.load(f)
+        
+        # for agnt in agents:
+        #     for mod in agnt.modules
+        #         agents[0].modules[i].__class__.__name__
+        
+        for h in range(0,len(module_names)):
+            for i in range(0,num_agents):
+                for j in range(0,len(agents[0].modules)):
+                    print('loading training data!!!')
+                    if agents[i].modules[j].__class__.__name__ == module_names[h]:
+                        agents[i].modules[j].Q.q_table = cp.copy(tables[h])
+                        agents[i].modules[j].Q.q_states = cp.copy(states[h])
+
 ##############################################################################
 #   Initialization
 ##############################################################################
@@ -221,6 +251,12 @@ for e in range(0,num_episodes):
 
 print('training complete')
 
+
+#store the program end time so we can calculate how long it took for the code to execute
+end_time = time.time() 
+print('Program execution time:')
+print(end_time-start_time)
+
 ##############################################################################
 #   main algorithm
 ##############################################################################
@@ -261,6 +297,7 @@ plt.close()
 for i in range(0,num_agents):
     plt.plot(iterations,agent_rewards[:,i])
 plt.show()
+
 
 
 

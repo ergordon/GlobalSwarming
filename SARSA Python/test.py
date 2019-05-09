@@ -73,40 +73,50 @@ import pickle
 # print('exp is')
 # print(np.exp(7600.21392))
 
-print("Q learining data found, loading it now")
-#TODO handle if the desired number of agents is different from the number of agents saved to disk
-with open('agents.pkl', 'rb') as f:
-    agents = pickle.load(f)
+q_states = np.array([[1,1],
+                    [1,2],
+                    [1,3],
+                    [1,4]])
 
-num_agents = len(agents)
+q_table = np.array([[1,1,1,1,1],
+                    [2,2,2,2,2],
+                    [3,3,3,3,3],
+                    [4,4,4,4,4]])
 
-#average and save the Q tables for each agent
-for i in range(0,len(agents[0].modules)):
-    q_table = np.array([])
-    q_states = np.array([])
-    number_experienced = np.array([])
+state = np.array([1,2])
 
-    for j in range(0,num_agents):
-        for k in range(0, agents[j].modules[i].Q.q_states.shape[0]):
-            working_state = agents[j].modules[i].Q.q_states[k]
-            if q_states.shape[0] != 0:
-                print('checking')
-                print(np.equal(q_states,[working_state]).all(1))
-                
+#TODO research a better (more efficeint) way of doing this
+index = -1
 
+if q_states.shape[0] != 0: #check for empty matrix
 
-            if not working_state.tolist() in q_states.tolist():
-                #state not yet added to our local list, add it now
-                if q_states.shape[0] != 0:
-                    q_states = np.vstack([q_states, working_state])
-                else:
-                    q_states = working_state
-            else:
-                #state already exists, add to the current q_table value
-                pass
-            
+    matches = np.equal(q_states,[state]).all(1).nonzero()
 
+    if matches[0].size == 0:
+        #state not in q states add it along with the row
+        empty_row = np.zeros(len(action.Action))
+        q_states = np.vstack([q_states, np.copy(state)])
+        q_table = np.vstack([q_table, empty_row])
+        
+        index = q_states.shape[0]-1
+    else:
+        #working state already in q states for this module, 
+        #sum the working q row with the corresponding entry in the q table for this module
+        #incerement the number of times this row has been updated
+        index = matches[0][0] 
+        
+else: 
+    #tables are empty, put ours in
+    q_table = np.zeros((1,len(action.Action)))
+    q_states = np.copy(state.reshape((1,state.shape[0])))
+    index = 0
 
-            # print(any(np.equal(q_states,working_state).all(1)))
-            # if not any(np.equal(q_states,working_state).all(1)):
-            #     print('not there!')
+print('index is:')
+print(index)
+print('table is:')
+print(q_table)
+print('states is:')
+print(q_states)
+
+print('row is')
+print(q_table[index])

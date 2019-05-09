@@ -85,7 +85,7 @@ class CohesionModule(Module):
         
         self.init_time = time.time() #store the time at which the agent was initialized
         #in seconds TODO change the name of this
-        self.exploitation_rise_time = 120 #the amount of time over which we tranistion from exploration to exploitation 
+        self.exploitation_rise_time = 12 #the amount of time over which we tranistion from exploration to exploitation 
 
         self.action = Action.STAY          #safest not to do anyting for first action
         self.action_prime = Action.STAY     #safest not to do anyting for first action
@@ -261,7 +261,7 @@ class CollisionModule(Module):
         
         self.init_time = time.time() #store the time at which the agent was initialized
         #in seconds TODO change the name of this
-        self.exploitation_rise_time = 120 #the amount of time over which we tranistion from exploration to exploitation 
+        self.exploitation_rise_time = 12 #the amount of time over which we tranistion from exploration to exploitation 
 
         self.action = Action.STAY          #safest not to do anyting for first action
         self.action_prime = Action.STAY     #safest not to do anyting for first action
