@@ -19,8 +19,8 @@ class Agent:
         #self.modules.append(module.CollisionModule(self))
         self.targets = np.array([-20,25])
         self.modules.append(module.TargetSeekModule(self,self.targets)) #target seeking module makes the agents go toward a target
-        self.targets = np.array([+20,-25])
-        self.modules.append(module.TargetSeekModule(self,self.targets)) #target seeking module makes the agents go toward a target
+        #self.targets = np.array([+20,-25])
+        #self.modules.append(module.TargetSeekModule(self,self.targets)) #target seeking module makes the agents go toward a target
     #change the agent's position based on the action passed in
     def take_action(self,act):
         step_size = 2

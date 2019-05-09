@@ -7,7 +7,17 @@ import time
 import sys
 import pickle
 import os.path
+import argparse
 
+##############################################################################
+#   Argument Parser
+##############################################################################
+# EXAMPLE: python plot_data.py --file agent_rewards_DistanceOnly.pkl
+# construct the argument parser and parse the arguments
+ap = argparse.ArgumentParser()
+ap.add_argument("--simName", type=str, default="SimulationResults", required=False,
+	help="simName == Name of Simulation or Test")
+args = vars(ap.parse_args())
 
 ##############################################################################
 #   Helper Functions
@@ -49,8 +59,8 @@ def ReinitializeAgents(agents,bounds):
 ##############################################################################
 
 
-num_agents = 1 #number of agents to simulate
-num_episodes = 50 #number of times to run the training scenario
+num_agents = 5 #number of agents to simulate
+num_episodes = 500 #number of times to run the training scenario
 episode_length = 200 #number of time steps in each training scenario
 
 #bounds to initialize the agents inside of
@@ -62,9 +72,18 @@ init_space = [[0,10],
 search_space = [[-50,50],
                 [-50,50]]
 
-visualize = True   #whether to show a plot animation of the agent positions
+visualize = False   #whether to show a plot animation of the agent positions
 
 agent_rewards = np.array ([])   # matrix containing total reward values for each agent for each episode
+
+## Make new Directories
+raw_path = os.getcwd()
+filename = str(args["simName"])
+path = filename
+try:  
+   os.mkdir(path)
+except OSError:
+    print("")
 
 ##############################################################################
 #   Simulation Variables
@@ -78,11 +97,11 @@ print('initializing agents')
 agents = list() #list of agents
 
 #check if a file containing a list of agents already exits
-if(os.path.isfile('agents.pkl')):
+if(os.path.isfile(filename+'/agents.pkl')):
     #if so, load it
     print("Q learning data found, loading it now")
     #TODO handle if the desired number of agents is different from the number of agents saved to disk
-    with open('agents.pkl', 'rb') as f:
+    with open(filename+'/agents.pkl', 'rb') as f:
         agents = pickle.load(f)
 else:
     #if not, initialize a set of agents from scratch
@@ -157,7 +176,7 @@ for e in range(0,num_episodes):
 
         for agnt in agents:
 
-            
+
             for mod in agnt.modules:
                 
                 #select the next action (action_prime) for the agent to take 
@@ -203,7 +222,7 @@ for e in range(0,num_episodes):
     ReinitializeAgents(agents,init_space)
 
     #save the trained agents to a file
-    agent_filename = 'agents.pkl'
+    agent_filename = filename+'/agents.pkl'
     with open(agent_filename,'wb') as f:
         pickle.dump(agents,f)
 
@@ -214,10 +233,15 @@ for e in range(0,num_episodes):
 ##############################################################################
 #   data 
 ##############################################################################
+timestr = time.strftime("%m%d-%H%M")
 
 #store the iterations and total rewards for each agent for each episode
 iterations = np.arange(num_episodes)
-agent_reward_filename = 'agent_rewards.pkl'
+if(os.path.isfile(filename+'/agent_rewards.pkl')):
+    agent_reward_filename = filename+'/agent_rewards'+timestr+'.pkl'
+else:
+    agent_reward_filename = filename+'/agent_rewards.pkl'
+
 with open(agent_reward_filename,'wb') as f:
     pickle.dump([iterations, agent_rewards],f)  
 
@@ -225,8 +249,16 @@ with open(agent_reward_filename,'wb') as f:
 plt.close()
 for i in range(0,num_agents):
     plt.plot(iterations,agent_rewards[:,i])
-plt.show()
+plt.xlabel("Iterations")
+plt.ylabel("Reward Value")
+plt.title('Iterations V. Reward')
 
+if(os.path.isfile(filename+'/IterationsVReward.jpeg')):
+    plt.savefig(os.path.join(filename, "IterationsVReward"+timestr+".jpeg") , orientation='landscape', quality=95)
+else:
+    plt.savefig(os.path.join(filename, "IterationsVReward.jpeg") , orientation='landscape', quality=95)
+
+plt.show()
 ##############################################################################
 #   data
 ##############################################################################

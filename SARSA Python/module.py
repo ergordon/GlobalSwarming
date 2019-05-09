@@ -11,6 +11,7 @@ import pickle
 
 import time
 import matplotlib.pyplot as plt
+import math
 ##############################################################################
 #   Module Base Class
 ##############################################################################
@@ -288,7 +289,13 @@ class TargetSeekModule(Module):
             #self.instant_reward = TargetSeekModule.rewards[-1]
             #self.instant_reward = TargetSeekModule.rewards[-1] - (1/10000)*(dist_squared) 
             #self.instant_reward = 2-(1/10000)*(dist_squared) # Distance Only 2
-            self.instant_reward = -5*(dist_squared/(100+dist_squared)-.5) # Distance Only 3
+            #self.instant_reward = -5*(dist_squared/(100+dist_squared)-.5) # Distance Only 3
+            
+            #self.instant_reward = -5 - dist_squared/100 #EQN1
+            #self.instant_reward = -5*((dist_squared/(100+dist_squared))-0.5) #EQN2
+            #self.instant_reward = -5*((dist_squared/(10+dist_squared))-0.5) #EQN3
+            self.instant_reward = (10**(100/(dist_squared+100)))-2 #EQN4
+            #self.instant_reward = -math.log(dist_squared + 10) + 5 #EQN5
             #print(self.instant_reward)
            
 

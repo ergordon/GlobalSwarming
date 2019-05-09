@@ -8,8 +8,8 @@ import sys
 import pickle
 import os.path
 import copy as cp
-
 import argparse
+import pandas as pd
 
 ##############################################################################
 #   Argument Parser
@@ -17,18 +17,18 @@ import argparse
 # EXAMPLE: python plot_data.py --file agent_rewards_DistanceOnly.pkl
 # construct the argument parser and parse the arguments
 ap = argparse.ArgumentParser()
-ap.add_argument("--file", type=str, default="agent_rewards.pkl", required=False,
-	help="file == Test result you want to read.")
+ap.add_argument("--simName", type=str, default="SimulationResults", required=False,
+	help="simName == Name of Simulation or Test")
 args = vars(ap.parse_args())
 
 ##############################################################################
 #   Data 
 ##############################################################################
 
-agent_reward_filename = args["file"]
+path = args["simName"]
 agent_rewards = np.array ([])
 
-with open(agent_reward_filename, 'rb') as f:
+with open(path+"/agent_rewards.pkl", 'rb') as f:
     agent_rewards = pickle.load(f)
 
 
@@ -62,12 +62,22 @@ f2 = plt.figure(2)
 plt.plot(iterations,max_reward,linestyle='--',color='grey')
 plt.plot(iterations,min_reward,linestyle='--',color='grey')
 plt.plot(iterations,avg_reward)
-
 plt.fill_between(iterations,max_reward,min_reward,color='blue',alpha='0.05')
 
+f3 = plt.figure(3)
+span = 20;
+rolling_min = pd.Series(min_reward).rolling(window=span).mean()
+rolling_max = pd.Series(max_reward).rolling(window=span).mean()
+rolling_avg = pd.Series(avg_reward).rolling(window=span).mean()
 
+plt.plot(iterations,rolling_min,linestyle='--',color='grey')
+plt.plot(iterations,rolling_max,linestyle='--',color='grey')
+plt.plot(iterations,rolling_avg)
+plt.fill_between(iterations,rolling_max,rolling_min,color='blue',alpha='0.05')
+
+f2.savefig(os.path.join(path, "AvgMaxMin_Reward.jpeg") , orientation='landscape', quality=95)
+f3.savefig(os.path.join(path, "RollingAvgMaxMin_Reward.jpeg") , orientation='landscape', quality=95)
 plt.show()
-
 
 
 ##############################################################################
