@@ -38,8 +38,10 @@ def checkInBounds(position,bounds):
 #reset the agents to initial conditions (except for the Q states and tables)
 def ReinitializeAgents(agents,bounds):
     #reintizilize target
-    Simulation.targets = np.array([random.randint(-50, 50),random.randint(-50, 50)])
-
+    search_space = Simulation.search_space
+    #Simulation.targets = np.array([random.randint(-50, 50),random.randint(-50, 50)])
+    Simulation.targets = np.array([random.randint(search_space[0][0], search_space[0][1]),
+                        random.randint(search_space[1][0], search_space[1][1])])
     #initialize agent parameters
     for i in range(0,len(agents)):
         #TODO make this initial position randomized
