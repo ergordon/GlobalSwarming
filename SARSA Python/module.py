@@ -1,4 +1,5 @@
 import numpy as np
+from simulation import Simulation
 from qlearning import Qlearning
 
 from action import Action
@@ -12,6 +13,7 @@ import pickle
 import time
 import matplotlib.pyplot as plt
 import math
+
 ##############################################################################
 #   Module Base Class
 ##############################################################################
@@ -180,23 +182,6 @@ class CohesionModule(Module):
 ##############################################################################
 
 ##############################################################################
-#   Begin Collision Module Class
-##############################################################################
-
-#module to prevent agents from hitting each other
-class CollisionModule(Module):
-    
-    gamma = 0
-
-    def __init__(self):
-        super().__init__()
-        #print(CollisionModule.gamma)
-
-##############################################################################
-#   End Collision Module Class
-##############################################################################
-
-##############################################################################
 #   Begin Target Seek Module Class
 ##############################################################################
 
@@ -211,7 +196,7 @@ class TargetSeekModule(Module):
     ranges_squared = [25,225,625]
 
     #class constructor
-    def __init__(self,parent_agt,target):
+    def __init__(self,parent_agt):
         super().__init__(parent_agt) #inherited class initialization
         
         self.state = np.array([]) #the vector from the agent to the target
@@ -220,16 +205,18 @@ class TargetSeekModule(Module):
         
         self.init_time = time.time() #store the time at which the agent was initialized
         #in seconds TODO change the name of this
-        self.exploitation_rise_time = 220 #the amount of time over which we transition from exploration to exploitation 
+        self.exploitation_rise_time = Simulation.exploitation_rise_time #the amount of time over which we transition from exploration to exploitation 
 
         self.action = Action.STAY         # safest not to do anything for first action
         self.action_prime = Action.STAY   # safest not to do anything for first action
         self.gamma = 0.90                 # discount factor. keep in range [0,1]. can be tuned to affect Q learning
-        self.target = target  # target location
+        self.target = Simulation.targets  # target location
     #visualization for this module. 
     # draw a transparent circle for each tracked agent for each reward range 
     def visualize(self):
         super().visualize() #inherited class function
+        self.target = Simulation.targets  # Retrieve updated target coordinates
+
         #for each reward tier range
         #TO DO: Make this only run for the first agent and then not run it again. Currently runns for all agents.
         for i in range(0,len(TargetSeekModule.ranges_squared)):
@@ -278,24 +265,20 @@ class TargetSeekModule(Module):
         # tiered reward scheme
         #loop through each range to give the appropriate reward
         rewarded = False
-        #for i in range(0,len(TargetSeekModule.ranges_squared)):
-        #    if dist_squared <= TargetSeekModule.ranges_squared[i]:
-        #        self.instant_reward = TargetSeekModule.rewards[i]
-        #        rewarded = True    
-        #        break
+        for i in range(0,len(TargetSeekModule.ranges_squared)):
+            if dist_squared <= TargetSeekModule.ranges_squared[i]:
+                self.instant_reward = TargetSeekModule.rewards[i]
+                rewarded = True    
+                break
         
         #not in range, apply last reward (punishment)
         if rewarded == False:
             #self.instant_reward = TargetSeekModule.rewards[-1]
-            #self.instant_reward = TargetSeekModule.rewards[-1] - (1/10000)*(dist_squared) 
-            #self.instant_reward = 2-(1/10000)*(dist_squared) # Distance Only 2
-            #self.instant_reward = -5*(dist_squared/(100+dist_squared)-.5) # Distance Only 3
-            
             #self.instant_reward = -5 - dist_squared/100 #EQN1
             #self.instant_reward = -5*((dist_squared/(100+dist_squared))-0.5) #EQN2
             #self.instant_reward = -5*((dist_squared/(10+dist_squared))-0.5) #EQN3
-            self.instant_reward = (10**(100/(dist_squared+100)))-2 #EQN4
-            #self.instant_reward = -math.log(dist_squared + 10) + 5 #EQN5
+            #self.instant_reward = (10**(100/(dist_squared+100)))-2 #EQN4
+            self.instant_reward = -math.log(dist_squared + 10) + 5 #EQN5
             #print(self.instant_reward)
            
 
@@ -339,7 +322,6 @@ class TargetSeekModule(Module):
 
         #set state_prime to be the selected next action
         self.action_prime = Action(sample)
-
 
 ##############################################################################
 #   End Target Seek Module Class

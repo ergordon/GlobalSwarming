@@ -1,4 +1,5 @@
 from agent import Agent
+from simulation import Simulation
 import numpy as np
 from action import Action
 import matplotlib.pyplot as plt
@@ -8,6 +9,7 @@ import sys
 import pickle
 import os.path
 import argparse
+import random
 
 ##############################################################################
 #   Argument Parser
@@ -35,10 +37,14 @@ def checkInBounds(position,bounds):
 #TODO actually use bounds
 #reset the agents to initial conditions (except for the Q states and tables)
 def ReinitializeAgents(agents,bounds):
+    #reintizilize target
+    Simulation.targets = np.array([random.randint(-50, 50),random.randint(-50, 50)])
+
     #initialize agent parameters
     for i in range(0,len(agents)):
         #TODO make this initial position randomized
         agents[i].position = np.array([2*i,2*i], dtype='f')
+        #np.random.rand(1,2)
         agents[i].total_reward = 0
         
     #initialize module parameters
@@ -59,20 +65,12 @@ def ReinitializeAgents(agents,bounds):
 ##############################################################################
 
 
-num_agents = 5 #number of agents to simulate
-num_episodes = 500 #number of times to run the training scenario
-episode_length = 200 #number of time steps in each training scenario
-
-#bounds to initialize the agents inside of
-init_space = [[0,10],
-             [0,10]]
-
-#bounds to simulate the agents within
-#exiting these bounds will end the episode immediately
-search_space = [[-50,50],
-                [-50,50]]
-
-visualize = False   #whether to show a plot animation of the agent positions
+num_agents = Simulation.num_agents #number of agents to simulate
+num_episodes = Simulation.num_episodes #number of times to run the training scenario
+episode_length = Simulation.episode_length #number of time steps in each training scenario
+init_space = Simulation.init_space #bounds to initialize the agents inside of
+search_space = Simulation.search_space #bounds to simulate the agents within
+visualize = Simulation.visualize   #whether to show a plot animation of the agent positions
 
 agent_rewards = np.array ([])   # matrix containing total reward values for each agent for each episode
 
