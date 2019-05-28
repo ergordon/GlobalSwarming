@@ -53,7 +53,7 @@ def ReinitializeAgents(agents,bounds):
 
 num_agents = 5 #number of agents to simulate
 
-num_episodes = 100 #number of times to run the training scenario
+num_episodes = 1000 #number of times to run the training scenario
 episode_length = 100 #number of timesteps in each traning scenario
 
 #bounds to initialize the agents inside of
@@ -65,7 +65,7 @@ init_space = [[0,10],
 search_space = [[-50,50],
                 [-50,50]]
 
-visualize = False    #whether to show a plot animation of the agent positions
+visualize = True    #whether to show a plot animation of the agent positions
 
 agent_rewards = np.array ([])   # matrix containing total reward values for each agent for each episode
 

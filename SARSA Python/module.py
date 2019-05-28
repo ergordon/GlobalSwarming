@@ -434,3 +434,196 @@ class CollisionModule(Module):
 ##############################################################################
 #   End Collision Module Class
 ##############################################################################
+
+##############################################################################
+#   Begin Boundary Module Class
+##############################################################################
+
+#module derived from the base class.
+#keep the agents within the boundaries of the search space
+class BoundaryModule(Module):
+
+    #class constructor
+    def __init__(self,parent_agt):
+        super().__init__(parent_agt) #inherited class initialization
+        
+        self.state = np.array([])   #the perpendicular distance from the agent to each wall. Ordering is [+x,-x,+y,-y] (append [+z,-z] for 3D case) 
+        self.state_prime = np.array([]) #same as state but for the next step. used for qlearning before assigning to state
+        self.Q = Qlearning()    #define a Qleaning object for each module instance        
+        
+        self.init_time = time.time() #store the time at which the agent was initialized
+        #in seconds TODO change the name of this
+        self.exploitation_rise_time = 12 #the amount of time over which we tranistion from exploration to exploitation 
+
+        self.action = Action.STAY          #safest not to do anyting for first action
+        self.action_prime = Action.STAY     #safest not to do anyting for first action
+        self.gamma = 0.0                   #discount factor. keep in range [0,1]. can be tuned to affect Q learning
+
+        self.collision_count = 0        #number of times this module has recorded a collision (with the boundary) for this agent
+    
+    #visualization for this module. 
+    # draw a transparent circle for each tracked agent for each reward range 
+    def visualize(self):
+        super().visualize() #inherited class function
+        pass
+
+    #for the collision module, this is used to check for and track collisions between agents. 
+    def auxilariy_functions(self):
+        super().auxilariy_functions() #inherited class function
+        for i in range(0,len(self.state_prime)):
+            if(np.array_equal(self.state_prime[i],np.array([0,0]))):
+                self.collision_count = self.collision_count + 1
+
+    #add an agent to the list of agents to be tracked by this module
+    def start_tracking(self,agt):
+        #super().start_tracking(agt) #make sure this works correctly
+        #first check if the agent is already being tracked
+        if agt not in self.tracked_agents:
+            if(len(self.tracked_agents) != 0):
+                self.state = np.vstack([self.state,[0,0]])
+                self.state_prime = np.vstack([self.state_prime,[0,0]])
+                self.instant_reward = np.vstack([self.instant_reward,[0]])
+            else:
+                self.state = np.zeros((1,2))
+                self.state_prime = np.zeros((1,2))
+                self.instant_reward = np.zeros((1,1))        
+        
+        super().start_tracking(agt) 
+
+    #update the Q table for this module
+    def update_q(self):
+        #accessed through the Qlearning object
+        for i in range(0,len(self.tracked_agents)):
+            self.Q.update_q(self.state[i],self.state_prime[i],self.action,self.action_prime,self.alpha,self.gamma,self.instant_reward[i])
+
+    #update the state that the agent is currently in
+    #for this module, it is the the set of vectors pointing from the agent to each other agent in the swarm
+    def update_state(self):
+        #each state is the vector from the parent agent to the tracked agent
+        for i in range(0,len(self.tracked_agents)):   
+            #round to whole numbers for discretization
+            self.state[i] = np.round(np.array(self.tracked_agents[i].position) - np.array(self.parent_agent.position),0)
+
+    #update the state that agent is in. Store it in state_prime because it is called after 
+    #executing an action and the Q object needs both the orignal state and the state after exectuion 
+    #for this module, it is the set of vectors pointing from the agent to each other tracked agent
+    def update_state_prime(self):
+        for i in range(0,len(self.tracked_agents)):  
+            #round to whole numbers for discretization  
+            self.state_prime[i] = np.round(np.array(self.tracked_agents[i].position) - np.array(self.parent_agent.position),0)
+
+    #determine the reward for executing the action (not prime) in the state (not prime)
+    #action (not prime) brings agent from state (not prime) to state_prime, and reward is calulated based on state_prime
+    def update_instant_reward(self):
+        
+        for i in range(0,len(self.tracked_agents)):  
+            
+            #the state is the vector to the tracked agent
+            #use distance squared for range comparisons (sqrt is slow)
+            dist_squared = 0
+            for j in range(0,self.state_prime[i].shape[0]):
+                dist_squared = dist_squared + self.state_prime[i,j]**2
+
+            # continuous reward scheme that offeres severe punishements for being very close to other agents
+            # the function is always negative but is asymtotic to 0 as dist_squared approaches infinity
+            self.instant_reward[i] = 10.0*(dist_squared/(10.0+dist_squared)-1.0)
+
+
+    #update parent agents total reward based on the module's current instant reward
+    def update_total_reward(self):
+        reward = sum(self.instant_reward)
+        self.parent_agent.add_total_reward(reward)
+
+    #get a set of action weights for this module to be used in conjuntion with those of other modules 
+    #with the purpose of selecting a single action for the agent to perform 
+    def get_action_weights(self):
+
+        #create a set of weights for each action
+        action_weights = np.zeros(len(Action))
+        #sum the action tables for every tracked agent
+        for i in range (0,len(self.tracked_agents)):
+            action_weights = action_weights + self.Q.fetch_row_by_state(self.state[i])
+        
+        #for each possible agent action
+        for i in range (0,len(action_weights)):
+            #get the appropiate Q value Q table row corresponding to the current state 
+            #and the action being iterated over
+            Qval = action_weights[i]
+
+            #exploitation vs exploration constant
+            #big T encourages exploration
+            #small T encourages exploitation
+            T = 1
+            #linearly change T to decrease exploration and increase exploitation over time
+            curr_time = time.time()
+            if(curr_time - self.init_time < self.exploitation_rise_time):
+                T = 1000.0 - (1000.0-1)*(curr_time - self.init_time)/self.exploitation_rise_time
+            else:
+                T = 1
+
+            #calculate the weight for this action
+            action_weights[i] = np.exp(Qval/T)
+            
+            #set the weight to the max float size in case it is beyond pythons max float size
+            if(action_weights[i] == float('inf')):
+                action_weights[i] = 1.7976931348623157e+308
+            
+        #normalize the weights to create probabilities
+        if(np.sum(action_weights) != 0):
+            action_weights = action_weights / np.sum(action_weights)
+        else:
+            action_weights = np.ones(len(Action))/len(Action)
+
+        return action_weights
+
+    #select next action for this module with a softmax porabability mass function
+    def select_next_action(self):
+        
+        #create a set of probabilities for each action
+        action_weights = np.zeros(len(Action))
+        #sum the action tables for every tracked agent
+        for i in range (0,len(self.tracked_agents)):
+            action_weights = action_weights + self.Q.fetch_row_by_state(self.state[i])
+        
+        #for each possible agent action
+        for i in range (0,len(action_weights)):
+            #get the appropiate Q value Q table row corresponding to the current state 
+            #and the action being iterated over
+            Qval = action_weights[i]
+
+            #exploitation vs exploration constant
+            #big T encourages exploration
+            #small T encourages exploitation
+            T = 1
+            #linearly change T to decrease exploration and increase exploitation over time
+            curr_time = time.time()
+            if(curr_time - self.init_time < self.exploitation_rise_time):
+                T = 1000.0 - (1000.0-1)*(curr_time - self.init_time)/self.exploitation_rise_time
+            else:
+                T = 1
+
+            #calculate the weight for this action
+            action_weights[i] = np.exp(Qval/T)
+            
+            #set the weight to the max float size in case it is beyond pythons max float size
+            if(action_weights[i] == float('inf')):
+                action_weights[i] = 1.7976931348623157e+308
+            
+        #normalize the weights to create probabilities
+        if(np.sum(action_weights) != 0):
+            action_weights = action_weights / np.sum(action_weights)
+        else:
+            action_weights = np.ones(len(Action))/len(Action)
+
+        #use a discrete random variable distribution to select the next action
+        x=list(map(int,Action))
+        px=action_weights
+        sample=rv_discrete(values=(x,px)).rvs(size=1)
+
+        #set state_prime to be the selected next action
+        self.action_prime = Action(sample)
+
+##############################################################################
+#   End Boundary Module Class
+##############################################################################
+
