@@ -62,8 +62,10 @@ init_space = [[0,10],
 
 #bounds to simulate the agents within
 #exiting these bounds will end the episode immediately
-search_space = [[-50,50],
-                [-50,50]]
+search_space = Simulation.search_space
+
+# search_space = [[-50,50],
+#                 [-50,50]]
 
 visualize = True    #whether to show a plot animation of the agent positions
 
@@ -201,7 +203,7 @@ for e in range(0,num_episodes):
 
                 #TODO move this up a level. Will only select one action based on all modules
                 #select the next action (action_prime) for the agent to take 
-                # mod.select_next_action()
+                #mod.select_next_action()
                 
                 #find what the state (state_prime) would be if that action were taken
                 mod.update_state_prime()

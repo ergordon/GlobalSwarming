@@ -5,6 +5,8 @@ import action as action
 import matplotlib.pyplot as plt
 import pickle
 
+import simulation as sim
+
 # vec1 = np.array([[1,3,1],
 #                  [1,1,1]])
 # excerpt = vec1[0]
@@ -73,50 +75,56 @@ import pickle
 # print('exp is')
 # print(np.exp(7600.21392))
 
-q_states = np.array([[1,1],
-                    [1,2],
-                    [1,3],
-                    [1,4]])
+# q_states = np.array([[1,1],
+#                     [1,2],
+#                     [1,3],
+#                     [1,4]])
 
-q_table = np.array([[1,1,1,1,1],
-                    [2,2,2,2,2],
-                    [3,3,3,3,3],
-                    [4,4,4,4,4]])
+# q_table = np.array([[1,1,1,1,1],
+#                     [2,2,2,2,2],
+#                     [3,3,3,3,3],
+#                     [4,4,4,4,4]])
 
-state = np.array([1,2])
+# state = np.array([1,2])
 
-#TODO research a better (more efficeint) way of doing this
-index = -1
+# #TODO research a better (more efficeint) way of doing this
+# index = -1
 
-if q_states.shape[0] != 0: #check for empty matrix
+# if q_states.shape[0] != 0: #check for empty matrix
 
-    matches = np.equal(q_states,[state]).all(1).nonzero()
+#     matches = np.equal(q_states,[state]).all(1).nonzero()
 
-    if matches[0].size == 0:
-        #state not in q states add it along with the row
-        empty_row = np.zeros(len(action.Action))
-        q_states = np.vstack([q_states, np.copy(state)])
-        q_table = np.vstack([q_table, empty_row])
+#     if matches[0].size == 0:
+#         #state not in q states add it along with the row
+#         empty_row = np.zeros(len(action.Action))
+#         q_states = np.vstack([q_states, np.copy(state)])
+#         q_table = np.vstack([q_table, empty_row])
         
-        index = q_states.shape[0]-1
-    else:
-        #working state already in q states for this module, 
-        #sum the working q row with the corresponding entry in the q table for this module
-        #incerement the number of times this row has been updated
-        index = matches[0][0] 
+#         index = q_states.shape[0]-1
+#     else:
+#         #working state already in q states for this module, 
+#         #sum the working q row with the corresponding entry in the q table for this module
+#         #incerement the number of times this row has been updated
+#         index = matches[0][0] 
         
-else: 
-    #tables are empty, put ours in
-    q_table = np.zeros((1,len(action.Action)))
-    q_states = np.copy(state.reshape((1,state.shape[0])))
-    index = 0
+# else: 
+#     #tables are empty, put ours in
+#     q_table = np.zeros((1,len(action.Action)))
+#     q_states = np.copy(state.reshape((1,state.shape[0])))
+#     index = 0
 
-print('index is:')
-print(index)
-print('table is:')
-print(q_table)
-print('states is:')
-print(q_states)
+# print('index is:')
+# print(index)
+# print('table is:')
+# print(q_table)
+# print('states is:')
+# print(q_states)
 
-print('row is')
-print(q_table[index])
+# print('row is')
+# print(q_table[index])
+
+# ss = np.array([])
+
+# for i in range(0,)
+print('ss length')
+print(len(sim.Simulation.search_space))

@@ -12,6 +12,7 @@ import pickle
 import time
 
 import matplotlib.pyplot as plt
+import simulation as sim
 
 ##############################################################################
 #   Module Base Class
@@ -467,12 +468,18 @@ class BoundaryModule(Module):
         super().visualize() #inherited class function
         pass
 
-    #for the collision module, this is used to check for and track collisions between agents. 
+    #for the boundary module, this is used to check for and track collisions between the agent and the boundary. 
     def auxilariy_functions(self):
         super().auxilariy_functions() #inherited class function
-        for i in range(0,len(self.state_prime)):
-            if(np.array_equal(self.state_prime[i],np.array([0,0]))):
-                self.collision_count = self.collision_count + 1
+        
+        #put the search space into a single array to make for easier comparison with the agent's state
+        ss = np.array([])
+        for i in range(0,len(sim.Simulation.search_space)):
+            ss = np.hstack(ss, )
+        # # [+x,-x,+y,-y] (append [+z,-z] for 3D case)
+        # for i in range(0,len(self.state_prime)):
+        #     if(self.state_prime[i] >=  ):
+        #         self.collision_count = self.collision_count + 1
 
     #add an agent to the list of agents to be tracked by this module
     def start_tracking(self,agt):
