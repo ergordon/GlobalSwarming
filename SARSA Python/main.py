@@ -106,14 +106,13 @@ start_time = time.time()
 agents = list() #list of agents
 initialized = False
 #check if a file containing a list of agents already exits
-if load_agents:
-    if os.path.isfile(filename + 'agents.pkl'):
-        #if so, load it
-        print("Agent data found, loading it now")
-        #TODO handle if the desired number of agents is different from the number of agents saved to disk
-        with open(filename + 'agents.pkl', 'rb') as f:
-            agents = pickle.load(f)
-        initialized = True
+if os.path.isfile(filename + '/agents.pkl'):
+    #if so, load it
+    print("Agent data found, loading it now")
+    #TODO handle if the desired number of agents is different from the number of agents saved to disk
+    with open(filename + '/agents.pkl', 'rb') as f:
+        agents = pickle.load(f)
+    initialized = True
 
 if not initialized:
     #if not, initialize a set of agents from scratch
