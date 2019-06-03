@@ -24,11 +24,16 @@ class Simulation:
 
     visualize = False  #whether to show a plot animation of the agent positions
 
+    load_agents = False  #whether to load the agents.pkl file (loads agents exactly as they upon completion of training)
+    load_training_data = False #whether to load the agent training data (loads q tables and states into the modules that exist in the agent initialization function)
+
+
+
     #targets = np.array(np.random.random_integers(50, size=(1,2)))
     targets = np.array([random.randint(search_space[0][0], search_space[0][1]),
                         random.randint(search_space[1][0], search_space[1][1])])
 
-    print(targets)
+
 ##############################################################################
 #   Simulation Class
 ##############################################################################
