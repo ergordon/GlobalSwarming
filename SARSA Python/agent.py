@@ -1,7 +1,7 @@
 import action
 import numpy as np
 import module as module
-
+from simulation import Simulation
 ##############################################################################
 #   Agent class
 ##############################################################################
@@ -17,8 +17,9 @@ class Agent:
         self.modules = []           #a list of modules that the agent carries out
         #self.modules.append(module.CohesionModule(self)) #cohesion module makes the agents stay together as a swarm
         #self.modules.append(module.CollisionModule(self))
-        self.modules.append(module.TargetSeekModule(self)) #target seeking module makes the agents go toward a target
-        
+        #for i in range(0,Simulation.num_targets):
+        #    self.modules.append(module.TargetSeekModule(self,i)) #target seeking module makes the agents go toward a target
+        self.modules.append(module.TargetSeekModule(self)) #target seeking module makes the agents go toward a target 
     #change the agent's position based on the action passed in
     def take_action(self,act):
         step_size = 2

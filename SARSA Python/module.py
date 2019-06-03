@@ -192,9 +192,10 @@ class TargetSeekModule(Module):
     # for being within the range specified by the first entry in ranges_squared
     #the last entry is the reward (punishment) for being out of range
     rewards = [5,2,-1,-2] 
+    #rewards = [10, -1]
     #the discrete ranges at which the agent can collect rewards
     ranges_squared = [25,225,625]
-
+    #ranges_squared = [25]
     #class constructor
     def __init__(self,parent_agt):
         super().__init__(parent_agt) #inherited class initialization
@@ -292,7 +293,7 @@ class TargetSeekModule(Module):
         for i in range (0,len(Action)):
             #get the appropriate Q value Q table row corresponding to the current state 
             #and the action being iterated over
-            Qrow = self.Q.fetch_row_by_state(self.state) 
+            Qrow = self.Q.fetch_row_by_state(self.state_prime) 
             Qval = Qrow[i]
 
             #exploitation vs exploration constant

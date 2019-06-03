@@ -180,10 +180,13 @@ for e in range(0,num_episodes):
             for mod in agnt.modules:
                 
                 #select the next action (action_prime) for the agent to take 
-                mod.select_next_action()
+                #mod.select_next_action()
                 
                 #find what the state (state_prime) would be if that action were taken
                 mod.update_state_prime()
+
+                #select the next action (action_prime) for the agent to take 
+                mod.select_next_action()
 
                 #determine the reward for executing the action (not prime) in the state (not prime)
                 #action (not prime) brings agent from state (not prime) to state_prime, and reward is calulated based on state_prime
