@@ -26,8 +26,8 @@ class Agent:
         self.modules = []           #a list of modules that the agent carries out
         
         # self.modules.append(module.CohesionModule(self)) #cohesion module makes the agents stay together as a swarm
-        # self.modules.append(module.CollisionModule(self)) #collision module prevents the agents from hitting each other
-        self.modules.append(module.BoundaryModule(self)) #boundary module prevents the agents from leaving the search space
+        self.modules.append(module.CollisionModule(self)) #collision module prevents the agents from hitting each other
+        # self.modules.append(module.BoundaryModule(self)) #boundary module prevents the agents from leaving the search space
 
         #make sure there is a module weight for each module
         if(len(self.modules) != len(self.module_weights)):

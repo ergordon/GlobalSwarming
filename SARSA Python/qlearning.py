@@ -15,7 +15,6 @@ class Qlearning:
         #store state->Q table association
         self.q_states = np.array([])
 
-
     #update the Q table and state array
     def update_q(self, state, state_prime, action, action_prime, alpha, gamma, reward):
         # TODO think about if i really want to do it this way...        
@@ -35,6 +34,12 @@ class Qlearning:
 
         #update the Q table at the state,action index pair
         self.q_table[s_index, a_index]  = Q_s[a_index] + alpha*(reward + gamma*Q_s_p[a_p_index] - Q_s[a_index])
+
+        # if(reward != 0):
+        #     print('state prime is')
+        #     print(state_prime)
+        #     print('Q row prime is')
+        #     print(Q_s_p)
 
     #fetch the index of the row in the Q table that corresponds
     #to a given state. If now row exist for the state, make one
@@ -96,6 +101,10 @@ class Qlearning:
         else: 
             #tables are empty, put ours in
             self.q_table = np.zeros((1,len(action.Action)))
+            # print('state is')
+            # print(state)
+            # print('state shape 0 is')
+            # print(state.shape[0])
             self.q_states = np.copy(state.reshape((1,state.shape[0])))
             index = 0
 

@@ -8,7 +8,7 @@ import sys
 import pickle
 import os.path
 import copy as cp
-
+from simulation import Simulation
 
 ##############################################################################
 #   Helper Functions
@@ -53,27 +53,22 @@ def ReinitializeAgents(agents,bounds):
 
 num_agents = 5 #number of agents to simulate
 
-num_episodes = 1000 #number of times to run the training scenario
+num_episodes = 200 #number of times to run the training scenario
 episode_length = 100 #number of timesteps in each traning scenario
 
 #bounds to initialize the agents inside of
+#[[x1,x2],
+#[y1,y2]]
 init_space = [[0,10],
              [0,10]]
 
-#bounds to simulate the agents within
-#exiting these bounds will end the episode immediately
-search_space = Simulation.search_space
-
-# search_space = [[-50,50],
-#                 [-50,50]]
-
 visualize = True    #whether to show a plot animation of the agent positions
 
-agent_rewards = np.array ([])   # matrix containing total reward values for each agent for each episode
+agent_rewards = np.array([])   # matrix containing total reward values for each agent for each episode
 
 #TODO how to handle if both are set to true??? Right now, the training data will overwrite the agent qlearning data
 #should i just exit with an error?
-load_agents = False #whether to load the agents.pkl file (loads agents exactly as they upon completion of training)
+load_agents = True  #whether to load the agents.pkl file (loads agents exactly as they upon completion of training)
 load_training_data = False #whether to load the agent training data (loads q tables and states into the modules that exist in the agent initialization function)
 
 ##############################################################################
@@ -155,7 +150,7 @@ if load_training_data:
 #plotting for visualization
 if(visualize):
     frame_rate = 10
-    axis_bounds = [search_space[0][0], search_space[0][1], search_space[1][0], search_space[1][1]]
+    axis_bounds = [Simulation.search_space[0][0], Simulation.search_space[0][1], Simulation.search_space[1][0], Simulation.search_space[1][1]]
     plt.axis(axis_bounds)
     plt.draw()
     plt.pause(1/frame_rate)
@@ -170,15 +165,34 @@ for e in range(0,num_episodes):
         agent_out_of_bounds = False
 
         for agnt in agents:
+            # near_bounds = False
+            # for i in range (0,len(Simulation.search_space)):
+            #     # if(self.instant_reward[i] != 0):
+            #     if(agnt.modules[0].state[i][0] <= 4.0):
+            #         near_bounds = True
+            #     if(agnt.modules[0].state[i][1] >= -4.0):
+            #         near_bounds = True
+                
+            # if(near_bounds):
+            #     print('position before action')
+            #     print(agnt.position)
+            #     print('action is')
+            #     print(agnt.modules[0].action)
+
             #take the action determined in the last step
             #update agent positions on plots
             #TODO use action across multiple modules
             agnt.take_action(agnt.modules[0].action)
 
+
+            # if(near_bounds):
+            #     print('position after action')
+            #     print(agnt.position)
+
             #check if any agent went out of search space.
             #terminate episode if so
-            if not (checkInBounds(agnt.position,search_space)):
-                # print("agent left search space, ending episode")
+            if not (checkInBounds(agnt.position,Simulation.search_space)):
+                print("agent left search space, ending episode")
                 agent_out_of_bounds = True
                 # instead, move agent back in bounds.
                 # agnt.position = np.array([0,0], dtype='f')
@@ -190,23 +204,34 @@ for e in range(0,num_episodes):
                 for mod in agnt.modules:
                     mod.visualize()
 
-        # criteria for ending the episode early.
-        if(agent_out_of_bounds):
-            break
+        
 
         for agnt in agents:
 
+            # near_bounds = False
+            # for i in range (0,len(Simulation.search_space)):
+            #     # if(self.instant_reward[i] != 0):
+            #     if(agnt.modules[0].state[i][0] <= 4.0):
+            #         near_bounds = True
+            #     if(agnt.modules[0].state[i][1] >= -4.0):
+            #         near_bounds = True
+
             #select the next action (action_prime) for the agent to take 
-            agnt.select_next_action()
+            # agnt.select_next_action()
 
             for mod in agnt.modules:
 
-                #TODO move this up a level. Will only select one action based on all modules
-                #select the next action (action_prime) for the agent to take 
-                #mod.select_next_action()
-                
+                # #TODO move this up a level. Will only select one action based on all modules
+                # #select the next action (action_prime) for the agent to take 
+                # mod.select_next_action()
+
                 #find what the state (state_prime) would be if that action were taken
                 mod.update_state_prime()
+
+                #TODO move this up a level. Will only select one action based on all modules
+                #select the next action (action_prime) for the agent to take 
+                mod.select_next_action()
+
 
                 #determine the reward for executing the action (not prime) in the state (not prime)
                 #action (not prime) brings agent from state (not prime) to state_prime, and reward is calulated based on state_prime
@@ -232,6 +257,10 @@ for e in range(0,num_episodes):
             plt.pause(1/frame_rate)
             plt.clf()
             plt.cla()
+
+        # criteria for ending the episode early.
+        if(agent_out_of_bounds):
+            break    
     
     #store the total reward for each agent at the end of each episode for algorithm performance analysis
     episode_rewards = np.zeros(num_agents) 

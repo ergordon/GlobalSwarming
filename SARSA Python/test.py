@@ -125,6 +125,31 @@ import simulation as sim
 
 # ss = np.array([])
 
-# for i in range(0,)
-print('ss length')
+#put the search space into a single array to make for easier comparison with the agent's state
+#resulting format is [x1, x2, y1, y2, ...] where 1 is the lower bound and 2 is the upper bound
+# ss = np.array([])
+# for i in range(0,len(sim.Simulation.search_space)):
+#     for j in range(0,len(sim.Simulation.search_space[i])):
+#         ss = np.hstack((ss, sim.Simulation.search_space[i][j]))
+
+# print('ss')
+# print(ss)
+
+
+# agt1 = agent.Agent([1,1])
+# agt2 = agent.Agent([2,2])
+# agt1.modules[0].start_tracking(agt2)
+# agt1.modules[0].update_state()
+
 print(len(sim.Simulation.search_space))
+state = np.array([0,0])
+state = np.vstack([state,[0,0]])
+state = np.vstack([state,[0,0]])
+state = np.vstack([state,[0,0]])
+
+print('state is')
+print(state)
+
+state = np.zeros((len(sim.Simulation.search_space),len(sim.Simulation.search_space[0])))
+print('state is')
+print(state)
