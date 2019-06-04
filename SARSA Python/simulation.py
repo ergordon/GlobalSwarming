@@ -9,7 +9,7 @@ import random
 class Simulation:
 
     num_agents = 1 #number of agents to simulate
-    num_episodes = 5000 #number of times to run the training scenario
+    num_episodes = 2000 #number of times to run the training scenario
     episode_length = 100 #number of time steps in each training scenario [iterations]
     exploitation_rise_time = 20 #the amount of time over which we transition from exploration to exploitation [seconds]
 
@@ -22,7 +22,7 @@ class Simulation:
     search_space = [[-50,50],
                     [-50,50]]
 
-    visualize = True  #whether to show a plot animation of the agent positions
+    visualize = False  #whether to show a plot animation of the agent positions
 
     #TODO how to handle if both are set to true??? Right now, the training data will overwrite the agent qlearning data
     #should i just exit with an error?
