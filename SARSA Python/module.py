@@ -717,11 +717,11 @@ class TargetSeekModule(Module):
     #rewards for being within (or out of) range. 1st entry is the reward 
     # for being within the range specified by the first entry in ranges_squared
     #the last entry is the reward (punishment) for being out of range
-    rewards = [5,2,-1,-2] 
-    #rewards = [10, -1]
+    #rewards = [10,5,3,-2] 
+    rewards = [10, -1]
     #the discrete ranges at which the agent can collect rewards
-    ranges_squared = [25,225,625]
-    #ranges_squared = [25]
+    #ranges_squared = [25,225,625]
+    ranges_squared = [225]
     #class constructor
     def __init__(self,parent_agt):
         super().__init__(parent_agt) #inherited class initialization
@@ -737,12 +737,11 @@ class TargetSeekModule(Module):
         self.action = Action.STAY         # safest not to do anything for first action
         self.action_prime = Action.STAY   # safest not to do anything for first action
         self.gamma = 0.90                 # discount factor. keep in range [0,1]. can be tuned to affect Q learning
-        self.target = Simulation.targets  # target location
+        #self.target = Simulation.targets  # target location
     #visualization for this module. 
     # draw a transparent circle for each tracked agent for each reward range 
     def visualize(self):
         super().visualize() #inherited class function
-        self.target = Simulation.targets  # Retrieve updated target coordinates
 
         #for each reward tier range
         #TO DO: Make this only run for the first agent and then not run it again. Currently runns for all agents.
@@ -752,10 +751,10 @@ class TargetSeekModule(Module):
             mkr_size = np.sqrt(TargetSeekModule.ranges_squared[i])
 
             #plot target
-            plt.plot(self.target[0],self.target[1],'bo')
+            plt.plot(Simulation.targets[0],Simulation.targets[1],'bo')
 
             #plot range circle, mkrsize is the radius.
-            circle = plt.Circle((self.target[0],self.target[1]), mkr_size, color='purple', alpha=0.1)
+            circle = plt.Circle((Simulation.targets[0],Simulation.targets[1]), mkr_size, color='purple', alpha=0.1)
             ax = plt.gca()
             ax.set_aspect('equal')
             ax.add_artist(circle)
@@ -769,7 +768,7 @@ class TargetSeekModule(Module):
     #for this module, it is the vector pointing from the agent to the target
     def update_state(self):
         #round to whole numbers for discretization
-        self.state = np.round(self.target - self.parent_agent.position, 0) 
+        self.state = np.round(Simulation.targets - self.parent_agent.position, 0) 
         
 
     #update the state that agent is in. Store it in state_prime because it is called after 
@@ -778,7 +777,7 @@ class TargetSeekModule(Module):
     #TODO use the centroid of the agents within a defined range
     def update_state_prime(self): # CHECK THIS FUNCTION IF SWARM DOES NOT BEHAVE AS PLANNED
         #round to whole numbers for discretization
-        self.state_prime = np.round(self.target - self.parent_agent.position, 0)
+        self.state_prime = np.round(Simulation.targets - self.parent_agent.position, 0)
     #determine the reward for executing the action (not prime) in the state (not prime)
     #action (not prime) brings agent from state (not prime) to state_prime, and reward is calculated based on state_prime
     def update_instant_reward(self):
@@ -806,7 +805,6 @@ class TargetSeekModule(Module):
             #self.instant_reward = -5*((dist_squared/(10+dist_squared))-0.5) #EQN3
             #self.instant_reward = (10**(100/(dist_squared+100)))-2 #EQN4
             self.instant_reward = -math.log(dist_squared + 10) + 5 #EQN5
-            #print(self.instant_reward)
            
 
     #select next action for this module with a soft max probability mass function
@@ -841,7 +839,9 @@ class TargetSeekModule(Module):
         #normalize the weights to create probabilities
         if(np.sum(action_weights) != 0):
             action_weights = action_weights / np.sum(action_weights)
-
+        else:
+            action_weights = np.ones(len(Action))/len(Action)
+        
         #use a discrete random variable distribution to select the next action
         x=list(map(int,Action))
         px=action_weights

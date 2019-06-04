@@ -112,9 +112,11 @@ if os.path.isfile(filename + '/agents.pkl'):
     #TODO handle if the desired number of agents is different from the number of agents saved to disk
     with open(filename + '/agents.pkl', 'rb') as f:
         agents = pickle.load(f)
+        print("Agent data loaded")
     initialized = True
 
 if not initialized:
+    print("BOOHOOHOO")
     #if not, initialize a set of agents from scratch
     #initialize agent positions
     for i in range(0,num_agents):
