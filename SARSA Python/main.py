@@ -41,9 +41,9 @@ def checkInBounds(position,bounds):
 def ReinitializeAgents(agents,bounds):
     #reintizilize target
     search_space = Simulation.search_space
-    Simulation.targets = np.array([-40,40])
-    # Simulation.targets = np.array([random.randint(search_space[0][0], search_space[0][1]),
-    #                     random.randint(search_space[1][0], search_space[1][1])])
+    #Simulation.targets = np.array([-40,40])
+    Simulation.targets = np.array([random.randint(search_space[0][0], search_space[0][1]),
+                         random.randint(search_space[1][0], search_space[1][1])])
     #initialize agent parameters
     for i in range(0,len(agents)):
         #TODO make this initial position randomized

@@ -687,11 +687,11 @@ class TargetSeekModule(Module):
     #rewards for being within (or out of) range. 1st entry is the reward 
     # for being within the range specified by the first entry in ranges_squared
     #the last entry is the reward (punishment) for being out of range
-    rewards = [10,5,3,-2] 
-    #rewards = [10, -1]
+    #rewards = [10,5,3,-2] 
+    rewards = [10, -1]
     #the discrete ranges at which the agent can collect rewards
     #ranges_squared = [25,225,625]
-    ranges_squared = [225]
+    ranges_squared = [25]
     #class constructor
     def __init__(self,parent_agt):
         super().__init__(parent_agt) #inherited class initialization
@@ -770,11 +770,7 @@ class TargetSeekModule(Module):
         #not in range, apply last reward (punishment)
         if rewarded == False:
             self.instant_reward = TargetSeekModule.rewards[-1]
-            #self.instant_reward = -5 - dist_squared/100 #EQN1
-            #self.instant_reward = -5*((dist_squared/(100+dist_squared))-0.5) #EQN2
-            #self.instant_reward = -5*((dist_squared/(10+dist_squared))-0.5) #EQN3
-            #self.instant_reward = (10**(100/(dist_squared+100)))-2 #EQN4
-            self.instant_reward = -math.log(dist_squared + 10) + 5 #EQN5
+            #self.instant_reward = -math.log(dist_squared + 10) + 5 #EQN5
            
 
     #select next action for this module with a soft max probability mass function
