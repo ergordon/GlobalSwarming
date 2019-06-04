@@ -19,8 +19,8 @@ class Simulation:
 
     #bounds to simulate the agents within
     #exiting these bounds will end the episode immediately
-    search_space = [[-20,20],
-                    [-20,20]]
+    search_space = [[-50,50],
+                    [-50,50]]
 
     visualize = True  #whether to show a plot animation of the agent positions
 
@@ -28,7 +28,7 @@ class Simulation:
     load_training_data = False #whether to load the agent training data (loads q tables and states into the modules that exist in the agent initialization function)
     
     #TODO think of better name for this
-    take_best_action = True #whether to select next actions based on highest Q table entry or use Q table values as probabilities for each action 
+    take_best_action = False #whether to select next actions based on highest Q table entry or use Q table values as probabilities for each action 
 
     targets = np.array([-40,40])
     # targets = np.array([random.randint(search_space[0][0], search_space[0][1]),

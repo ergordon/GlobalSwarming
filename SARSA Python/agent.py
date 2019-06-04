@@ -16,7 +16,7 @@ class Agent:
     #these are the weights for each module. they should sum to 1. 
     #If they don't, they will be scaled accordingly during initialization
     #also, there should be a weight entry for each module
-    module_weights = [.9,.1]#[0.25,0.75] 
+    module_weights = [.2,.8 ]#[0.25,0.75] 
     
 
     #class constructor
@@ -64,17 +64,17 @@ class Agent:
 
     #select the next action to preform based on a softmax of each module
     def select_next_action(self):
-        print("selecting the next action!!!")
+        # print("selecting the next action!!!")
         action_weights = np.zeros(len(Action))
         for i in range(0,len(self.modules)):
             action_weights = action_weights + self.module_weights[i]*self.modules[i].get_action_weights()
-            print('index')
-            print(i)
-            print('module weights')
-            print(self.modules[i].get_action_weights())
+            # print('index')
+            # print(i)
+            # print('module weights')
+            # print(self.modules[i].get_action_weights())
 
-        print('summed weights')
-        print(action_weights)
+        # print('summed weights')
+        # print(action_weights)
         #then select another action here.....
          #normalize the weights to create probabilities
         if(np.sum(action_weights) != 0):

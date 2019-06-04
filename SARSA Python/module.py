@@ -73,7 +73,7 @@ class CohesionModule(Module):
     #the last entry is the reward (punishment) for being out of range
     rewards = [1,-1] 
     #the discrete ranges at which the agent can collect rewards
-    ranges_squared = [81]
+    ranges_squared = [400]
 
 
     #class constructor
@@ -146,6 +146,27 @@ class CohesionModule(Module):
 
         #continuous reward scheme
         # self.instant_reward = 2 - .1*dist_squared
+
+
+    #visualization for this module. 
+    # draw a transparent circle around the centroid 
+    def visualize(self):
+        super().visualize() #inherited class function
+            
+        centroid = self.parent_agent.position
+        for i in range(0,len(self.tracked_agents)):
+            centroid = centroid + self.tracked_agents[i].position 
+        centroid = centroid / (len(self.tracked_agents)+1)
+        
+        #set marker size to be the diameter of the range
+        mkr_size = np.sqrt(CohesionModule.ranges_squared[-1])
+
+        #plot range circle, mkrsize is the radius.
+        circle = plt.Circle((centroid[0],centroid[1]), mkr_size, color='green', alpha=0.1/Simulation.num_agents)
+        ax = plt.gca()
+        ax.set_aspect('equal')
+        ax.add_artist(circle)
+
 
     #get a set of action weights for this module to be used in conjuntion with those of other modules 
     #with the purpose of selecting a single action for the agent to perform 
