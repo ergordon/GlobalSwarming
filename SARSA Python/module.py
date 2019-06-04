@@ -89,7 +89,7 @@ class CohesionModule(Module):
         
         self.init_time = time.time() #store the time at which the agent was initialized
         #in seconds TODO change the name of this
-        self.exploitation_rise_time = 12 #the amount of time over which we tranistion from exploration to exploitation 
+        # self.exploitation_rise_time = 12 #the amount of time over which we tranistion from exploration to exploitation 
 
         self.action = Action.STAY          #safest not to do anything for first action
         self.action_prime = Action.STAY     #safest not to do anything for first action
@@ -172,8 +172,8 @@ class CohesionModule(Module):
             T = 1
             #linearly change T to decrease exploration and increase exploitation over time
             curr_time = time.time()
-            if(curr_time - self.init_time < self.exploitation_rise_time):
-                T = 1000.0 - (1000.0-0.1)*(curr_time - self.init_time)/self.exploitation_rise_time
+            if(curr_time - self.init_time < Simulation.exploitation_rise_time):
+                T = 1000.0 - (1000.0-0.1)*(curr_time - self.init_time)/Simulation.exploitation_rise_time
             else:
                 T = 0.1
 
@@ -212,8 +212,8 @@ class CohesionModule(Module):
             T = 1
             #linearly change T to decrease exploration and increase exploitation over time
             curr_time = time.time()
-            if(curr_time - self.init_time < self.exploitation_rise_time):
-                T = 1000.0 - (1000.0-0.1)*(curr_time - self.init_time)/self.exploitation_rise_time
+            if(curr_time - self.init_time < Simulation.exploitation_rise_time):
+                T = 1000.0 - (1000.0-0.1)*(curr_time - self.init_time)/Simulation.exploitation_rise_time
             else:
                 T = 0.1
 
@@ -230,13 +230,22 @@ class CohesionModule(Module):
         else:
             action_weights = np.ones(len(Action))/len(Action)
 
-        #use a discrete random variable distribution to select the next action
-        x=list(map(int,Action))
-        px=action_weights
-        sample=rv_discrete(values=(x,px)).rvs(size=1)
-
         #set state_prime to be the selected next action
-        self.action_prime = Action(sample)
+        if(Simulation.take_best_action):
+            #take the action with the highest Q value
+            indices = np.argwhere(action_weights == np.amax(action_weights))
+            if(len(indices) == 1):
+                self.action_prime = Action(np.argmax(action_weights))
+            else:
+                #if multiple entries in the Q table row are tied for highest, randomly select one of them
+                index = random.randint(0,len(indices)-1)
+                self.action_prime = Action(indices[index])
+        else:
+            #use a discrete random variable distribution to select the next action
+            x=list(map(int,Action))
+            px=action_weights
+            sample=rv_discrete(values=(x,px)).rvs(size=1)
+            self.action_prime = Action(sample)
 
 
 ##############################################################################
@@ -261,7 +270,7 @@ class CollisionModule(Module):
         
         self.init_time = time.time() #store the time at which the agent was initialized
         #in seconds TODO change the name of this
-        self.exploitation_rise_time = 0 #the amount of time over which we tranistion from exploration to exploitation 
+        # self.exploitation_rise_time = 0 #the amount of time over which we tranistion from exploration to exploitation 
 
         self.action = Action.STAY          #safest not to do anyting for first action
         self.action_prime = Action.STAY     #safest not to do anyting for first action
@@ -379,8 +388,8 @@ class CollisionModule(Module):
             T = 1
             #linearly change T to decrease exploration and increase exploitation over time
             curr_time = time.time()
-            if(curr_time - self.init_time < self.exploitation_rise_time):
-                T = 1000.0 - (1000.0-1)*(curr_time - self.init_time)/self.exploitation_rise_time
+            if(curr_time - self.init_time < Simulation.exploitation_rise_time):
+                T = 1000.0 - (1000.0-1)*(curr_time - self.init_time)/Simulation.exploitation_rise_time
             else:
                 T = 1
 
@@ -420,8 +429,8 @@ class CollisionModule(Module):
             T = 1
             #linearly change T to decrease exploration and increase exploitation over time
             curr_time = time.time()
-            if(curr_time - self.init_time < self.exploitation_rise_time):
-                T = 1000.0 - (1000.0-1)*(curr_time - self.init_time)/self.exploitation_rise_time
+            if(curr_time - self.init_time < Simulation.exploitation_rise_time):
+                T = 1000.0 - (1000.0-1)*(curr_time - self.init_time)/Simulation.exploitation_rise_time
             else:
                 T = 1
 
@@ -438,13 +447,22 @@ class CollisionModule(Module):
         else:
             action_weights = np.ones(len(Action))/len(Action)
 
-        #use a discrete random variable distribution to select the next action
-        x=list(map(int,Action))
-        px=action_weights
-        sample=rv_discrete(values=(x,px)).rvs(size=1)
-
         #set state_prime to be the selected next action
-        self.action_prime = Action(sample)
+        if(Simulation.take_best_action):
+            #take the action with the highest Q value
+            indices = np.argwhere(action_weights == np.amax(action_weights))
+            if(len(indices) == 1):
+                self.action_prime = Action(np.argmax(action_weights))
+            else:
+                #if multiple entries in the Q table row are tied for highest, randomly select one of them
+                index = random.randint(0,len(indices)-1)
+                self.action_prime = Action(indices[index])
+        else:
+            #use a discrete random variable distribution to select the next action
+            x=list(map(int,Action))
+            px=action_weights
+            sample=rv_discrete(values=(x,px)).rvs(size=1)
+            self.action_prime = Action(sample)
 
 ##############################################################################
 #   End Collision Module Class
@@ -468,8 +486,6 @@ class BoundaryModule(Module):
              
         
         self.init_time = time.time() #store the time at which the agent was initialized
-        #in seconds TODO change the name of this
-        self.exploitation_rise_time = 30 #the amount of time over which we tranistion from exploration to exploitation 
 
         self.action = Action.STAY          #safest not to do anyting for first action
         self.action_prime = Action.STAY    #safest not to do anyting for first action
@@ -480,8 +496,6 @@ class BoundaryModule(Module):
         self.state = np.zeros((len(sim.Simulation.search_space),len(sim.Simulation.search_space[0])))
         self.state_prime = np.zeros((len(sim.Simulation.search_space),len(sim.Simulation.search_space[0])))
         self.instant_reward = np.zeros(len(sim.Simulation.search_space))
-
-        self.action_count = 0.0 #temp debugging variable
 
         for i in range(len(sim.Simulation.search_space)):
             self.Q.append(Qlearning())   
@@ -585,8 +599,8 @@ class BoundaryModule(Module):
             T = 1
             #linearly change T to decrease exploration and increase exploitation over time
             curr_time = time.time()
-            if(curr_time - self.init_time < self.exploitation_rise_time):
-                T = 1000.0 - (1000.0-1)*(curr_time - self.init_time)/self.exploitation_rise_time
+            if(curr_time - self.init_time < Simulation.exploitation_rise_time):
+                T = 1000.0 - (1000.0-1)*(curr_time - self.init_time)/Simulation.exploitation_rise_time
             else:
                 T = 1
 
@@ -607,43 +621,12 @@ class BoundaryModule(Module):
 
     #select next action for this module with a softmax porabability mass function
     def select_next_action(self):
-        
-        self.action_count = self.action_count + 1
-
-        near_bounds = False
-        # for i in range (0,len(sim.Simulation.search_space)):
-        #     # if(self.instant_reward[i] != 0):
-        #     if(self.state_prime[i][0] <= 4.0):
-        #         near_bounds = True
-        #     if(self.state_prime[i][1] >= -4.0):
-        #         near_bounds = True
-        #     # if(self.state[i][0] <= 4.0):
-        #     #     near_bounds = True
-        #     # if(self.state[i][1] >= -4.0):
-        #     #     near_bounds = True    
-
-
-        
-        if(near_bounds):
-            print('agent near boundary, selecting next action')
-            print('action number is')
-            print(self.action_count)
 
         #create a set of probabilities for each action
         action_weights = np.zeros(len(Action))
         #sum the action tables for every tracked agent
         for i in range (0,len(sim.Simulation.search_space)):
-            # action_weights = action_weights + self.Q[i].fetch_row_by_state(self.state[i]) #maybe all i need is to use state_prime here!!!
-            action_weights = action_weights + self.Q[i].fetch_row_by_state(self.state_prime[i]) #maybe all i need is to use state_prime here!!!
-            if(near_bounds):
-                print('index is')
-                print(i)
-                print('Q state prime is')
-                print(self.state_prime[i])
-                print('Q row prime is')
-                print(self.Q[i].fetch_row_by_state(self.state_prime[i]))
-        
-
+            action_weights = action_weights + self.Q[i].fetch_row_by_state(self.state_prime[i])
 
         #for each possible agent action
         for i in range (0,len(action_weights)):
@@ -657,8 +640,8 @@ class BoundaryModule(Module):
             T = 1
             #linearly change T to decrease exploration and increase exploitation over time
             curr_time = time.time()
-            if(curr_time - self.init_time < self.exploitation_rise_time):
-                T = 1000.0 - (1000.0-1)*(curr_time - self.init_time)/self.exploitation_rise_time
+            if(curr_time - self.init_time < Simulation.exploitation_rise_time):
+                T = 1000.0 - (1000.0-1)*(curr_time - self.init_time)/Simulation.exploitation_rise_time
             else:
                 T = 1
 
@@ -675,32 +658,22 @@ class BoundaryModule(Module):
         else:
             action_weights = np.ones(len(Action))/len(Action)
 
-        if(near_bounds):
-            print('action_weights')
-            print(action_weights)
-
-        #use a discrete random variable distribution to select the next action
-        x=list(map(int,Action))
-        px=action_weights
-        sample=rv_discrete(values=(x,px)).rvs(size=1)
-
         #set state_prime to be the selected next action
-        # self.action_prime = Action(sample)
-        
-        indices = np.argwhere(px == np.amax(px))
-        if(len(indices) == 1):
-            self.action_prime = Action(np.argmax(px))
+        if(Simulation.take_best_action):
+            #take the action with the highest Q value
+            indices = np.argwhere(action_weights == np.amax(action_weights))
+            if(len(indices) == 1):
+                self.action_prime = Action(np.argmax(action_weights))
+            else:
+                #if multiple entries in the Q table row are tied for highest, randomly select one of them
+                index = random.randint(0,len(indices)-1)
+                self.action_prime = Action(indices[index])
         else:
-            index = random.randint(0,len(indices)-1)
-            self.action_prime = Action(indices[index])
-
-        if(near_bounds):
-            print('indices are')
-            print(indices)
-
-        if(near_bounds):
-            print('action prime is')
-            print(self.action_prime)
+            #use a discrete random variable distribution to select the next action
+            x=list(map(int,Action))
+            px=action_weights
+            sample=rv_discrete(values=(x,px)).rvs(size=1)
+            self.action_prime = Action(sample)
 
 ##############################################################################
 #   End Boundary Module Class
@@ -717,7 +690,7 @@ class TargetSeekModule(Module):
     #rewards for being within (or out of) range. 1st entry is the reward 
     # for being within the range specified by the first entry in ranges_squared
     #the last entry is the reward (punishment) for being out of range
-    rewards = [5,2,-1,-2] 
+    rewards = [10,5,3,-2] 
     #rewards = [10, -1]
     #the discrete ranges at which the agent can collect rewards
     ranges_squared = [25,225,625]
@@ -731,18 +704,17 @@ class TargetSeekModule(Module):
         self.Q = Qlearning()    #define a Q-learning object for each module instance        
         
         self.init_time = time.time() #store the time at which the agent was initialized
-        #in seconds TODO change the name of this
-        self.exploitation_rise_time = Simulation.exploitation_rise_time #the amount of time over which we transition from exploration to exploitation 
-
+        
         self.action = Action.STAY         # safest not to do anything for first action
         self.action_prime = Action.STAY   # safest not to do anything for first action
-        self.gamma = 0.90                 # discount factor. keep in range [0,1]. can be tuned to affect Q learning
-        self.target = Simulation.targets  # target location
+        self.gamma = 0.9                 # discount factor. keep in range [0,1]. can be tuned to affect Q learning
+        # self.target = Simulation.targets  # target location
+
     #visualization for this module. 
     # draw a transparent circle for each tracked agent for each reward range 
     def visualize(self):
         super().visualize() #inherited class function
-        self.target = Simulation.targets  # Retrieve updated target coordinates
+        # self.target = Simulation.targets  # Retrieve updated target coordinates
 
         #for each reward tier range
         #TO DO: Make this only run for the first agent and then not run it again. Currently runns for all agents.
@@ -752,10 +724,10 @@ class TargetSeekModule(Module):
             mkr_size = np.sqrt(TargetSeekModule.ranges_squared[i])
 
             #plot target
-            plt.plot(self.target[0],self.target[1],'bo')
+            plt.plot(Simulation.targets[0],Simulation.targets[1],'bo')
 
             #plot range circle, mkrsize is the radius.
-            circle = plt.Circle((self.target[0],self.target[1]), mkr_size, color='purple', alpha=0.1)
+            circle = plt.Circle((Simulation.targets[0],Simulation.targets[1]), mkr_size, color='purple', alpha=0.1)
             ax = plt.gca()
             ax.set_aspect('equal')
             ax.add_artist(circle)
@@ -769,16 +741,17 @@ class TargetSeekModule(Module):
     #for this module, it is the vector pointing from the agent to the target
     def update_state(self):
         #round to whole numbers for discretization
-        self.state = np.round(self.target - self.parent_agent.position, 0) 
-        
-
+        self.state = np.round(Simulation.targets - self.parent_agent.position, 0) 
+    
     #update the state that agent is in. Store it in state_prime because it is called after 
     #executing an action and the Q object needs both the original state and the state after execution 
     #for this module, it is the vector pointing from the agent to the swarm centroid
     #TODO use the centroid of the agents within a defined range
-    def update_state_prime(self): # CHECK THIS FUNCTION IF SWARM DOES NOT BEHAVE AS PLANNED
+    def update_state_prime(self):
         #round to whole numbers for discretization
-        self.state_prime = np.round(self.target - self.parent_agent.position, 0)
+        self.state_prime = np.round(Simulation.targets - self.parent_agent.position, 0)
+
+
     #determine the reward for executing the action (not prime) in the state (not prime)
     #action (not prime) brings agent from state (not prime) to state_prime, and reward is calculated based on state_prime
     def update_instant_reward(self):
@@ -797,29 +770,39 @@ class TargetSeekModule(Module):
                 self.instant_reward = TargetSeekModule.rewards[i]
                 rewarded = True    
                 break
-        
+
         #not in range, apply last reward (punishment)
         if rewarded == False:
-            #self.instant_reward = TargetSeekModule.rewards[-1]
+            self.instant_reward = TargetSeekModule.rewards[-1]
             #self.instant_reward = -5 - dist_squared/100 #EQN1
             #self.instant_reward = -5*((dist_squared/(100+dist_squared))-0.5) #EQN2
             #self.instant_reward = -5*((dist_squared/(10+dist_squared))-0.5) #EQN3
             #self.instant_reward = (10**(100/(dist_squared+100)))-2 #EQN4
-            self.instant_reward = -math.log(dist_squared + 10) + 5 #EQN5
-            #print(self.instant_reward)
+            # self.instant_reward = -math.log(dist_squared + 10) + 5 #EQN5
+            # self.instant_reward = -10.0*(dist_squared/(10.0+dist_squared)-1.0)
+            # print('instant reward is')
+            # print(self.instant_reward)
            
 
     #select next action for this module with a soft max probability mass function
     def select_next_action(self):
         
+        # print('selecting next action')
+
         #create a set of probabilities for each action
         action_weights = np.zeros(len(Action))
         
+        Qrow = self.Q.fetch_row_by_state(self.state_prime) 
+        
+        # print('Q row is: ')
+        # print(Qrow)
+        # print('state prime is: ')
+        # print(self.state_prime)
+
         #for each possible agent action
         for i in range (0,len(Action)):
             #get the appropriate Q value Q table row corresponding to the current state 
             #and the action being iterated over
-            Qrow = self.Q.fetch_row_by_state(self.state_prime) 
             Qval = Qrow[i]
 
             #exploitation vs exploration constant
@@ -827,8 +810,8 @@ class TargetSeekModule(Module):
             #small T encourages exploitation
             #linearly change T to decrease exploration and increase exploitation over time
             curr_time = time.time()
-            if(curr_time - self.init_time < self.exploitation_rise_time):
-                T = 1000.0 - (1000.0-0.1)*(curr_time - self.init_time)/self.exploitation_rise_time
+            if(curr_time - self.init_time < Simulation.exploitation_rise_time):
+                T = 1000.0 - (1000.0-0.1)*(curr_time - self.init_time)/Simulation.exploitation_rise_time
             else:
                 T = 0.1
             #calculate the weight for this action
@@ -841,14 +824,31 @@ class TargetSeekModule(Module):
         #normalize the weights to create probabilities
         if(np.sum(action_weights) != 0):
             action_weights = action_weights / np.sum(action_weights)
+        else:
+            action_weights = np.ones(len(Action))/len(Action)
 
-        #use a discrete random variable distribution to select the next action
-        x=list(map(int,Action))
-        px=action_weights
-        sample=rv_discrete(values=(x,px)).rvs(size=1)
+        # print('action weights are: ')
+        # print(action_weights)
 
         #set state_prime to be the selected next action
-        self.action_prime = Action(sample)
+        if(Simulation.take_best_action):
+            #take the action with the highest Q value
+            indices = np.argwhere(action_weights == np.amax(action_weights))
+            if(len(indices) == 1):
+                self.action_prime = Action(np.argmax(action_weights))
+            else:
+                #if multiple entries in the Q table row are tied for highest, randomly select one of them
+                index = random.randint(0,len(indices)-1)
+                self.action_prime = Action(indices[index])
+        else:
+            #use a discrete random variable distribution to select the next action
+            x=list(map(int,Action))
+            px=action_weights
+            sample=rv_discrete(values=(x,px)).rvs(size=1)
+            self.action_prime = Action(sample)
+
+        # print('selected action is: ')
+        # print(self.action_prime)
 
 ##############################################################################
 #   End Target Seek Module Class
