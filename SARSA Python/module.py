@@ -14,9 +14,6 @@ import time
 import matplotlib.pyplot as plt
 import math
 
-import matplotlib.pyplot as plt
-import simulation as sim
-
 
 ##############################################################################
 #   Module Base Class
@@ -709,8 +706,8 @@ class TargetSeekModule(Module):
     rewards = [5,2,-1,-2] 
     #rewards = [10, -1]
     #the discrete ranges at which the agent can collect rewards
-    ranges_squared = [25,225,625]
-    #ranges_squared = [25]
+    #ranges_squared = [25,225,625]
+    ranges_squared = [25]
     #class constructor
     def __init__(self,parent_agt):
         super().__init__(parent_agt) #inherited class initialization
@@ -730,7 +727,6 @@ class TargetSeekModule(Module):
     # draw a transparent circle for each tracked agent for each reward range 
     def visualize(self):
         super().visualize() #inherited class function
-        # self.target = Simulation.targets  # Retrieve updated target coordinates
 
         #for each reward tier range
         #TO DO: Make this only run for the first agent and then not run it again. Currently runns for all agents.
@@ -792,14 +788,7 @@ class TargetSeekModule(Module):
         #not in range, apply last reward (punishment)
         if rewarded == False:
             self.instant_reward = TargetSeekModule.rewards[-1]
-            #self.instant_reward = -5 - dist_squared/100 #EQN1
-            #self.instant_reward = -5*((dist_squared/(100+dist_squared))-0.5) #EQN2
-            #self.instant_reward = -5*((dist_squared/(10+dist_squared))-0.5) #EQN3
-            #self.instant_reward = (10**(100/(dist_squared+100)))-2 #EQN4
-            # self.instant_reward = -math.log(dist_squared + 10) + 5 #EQN5
-            # self.instant_reward = -10.0*(dist_squared/(10.0+dist_squared)-1.0)
-            # print('instant reward is')
-            # print(self.instant_reward)
+            #self.instant_reward = -math.log(dist_squared + 10) + 5 #EQN5
            
 
     #get a set of action weights for this module to be used in conjuntion with those of other modules 

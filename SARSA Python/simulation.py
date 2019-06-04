@@ -19,13 +19,11 @@ class Simulation:
 
     #bounds to simulate the agents within
     #exiting these bounds will end the episode immediately
-    search_space = [[-50,50],
-                    [-50,50]]
+    search_space = [[-20,20],
+                    [-20,20]]
 
     visualize = True  #whether to show a plot animation of the agent positions
 
-    #TODO how to handle if both are set to true??? Right now, the training data will overwrite the agent qlearning data
-    #should i just exit with an error?
     load_agents = True  #whether to load the agents.pkl file (loads agents exactly as they upon completion of training)
     load_training_data = False #whether to load the agent training data (loads q tables and states into the modules that exist in the agent initialization function)
     

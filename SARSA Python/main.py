@@ -43,7 +43,7 @@ def ReinitializeAgents(agents,bounds):
     search_space = Simulation.search_space
     Simulation.targets = np.array([-40,40])
     # Simulation.targets = np.array([random.randint(search_space[0][0], search_space[0][1]),
-    #                     random.randint(search_space[1][0], search_space[1][1])])
+    #                      random.randint(search_space[1][0], search_space[1][1])])
     #initialize agent parameters
     for i in range(0,len(agents)):
         #TODO make this initial position randomized
@@ -103,6 +103,7 @@ if Simulation.load_agents:
         initialized = True
 
 if not initialized:
+    print("BOOHOOHOO")
     #if not, initialize a set of agents from scratch
     #initialize agent positions
     for i in range(0,Simulation.num_agents):
