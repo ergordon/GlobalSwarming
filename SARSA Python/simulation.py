@@ -27,6 +27,9 @@ class Simulation:
     load_agents = True  #whether to load the agents.pkl file (loads agents exactly as they upon completion of training)
     load_training_data = False #whether to load the agent training data (loads q tables and states into the modules that exist in the agent initialization function)
 
+    
+    #TODO think of better name for this
+    take_best_action = True #whether to select next actions based on highest Q table entry or use Q table values as probabilities for each action 
 
 
     #targets = np.array(np.random.random_integers(50, size=(1,2)))
