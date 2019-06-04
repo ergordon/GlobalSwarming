@@ -74,9 +74,9 @@ class CohesionModule(Module):
     #rewards for being within (or out of) range. 1st entry is the reward 
     # for being within the range specified by the first entry in ranges_squared
     #the last entry is the reward (punishment) for being out of range
-    rewards = [2,1,0,-1,-2] 
+    rewards = [1,-1] 
     #the discrete ranges at which the agent can collect rewards
-    ranges_squared = [8,18,32,50]
+    ranges_squared = [81]
 
 
     #class constructor
@@ -88,9 +88,7 @@ class CohesionModule(Module):
         self.Q = Qlearning()    #define a Q-learning object for each module instance        
         
         self.init_time = time.time() #store the time at which the agent was initialized
-        #in seconds TODO change the name of this
-        # self.exploitation_rise_time = 12 #the amount of time over which we tranistion from exploration to exploitation 
-
+        
         self.action = Action.STAY          #safest not to do anything for first action
         self.action_prime = Action.STAY     #safest not to do anything for first action
         self.gamma = 0.01                   #discount factor. keep in range [0,1]. can be tuned to affect Q learning
@@ -136,21 +134,21 @@ class CohesionModule(Module):
         for i in range(0,len(self.state_prime)):
             dist_squared = dist_squared + self.state_prime[i]**2
         
-        #tiered reward scheme
-        # #loop through each range to give the appropriate reward
-        # rewarded = False
-        # for i in range(0,len(CohesionModule.ranges_squared)):
-        #     if dist_squared <= CohesionModule.ranges_squared[i]:
-        #         self.instant_reward = CohesionModule.rewards[i]
-        #         rewarded = True    
-        #         break
+        # tiered reward scheme
+        #loop through each range to give the appropriate reward
+        rewarded = False
+        for i in range(0,len(CohesionModule.ranges_squared)):
+            if dist_squared <= CohesionModule.ranges_squared[i]:
+                self.instant_reward = CohesionModule.rewards[i]
+                rewarded = True    
+                break
         
-        # #not in range, apply last reward (punishment)
-        # if rewarded == False:
-        #     self.instant_reward = CohesionModule.rewards[-1]
+        #not in range, apply last reward (punishment)
+        if rewarded == False:
+            self.instant_reward = CohesionModule.rewards[-1]
 
         #continuous reward scheme
-        self.instant_reward = 2 - .1*dist_squared
+        # self.instant_reward = 2 - .1*dist_squared
 
     #get a set of action weights for this module to be used in conjuntion with those of other modules 
     #with the purpose of selecting a single action for the agent to perform 
@@ -185,10 +183,10 @@ class CohesionModule(Module):
                 action_weights[i] = 1.7976931348623157e+308
 
         #normalize the weights to create probabilities
-        if(np.sum(action_weights) != 0):
-            action_weights = action_weights / np.sum(action_weights)
-        else:
-            action_weights = np.ones(len(Action))/len(Action)
+        # if(np.sum(action_weights) != 0):
+        #     action_weights = action_weights / np.sum(action_weights)
+        # else:
+        #     action_weights = np.ones(len(Action))/len(Action)
 
         return action_weights
 
@@ -260,6 +258,13 @@ class CohesionModule(Module):
 #make the agents swarm together
 class CollisionModule(Module):
 
+    #rewards for being within (or out of) range. 1st entry is the reward 
+    # for being within the range specified by the first entry in ranges_squared
+    #the last entry is the reward (punishment) for being out of range
+    rewards = [-100,-1,0] 
+    #the discrete ranges at which the agent can collect rewards
+    ranges_squared = [4,81]
+
     #class constructor
     def __init__(self,parent_agt):
         super().__init__(parent_agt) #inherited class initialization
@@ -269,9 +274,7 @@ class CollisionModule(Module):
         self.Q = Qlearning()    #define a Qleaning object for each module instance        
         
         self.init_time = time.time() #store the time at which the agent was initialized
-        #in seconds TODO change the name of this
-        # self.exploitation_rise_time = 0 #the amount of time over which we tranistion from exploration to exploitation 
-
+        
         self.action = Action.STAY          #safest not to do anyting for first action
         self.action_prime = Action.STAY     #safest not to do anyting for first action
         self.gamma = 0.1                   #discount factor. keep in range [0,1]. can be tuned to affect Q learning
@@ -284,7 +287,7 @@ class CollisionModule(Module):
         super().visualize() #inherited class function
             
         #set marker size to be the diameter of the range
-        mkr_size = np.sqrt(81.0)
+        mkr_size = np.sqrt(CollisionModule.ranges_squared[-1])
 
         #plot range circle, mkrsize is the radius.
         circle = plt.Circle((self.parent_agent.position[0],self.parent_agent.position[1]), mkr_size, color='purple', alpha=0.1)
@@ -351,16 +354,25 @@ class CollisionModule(Module):
             for j in range(0,self.state_prime[i].shape[0]):
                 dist_squared = dist_squared + self.state_prime[i,j]**2
 
-            # continuous reward scheme that offeres severe punishements for being very close to other agents
-            # the function is always negative but is asymtotic to 0 as dist_squared approaches infinity
-            self.instant_reward[i] = 10.0*(dist_squared/(10.0+dist_squared)-1.0)
+            # tiered reward scheme
+            #loop through each range to give the appropriate reward
+            rewarded = False
+            for k in range(0,len(CollisionModule.ranges_squared)):
+                if dist_squared <= CollisionModule.ranges_squared[k]:
+                    self.instant_reward[i] = CollisionModule.rewards[k]
+                    rewarded = True    
+                    break
+            
+            #not in range, apply last reward (punishment)
+            if rewarded == False:
+                self.instant_reward[i] = CollisionModule.rewards[-1]
 
-            # if(dist_squared < 81):
-            #     self.instant_reward[i] = -10
-            # else:
-            #     self.instant_reward[i] = 0
 
+            # # continuous reward scheme that offeres severe punishements for being very close to other agents
+            # # the function is always negative but is asymtotic to 0 as dist_squared approaches infinity
+            # self.instant_reward[i] = 10.0*(dist_squared/(10.0+dist_squared)-1.0)
 
+            
     #update parent agents total reward based on the module's current instant reward
     def update_total_reward(self):
         reward = sum(self.instant_reward)
@@ -401,10 +413,10 @@ class CollisionModule(Module):
                 action_weights[i] = 1.7976931348623157e+308
             
         #normalize the weights to create probabilities
-        if(np.sum(action_weights) != 0):
-            action_weights = action_weights / np.sum(action_weights)
-        else:
-            action_weights = np.ones(len(Action))/len(Action)
+        # if(np.sum(action_weights) != 0):
+        #     action_weights = action_weights / np.sum(action_weights)
+        # else:
+        #     action_weights = np.ones(len(Action))/len(Action)
 
         return action_weights
 
@@ -554,7 +566,8 @@ class BoundaryModule(Module):
     def update_instant_reward(self):
 
         threshold = 4
-        
+        reward = -2
+
         for i in range(0,len(sim.Simulation.search_space)):  
             
             self.instant_reward[i] = 0
@@ -563,13 +576,15 @@ class BoundaryModule(Module):
             if(self.state_prime[i,0] >= threshold):
                 pass #only punish if the agent is close to/past the boundary
             else:
-                self.instant_reward[i] = self.instant_reward[i] + self.state_prime[i,0] - threshold
+                self.instant_reward[i] = self.instant_reward[i] + reward
+                # self.instant_reward[i] = self.instant_reward[i] + self.state_prime[i,0] - threshold
                 
             #handle lower bounds
             if(self.state_prime[i,1] <= -threshold):
                 pass #only punish if the agent is close to/past the boundary
             else:
-                self.instant_reward[i] = self.instant_reward[i] - self.state_prime[i,1] - threshold
+                self.instant_reward[i] = self.instant_reward[i] + reward
+                # self.instant_reward[i] = self.instant_reward[i] - self.state_prime[i,1] - threshold
 
 
     #update parent agents total reward based on the module's current instant reward
@@ -690,7 +705,8 @@ class TargetSeekModule(Module):
     #rewards for being within (or out of) range. 1st entry is the reward 
     # for being within the range specified by the first entry in ranges_squared
     #the last entry is the reward (punishment) for being out of range
-    rewards = [10,5,3,-2] 
+    # rewards = [-1,-3,-4,-5] 
+    rewards = [5,2,-1,-2] 
     #rewards = [10, -1]
     #the discrete ranges at which the agent can collect rewards
     ranges_squared = [25,225,625]
@@ -742,7 +758,9 @@ class TargetSeekModule(Module):
     def update_state(self):
         #round to whole numbers for discretization
         self.state = np.round(Simulation.targets - self.parent_agent.position, 0) 
-    
+        
+        
+
     #update the state that agent is in. Store it in state_prime because it is called after 
     #executing an action and the Q object needs both the original state and the state after execution 
     #for this module, it is the vector pointing from the agent to the swarm centroid
@@ -784,6 +802,46 @@ class TargetSeekModule(Module):
             # print(self.instant_reward)
            
 
+    #get a set of action weights for this module to be used in conjuntion with those of other modules 
+    #with the purpose of selecting a single action for the agent to perform 
+    def get_action_weights(self):
+        
+        #create a set of probabilities for each action
+        action_weights = np.zeros(len(Action))
+        
+        #for each possible agent action
+        for i in range (0,len(Action)):
+            #get the appropiate Q value Q table row corresponding to the current state 
+            #and the action being iterated over
+            Qrow = self.Q.fetch_row_by_state(self.state) 
+            Qval = Qrow[i]
+
+            #exploitation vs exploration constant
+            #big T encourages exploration
+            #small T encourages exploitation
+            T = 1
+            #linearly change T to decrease exploration and increase exploitation over time
+            curr_time = time.time()
+            if(curr_time - self.init_time < Simulation.exploitation_rise_time):
+                T = 1000.0 - (1000.0-0.1)*(curr_time - self.init_time)/Simulation.exploitation_rise_time
+            else:
+                T = 0.1
+
+            #calculate the weight for this action
+            action_weights[i] = np.exp(Qval/T)
+            
+            #set the weight to the max float size in case it is beyond pythons max float size
+            if(action_weights[i] == float('inf')):
+                action_weights[i] = 1.7976931348623157e+308
+
+        #normalize the weights to create probabilities
+        if(np.sum(action_weights) != 0):
+            action_weights = action_weights / np.sum(action_weights)
+        else:
+            action_weights = np.ones(len(Action))/len(Action)
+
+        return action_weights
+
     #select next action for this module with a soft max probability mass function
     def select_next_action(self):
         
@@ -791,9 +849,9 @@ class TargetSeekModule(Module):
 
         #create a set of probabilities for each action
         action_weights = np.zeros(len(Action))
-        
+        # action_weights = self.Q.fetch_row_by_state(self.state_prime) 
         Qrow = self.Q.fetch_row_by_state(self.state_prime) 
-        
+
         # print('Q row is: ')
         # print(Qrow)
         # print('state prime is: ')
@@ -804,6 +862,7 @@ class TargetSeekModule(Module):
             #get the appropriate Q value Q table row corresponding to the current state 
             #and the action being iterated over
             Qval = Qrow[i]
+            # Qval = action_weights[i]
 
             #exploitation vs exploration constant
             #big T encourages exploration
