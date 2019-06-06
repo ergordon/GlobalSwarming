@@ -787,6 +787,7 @@ class TargetSeekModule(Module):
         # print(Qrow)
         # print('state prime is: ')
         # print(self.state_prime)
+        
 
         #for each possible agent action
         for i in range (0,len(Action)):
@@ -833,6 +834,10 @@ class TargetSeekModule(Module):
             #use a discrete random variable distribution to select the next action
             x=list(map(int,Action))
             px=action_weights
+            if(np.sum(px) < 0.999 or np.sum(px) > 1.0001):
+                print(np.sum(px))
+                print(px)
+                print(Qrow)
             sample=rv_discrete(values=(x,px)).rvs(size=1)
             self.action_prime = Action(sample)
 
