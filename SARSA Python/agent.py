@@ -16,7 +16,7 @@ class Agent:
     #these are the weights for each module. they should sum to 1. 
     #If they don't, they will be scaled accordingly during initialization
     #also, there should be a weight entry for each module
-    module_weights = [.2,.8 ]#[0.25,0.75] 
+    module_weights = [1]#[0.25,0.75] 
     
 
     #class constructor
@@ -27,10 +27,10 @@ class Agent:
         self.total_reward = 0       #running reward received by the agent
         self.modules = []           #a list of modules that the agent carries out
         
-        self.modules.append(module.CohesionModule(self)) #cohesion module makes the agents stay together as a swarm
-        self.modules.append(module.CollisionModule(self)) #collision module prevents the agents from hitting each other
+        #elf.modules.append(module.CohesionModule(self)) #cohesion module makes the agents stay together as a swarm
+        #self.modules.append(module.CollisionModule(self)) #collision module prevents the agents from hitting each other
         # self.modules.append(module.BoundaryModule(self)) #boundary module prevents the agents from leaving the search space
-        # self.modules.append(module.TargetSeekModule(self)) #collision module prevents the agents from hitting each other
+        self.modules.append(module.TargetSeekModule(self)) #collision module prevents the agents from hitting each other
 
 
 

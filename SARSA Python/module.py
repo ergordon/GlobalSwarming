@@ -523,11 +523,11 @@ class BoundaryModule(Module):
 
         self.collision_count = 0           #number of times this module has recorded a collision (with another agent) for this agent
     
-        self.state = np.zeros((len(sim.Simulation.search_space),len(sim.Simulation.search_space[0])))
-        self.state_prime = np.zeros((len(sim.Simulation.search_space),len(sim.Simulation.search_space[0])))
-        self.instant_reward = np.zeros(len(sim.Simulation.search_space))
+        self.state = np.zeros((len(Simulation.search_space),len(Simulation.search_space[0])))
+        self.state_prime = np.zeros((len(Simulation.search_space),len(Simulation.search_space[0])))
+        self.instant_reward = np.zeros(len(Simulation.search_space))
 
-        for i in range(len(sim.Simulation.search_space)):
+        for i in range(len(Simulation.search_space)):
             self.Q.append(Qlearning())   
         
 
@@ -547,7 +547,7 @@ class BoundaryModule(Module):
     #update the Q table for this module
     def update_q(self):
         #accessed through the Qlearning object
-        for i in range(0,len(sim.Simulation.search_space)):
+        for i in range(0,len(Simulation.search_space)):
             # if(self.instant_reward[i] < 0):
             #     print('search space index is: ')
             #     print(i)
@@ -559,22 +559,22 @@ class BoundaryModule(Module):
     # Ordering is [+x,-x,+y,-y] (append [+z,-z] for 3D case)
     def update_state(self):
         
-        for i in range(0,len(sim.Simulation.search_space)):   
+        for i in range(0,len(Simulation.search_space)):   
             #round to whole numbers for discretization
             state = np.empty([2,])
-            state[0] = np.round(sim.Simulation.search_space[i][1] - self.parent_agent.position[i])
-            state[1] = np.round(sim.Simulation.search_space[i][0] - self.parent_agent.position[i])
+            state[0] = np.round(Simulation.search_space[i][1] - self.parent_agent.position[i])
+            state[1] = np.round(Simulation.search_space[i][0] - self.parent_agent.position[i])
             self.state[i] = state
             
     # update the state that agent is in. Store it in state_prime because it is called after 
     # executing an action and the Q object needs both the orignal state and the state after exectuion 
     # for this module, it is the set of vectors pointing from the agent to each other tracked agent
     def update_state_prime(self):
-        for i in range(0,len(sim.Simulation.search_space)):   
+        for i in range(0,len(Simulation.search_space)):   
             #round to whole numbers for discretization
             state = np.empty([2,])
-            state[0] = np.round(sim.Simulation.search_space[i][1] - self.parent_agent.position[i])
-            state[1] = np.round(sim.Simulation.search_space[i][0] - self.parent_agent.position[i])
+            state[0] = np.round(Simulation.search_space[i][1] - self.parent_agent.position[i])
+            state[1] = np.round(Simulation.search_space[i][0] - self.parent_agent.position[i])
             self.state_prime[i] = state
 
 
@@ -586,7 +586,7 @@ class BoundaryModule(Module):
         threshold = 4
         reward = -2
 
-        for i in range(0,len(sim.Simulation.search_space)):  
+        for i in range(0,len(Simulation.search_space)):  
             
             self.instant_reward[i] = 0
 
@@ -617,7 +617,7 @@ class BoundaryModule(Module):
         #create a set of weights for each action
         action_weights = np.zeros(len(Action))
         #sum the action tables for every tracked agent
-        for i in range (0,len(sim.Simulation.search_space)):
+        for i in range (0,len(Simulation.search_space)):
             action_weights = action_weights + self.Q[i].fetch_row_by_state(self.state[i])
         
         #for each possible agent action
@@ -658,7 +658,7 @@ class BoundaryModule(Module):
         #create a set of probabilities for each action
         action_weights = np.zeros(len(Action))
         #sum the action tables for every tracked agent
-        for i in range (0,len(sim.Simulation.search_space)):
+        for i in range (0,len(Simulation.search_space)):
             action_weights = action_weights + self.Q[i].fetch_row_by_state(self.state_prime[i])
 
         #for each possible agent action
@@ -724,8 +724,8 @@ class TargetSeekModule(Module):
     # for being within the range specified by the first entry in ranges_squared
     #the last entry is the reward (punishment) for being out of range
     # rewards = [-1,-3,-4,-5] 
-    rewards = [5,2,-1,-2] 
-    #rewards = [10, -1]
+    #rewards = [5,2,-1,-2] 
+    rewards = [10, -1]
     #the discrete ranges at which the agent can collect rewards
     #ranges_squared = [25,225,625]
     ranges_squared = [25]
