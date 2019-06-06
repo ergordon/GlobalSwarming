@@ -41,9 +41,9 @@ def checkInBounds(position,bounds):
 def ReinitializeAgents(agents,bounds):
     #reintizilize target
     search_space = Simulation.search_space
-    #Simulation.targets = np.array([-40,40])
-    Simulation.targets = np.array([random.randint(search_space[0][0], search_space[0][1]),
-                         random.randint(search_space[1][0], search_space[1][1])])
+    Simulation.targets = np.array([-40,40])
+    # Simulation.targets = np.array([random.randint(search_space[0][0], search_space[0][1]),
+    #                      random.randint(search_space[1][0], search_space[1][1])])
     #initialize agent parameters
     for i in range(0,len(agents)):
         #TODO make this initial position randomized
@@ -195,6 +195,15 @@ for e in range(0,Simulation.num_episodes):
                     mod.visualize()
 
         
+        for agnt in agents:
+            for mod in agnt.modules:
+                #find what the state (state_prime) would be if that action were taken
+                mod.update_state_prime()
+
+            #select the next action (action_prime) for the agent to take 
+            agnt.select_next_action()
+
+
 
         for agnt in agents:
 
@@ -208,11 +217,11 @@ for e in range(0,Simulation.num_episodes):
                 # mod.select_next_action()
 
                 #find what the state (state_prime) would be if that action were taken
-                mod.update_state_prime()
+                # mod.update_state_prime()
 
                 #TODO move this up a level. Will only select one action based on all modules
                 #select the next action (action_prime) for the agent to take 
-                mod.select_next_action()
+                # mod.select_next_action()
 
 
                 #determine the reward for executing the action (not prime) in the state (not prime)

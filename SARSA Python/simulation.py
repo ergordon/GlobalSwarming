@@ -8,10 +8,17 @@ import random
 #A class containing high level simulation variables
 class Simulation:
 
+<<<<<<< HEAD
     num_agents = 1 #number of agents to simulate
     num_episodes = 20000 #number of times to run the training scenario
     episode_length = 25 #number of time steps in each training scenario [iterations]
     exploitation_rise_time = 0 #the amount of time over which we transition from exploration to exploitation [seconds]
+=======
+    num_agents = 4 #number of agents to simulate
+    num_episodes = 100 #number of times to run the training scenario
+    episode_length = 100 #number of time steps in each training scenario [iterations]
+    exploitation_rise_time = 30 #the amount of time over which we transition from exploration to exploitation [seconds]
+>>>>>>> aafa8cd2ea9d2d4986bd42d68363e16c9823d0a6
 
     #bounds to initialize the agents inside of
     init_space = [[0,10],
@@ -19,21 +26,24 @@ class Simulation:
 
     #bounds to simulate the agents within
     #exiting these bounds will end the episode immediately
-    search_space = [[-20,20],
-                    [-20,20]]
+    search_space = [[-50,50],
+                    [-50,50]]
 
     visualize = False  #whether to show a plot animation of the agent positions
 
     load_agents = False  #whether to load the agents.pkl file (loads agents exactly as they upon completion of training)
     load_training_data = False #whether to load the agent training data (loads q tables and states into the modules that exist in the agent initialization function)
-
     
     #TODO think of better name for this
     take_best_action = False #whether to select next actions based on highest Q table entry or use Q table values as probabilities for each action 
+<<<<<<< HEAD
 
+=======
+>>>>>>> aafa8cd2ea9d2d4986bd42d68363e16c9823d0a6
 
-    targets = np.array([random.randint(search_space[0][0], search_space[0][1]),
-                        random.randint(search_space[1][0], search_space[1][1])])
+    targets = np.array([-40,40])
+    # targets = np.array([random.randint(search_space[0][0], search_space[0][1]),
+    #                     random.randint(search_space[1][0], search_space[1][1])])
 
 
 ##############################################################################

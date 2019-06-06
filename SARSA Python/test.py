@@ -141,15 +141,19 @@ import simulation as sim
 # agt1.modules[0].start_tracking(agt2)
 # agt1.modules[0].update_state()
 
-print(len(sim.Simulation.search_space))
-state = np.array([0,0])
-state = np.vstack([state,[0,0]])
-state = np.vstack([state,[0,0]])
-state = np.vstack([state,[0,0]])
+rewards = [10, 5, -1]
+#the discrete ranges at which the agent can collect rewards
+ranges_squared = [25,225,625]
 
-print('state is')
-print(state)
+dist_squared = 24
 
-state = np.zeros((len(sim.Simulation.search_space),len(sim.Simulation.search_space[0])))
-print('state is')
-print(state)
+instant_reward = 0
+rewarded = False
+for i in range(0,len(ranges_squared)):
+    if dist_squared <= ranges_squared[i]:
+        instant_reward = rewards[i]
+        rewarded = True    
+        break
+
+print('the reward is')
+print(instant_reward)
