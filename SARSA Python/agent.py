@@ -27,9 +27,9 @@ class Agent:
         self.total_reward = 0       #running reward received by the agent
         self.modules = []           #a list of modules that the agent carries out
         
-        #elf.modules.append(module.CohesionModule(self)) #cohesion module makes the agents stay together as a swarm
+        #self.modules.append(module.CohesionModule(self)) #cohesion module makes the agents stay together as a swarm
         #self.modules.append(module.CollisionModule(self)) #collision module prevents the agents from hitting each other
-        # self.modules.append(module.BoundaryModule(self)) #boundary module prevents the agents from leaving the search space
+        #self.modules.append(module.BoundaryModule(self)) #boundary module prevents the agents from leaving the search space
         self.modules.append(module.TargetSeekModule(self)) #collision module prevents the agents from hitting each other
 
 

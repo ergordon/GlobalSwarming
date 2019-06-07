@@ -8,9 +8,9 @@ import random
 #A class containing high level simulation variables
 class Simulation:
 
-    num_agents = 1 #number of agents to simulate
-    num_episodes = 1000 #number of times to run the training scenario
-    episode_length = 50 #number of time steps in each training scenario [iterations]
+    num_agents = 3 #number of agents to simulate
+    num_episodes = 8000 #number of times to run the training scenario
+    episode_length = 40 #number of time steps in each training scenario [iterations]
     exploitation_rise_time = 0 #the amount of time over which we transition from exploration to exploitation [seconds]
 
     #bounds to initialize the agents inside of
@@ -19,8 +19,8 @@ class Simulation:
 
     #bounds to simulate the agents within
     #exiting these bounds will end the episode immediately
-    search_space = [[-50,50],
-                    [-50,50]]
+    search_space = [[-20,20],
+                    [-20,20]]
 
     visualize = False  #whether to show a plot animation of the agent positions
 

@@ -712,7 +712,6 @@ class BoundaryModule(Module):
 #   End Boundary Module Class
 ##############################################################################
 
-
 ##############################################################################
 #   Begin Target Seek Module Class
 ##############################################################################
@@ -723,8 +722,7 @@ class TargetSeekModule(Module):
     #rewards for being within (or out of) range. 1st entry is the reward 
     # for being within the range specified by the first entry in ranges_squared
     #the last entry is the reward (punishment) for being out of range
-    # rewards = [-1,-3,-4,-5] 
-    #rewards = [5,2,-1,-2] 
+    #rewards = [10,5,3,-2] 
     rewards = [10, -1]
     #the discrete ranges at which the agent can collect rewards
     #ranges_squared = [25,225,625]
@@ -775,9 +773,7 @@ class TargetSeekModule(Module):
     def update_state(self):
         #round to whole numbers for discretization
         self.state = np.round(Simulation.targets - self.parent_agent.position, 0) 
-        
-        
-
+    
     #update the state that agent is in. Store it in state_prime because it is called after 
     #executing an action and the Q object needs both the original state and the state after execution 
     #for this module, it is the vector pointing from the agent to the swarm centroid
@@ -811,57 +807,16 @@ class TargetSeekModule(Module):
             self.instant_reward = TargetSeekModule.rewards[-1]
             #self.instant_reward = -math.log(dist_squared + 10) + 5 #EQN5
            
-
-    #get a set of action weights for this module to be used in conjuntion with those of other modules 
-    #with the purpose of selecting a single action for the agent to perform 
-    def get_action_weights(self):
-        
-        #create a set of probabilities for each action
-        action_weights = np.zeros(len(Action))
-        
-        #for each possible agent action
-        for i in range (0,len(Action)):
-            #get the appropiate Q value Q table row corresponding to the current state 
-            #and the action being iterated over
-            Qrow = self.Q.fetch_row_by_state(self.state) 
-            Qval = Qrow[i]
-
-            #exploitation vs exploration constant
-            #big T encourages exploration
-            #small T encourages exploitation
-            T = 1
-            #linearly change T to decrease exploration and increase exploitation over time
-            curr_time = time.time()
-            if(curr_time - self.init_time < Simulation.exploitation_rise_time):
-                T = 1000.0 - (1000.0-0.1)*(curr_time - self.init_time)/Simulation.exploitation_rise_time
-            else:
-                T = 0.1
-
-            #calculate the weight for this action
-            action_weights[i] = np.exp(Qval/T)
-            
-            #set the weight to the max float size in case it is beyond pythons max float size
-            if(action_weights[i] == float('inf')):
-                action_weights[i] = 1.7976931348623157e+308
-
-        #normalize the weights to create probabilities
-        if(np.sum(action_weights) != 0):
-            action_weights = action_weights / np.sum(action_weights)
-        else:
-            action_weights = np.ones(len(Action))/len(Action)
-
-        return action_weights
-
     #select next action for this module with a soft max probability mass function
-    def select_next_action(self):
+    def get_action_weights(self):
         
         # print('selecting next action')
 
         #create a set of probabilities for each action
         action_weights = np.zeros(len(Action))
-        # action_weights = self.Q.fetch_row_by_state(self.state_prime) 
+        
         Qrow = self.Q.fetch_row_by_state(self.state_prime) 
-
+        
         # print('Q row is: ')
         # print(Qrow)
         # print('state prime is: ')
@@ -873,7 +828,47 @@ class TargetSeekModule(Module):
             #get the appropriate Q value Q table row corresponding to the current state 
             #and the action being iterated over
             Qval = Qrow[i]
-            # Qval = action_weights[i]
+
+            #exploitation vs exploration constant
+            #big T encourages exploration
+            #small T encourages exploitation
+            #linearly change T to decrease exploration and increase exploitation over time
+            curr_time = time.time()
+            if(curr_time - self.init_time < Simulation.exploitation_rise_time):
+                T = 1000.0 - (1000.0-0.1)*(curr_time - self.init_time)/Simulation.exploitation_rise_time
+            else:
+                T = 0.1
+            #calculate the weight for this action
+            action_weights[i] = np.exp(Qval/T)
+
+            #set the weight to the max float size in case it is beyond pythons max float size
+            if(action_weights[i] == float('inf')):
+                action_weights[i] = 1.7976931348623157e+308
+
+        return action_weights
+
+
+    #select next action for this module with a soft max probability mass function
+    def select_next_action(self):
+        
+        # print('selecting next action')
+
+        #create a set of probabilities for each action
+        action_weights = np.zeros(len(Action))
+        
+        Qrow = self.Q.fetch_row_by_state(self.state_prime) 
+        
+        # print('Q row is: ')
+        # print(Qrow)
+        # print('state prime is: ')
+        # print(self.state_prime)
+        
+
+        #for each possible agent action
+        for i in range (0,len(Action)):
+            #get the appropriate Q value Q table row corresponding to the current state 
+            #and the action being iterated over
+            Qval = Qrow[i]
 
             #exploitation vs exploration constant
             #big T encourages exploration
