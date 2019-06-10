@@ -263,7 +263,6 @@ class CohesionModule(Module):
             sample=rv_discrete(values=(x,px)).rvs(size=1)
             self.action_prime = Action(sample)
 
-
 ##############################################################################
 #   End Cohesion Module Class
 ##############################################################################
@@ -359,7 +358,6 @@ class CollisionModule(Module):
         for i in range(0,len(self.tracked_agents)):  
             #round to whole numbers for discretization  
             self.state_prime[i] = np.round(np.array(self.tracked_agents[i].position) - np.array(self.parent_agent.position),0)
-
     #determine the reward for executing the action (not prime) in the state (not prime)
     #action (not prime) brings agent from state (not prime) to state_prime, and reward is calulated based on state_prime
     def update_instant_reward(self):
@@ -558,7 +556,6 @@ class BoundaryModule(Module):
     #for this module, it is a vector containing distances from the agent to each boundary
     # Ordering is [+x,-x,+y,-y] (append [+z,-z] for 3D case)
     def update_state(self):
-        
         for i in range(0,len(Simulation.search_space)):   
             #round to whole numbers for discretization
             state = np.empty([2,])
@@ -921,4 +918,265 @@ class TargetSeekModule(Module):
 
 ##############################################################################
 #   End Target Seek Module Class
+##############################################################################
+
+##############################################################################
+#   Begin Obstacle Avoidance Module Class
+##############################################################################
+
+#module derived from the base class.
+#make the agents swarm together
+class ObstacleAvoidanceModule(Module):
+
+    #rewards for being within (or out of) range. 1st entry is the reward 
+    # for being within the range specified by the first entry in ranges_squared
+    #the last entry is the reward (punishment) for being out of range
+    rewards = [-100,-1,0] 
+    #the discrete ranges at which the agent can collect rewards
+    ranges_squared = [1,25]
+
+    #class constructor
+    def __init__(self,parent_agt):
+        super().__init__(parent_agt) #inherited class initialization
+        
+        self.state = np.array([]) #the vectors from the agent to the tracked agents 
+        self.state_prime = np.array([]) #same as state but for the next step. used for qlearning before assigning to state
+        self.Q = []    #define a Qleaning object for each module instance        
+        
+        self.init_time = time.time() #store the time at which the agent was initialized
+        
+        self.action = Action.STAY          #safest not to do anyting for first action
+        self.action_prime = Action.STAY     #safest not to do anyting for first action
+        self.gamma = 0.7                   #discount factor. keep in range [0,1]. can be tuned to affect Q learning
+
+        self.collision_count = 0        #number of times this module has recorded a collision (with another agent) for this agent
+    
+        self.state = [] #np.zeros((len(Simulation.obstacles),2+len(Simulation.obstacles[0])))
+        self.state_prime = [] #np.zeros((len(Simulation.obstacles),2*len(Simulation.obstacles[0])))
+        self.instant_reward = [] #np.zeros(len(Simulation.obstacles))
+
+        for i in range(len(Simulation.obstacles)):
+            self.Q.append(Qlearning())   
+            self.state = self.state.append(np.zeros((len(Simulation.obstacles),2+len(Simulation.obstacles[0]))))
+            self.state_prime = self.state_prime.append(np.zeros((len(Simulation.obstacles),2*len(Simulation.obstacles[0]))))
+            self.instant_reward = self.instant_reward.append(np.zeros(len(Simulation.obstacles)))
+    #visualization for this module. 
+    # draw a transparent circle for each tracked agent for each reward range 
+    def visualize(self):
+        super().visualize() #inherited class function
+
+        # TODO: Add reward region
+        # TODO: Loop for multiple obstacles         
+        # Create a Obstacle Area
+        for i in range(len(Simulation.obstacles)):
+            rect = plt.Rectangle((Simulation.obstacles[i][0],Simulation.obstacles[i][1]),
+                                Simulation.obstacles[i][2],Simulation.obstacles[i][3],
+                                linewidth=1,edgecolor='r',facecolor='none')
+        
+        ax = plt.gca()
+        ax.set_aspect('equal')
+        ax.add_patch(rect)
+
+    #for the collision module, this is used to check for and track collisions between agents. 
+    def auxilariy_functions(self):
+        super().auxilariy_functions() #inherited class function
+        for i in range(0,len(self.state_prime)):
+            if(np.array_equal(self.state_prime[i],np.array([0,0]))):
+                self.collision_count = self.collision_count + 1
+
+    #update the Q table for this module
+    def update_q(self):
+        #accessed through the Qlearning object
+        for i in range(0,len(Simulation.obstacles)):
+            self.Q[i].update_q(self.state[i],self.state_prime[i],self.action,self.action_prime,self.alpha,self.gamma,self.instant_reward[i])             
+
+    #update the state that the agent is currently in
+    #for this module, it is the the set of vectors pointing from the agent to each other agent in the swarm
+    def update_state(self):
+       
+        #each state is the vector from the parent agent to the tracked agent
+        for i in range(0,len(Simulation.obstacles)): 
+            obsX = Simulation.obstacles[i][0]
+            obsY = Simulation.obstacles[i][1]
+            agntX = self.parent_agent.position[0]
+            agntY = self.parent_agent.position[1]
+            width = Simulation.obstacles[i][2]
+            height = Simulation.obstacles[i][3]
+
+            state = np.empty([6,])
+            # x,y, width, height
+            state[0] = np.round(obsX - agntX)
+            state[1] = np.round(obsY - agntY)
+            state[2] = np.round((obsX+width) - agntX)
+            state[3] = np.round((obsY+height) - agntY)
+            
+            if (agntX > obsX and agntX < obsX+width):
+                #print("IN X RANGE!!!!")
+                state[4] = 1
+            else:
+                state[4] = 0
+
+            if (agntY > obsY and agntY < obsY+height):
+                #print("IN Y RANGE!!!!")
+                state[5] = 1
+            else:
+                state[5] = 0
+
+            self.state[i] = state
+
+    #update the state that agent is in. Store it in state_prime because it is called after 
+    #executing an action and the Q object needs both the orignal state and the state after exectuion 
+    #for this module, it is the set of vectors pointing from the agent to each other tracked agent
+    def update_state_prime(self):
+        #each state is the vector from the parent agent to the tracked agent
+        for i in range(0,len(Simulation.obstacles)): 
+            obsX = Simulation.obstacles[i][0]
+            obsY = Simulation.obstacles[i][1]
+            agntX = self.parent_agent.position[0]
+            agntY = self.parent_agent.position[1]
+            width = Simulation.obstacles[i][2]
+            height = Simulation.obstacles[i][3]
+
+            state = np.empty([6,])
+            # x,y, width, height
+            state[0] = np.round(obsX - agntX)
+            state[1] = np.round(obsY - agntY)
+            state[2] = np.round((obsX+width) - agntX)
+            state[3] = np.round((obsY+height) - agntY)
+            
+            if (agntX > obsX and agntX < obsX+width):
+                #print("IN X RANGE!!!!")
+                state[4] = 1
+            else:
+                state[4] = 0
+
+            if (agntY > obsY and agntY < obsY+height):
+                #print("IN Y RANGE!!!!")
+                state[5] = 1
+            else:
+                state[5] = 0
+
+            self.state[i] = state
+
+    #determine the reward for executing the action (not prime) in the state (not prime)
+    #action (not prime) brings agent from state (not prime) to state_prime, and reward is calulated based on state_prime
+    def update_instant_reward(self):
+
+        for i in range(0,len(Simulation.obstacles)):  
+            self.instant_reward[i] = 0
+            #handle upper bounds
+            if(self.state[i,4] != 0 and self.state[i,5] != 0):
+                self.instant_reward[i] = -100
+                #print("GET ME OUT OF HERE!")
+                # self.instant_reward[i] = self.instant_reward[i] + self.state_prime[i,0] - threshold
+            else:
+                self.instant_reward[i] = 1
+
+
+            
+    #update parent agents total reward based on the module's current instant reward
+    def update_total_reward(self):
+        reward = sum(self.instant_reward)
+        self.parent_agent.add_total_reward(reward)
+
+    #get a set of action weights for this module to be used in conjuntion with those of other modules 
+    #with the purpose of selecting a single action for the agent to perform 
+    def get_action_weights(self):
+
+        #create a set of weights for each action
+        action_weights = np.zeros(len(Action))
+        #sum the action tables for every tracked agent
+        for i in range (0,len(self.tracked_agents)):
+            action_weights = action_weights + self.Q.fetch_row_by_state(self.state[i])
+        
+        #for each possible agent action
+        for i in range (0,len(action_weights)):
+            #get the appropiate Q value Q table row corresponding to the current state 
+            #and the action being iterated over
+            Qval = action_weights[i]
+
+            #exploitation vs exploration constant
+            #big T encourages exploration
+            #small T encourages exploitation
+            T = 1
+            #linearly change T to decrease exploration and increase exploitation over time
+            curr_time = time.time()
+            if(curr_time - self.init_time < Simulation.exploitation_rise_time):
+                T = 1000.0 - (1000.0-1)*(curr_time - self.init_time)/Simulation.exploitation_rise_time
+            else:
+                T = 1
+
+            #calculate the weight for this action
+            action_weights[i] = np.exp(Qval/T)
+            
+            #set the weight to the max float size in case it is beyond pythons max float size
+            if(action_weights[i] == float('inf')):
+                action_weights[i] = 1.7976931348623157e+308
+            
+        #normalize the weights to create probabilities
+        # if(np.sum(action_weights) != 0):
+        #     action_weights = action_weights / np.sum(action_weights)
+        # else:
+        #     action_weights = np.ones(len(Action))/len(Action)
+
+        return action_weights
+
+    #select next action for this module with a softmax porabability mass function
+    def select_next_action(self):
+        
+        #create a set of probabilities for each action
+        action_weights = np.zeros(len(Action))
+        #sum the action tables for every tracked agent
+        for i in range (0,len(self.tracked_agents)):
+            action_weights = action_weights + self.Q.fetch_row_by_state(self.state_prime[i])
+        
+        #for each possible agent action
+        for i in range (0,len(action_weights)):
+            #get the appropiate Q value Q table row corresponding to the current state 
+            #and the action being iterated over
+            Qval = action_weights[i]
+
+            #exploitation vs exploration constant
+            #big T encourages exploration
+            #small T encourages exploitation
+            T = 1
+            #linearly change T to decrease exploration and increase exploitation over time
+            curr_time = time.time()
+            if(curr_time - self.init_time < Simulation.exploitation_rise_time):
+                T = 1000.0 - (1000.0-1)*(curr_time - self.init_time)/Simulation.exploitation_rise_time
+            else:
+                T = 1
+
+            #calculate the weight for this action
+            action_weights[i] = np.exp(Qval/T)
+            
+            #set the weight to the max float size in case it is beyond pythons max float size
+            if(action_weights[i] == float('inf')):
+                action_weights[i] = 1.7976931348623157e+308
+            
+        #normalize the weights to create probabilities
+        if(np.sum(action_weights) != 0):
+            action_weights = action_weights / np.sum(action_weights)
+        else:
+            action_weights = np.ones(len(Action))/len(Action)
+
+        #set state_prime to be the selected next action
+        if(Simulation.take_best_action):
+            #take the action with the highest Q value
+            indices = np.argwhere(action_weights == np.amax(action_weights))
+            if(len(indices) == 1):
+                self.action_prime = Action(np.argmax(action_weights))
+            else:
+                #if multiple entries in the Q table row are tied for highest, randomly select one of them
+                index = random.randint(0,len(indices)-1)
+                self.action_prime = Action(indices[index])
+        else:
+            #use a discrete random variable distribution to select the next action
+            x=list(map(int,Action))
+            px=action_weights
+            sample=rv_discrete(values=(x,px)).rvs(size=1)
+            self.action_prime = Action(sample)
+
+##############################################################################
+#   End Obstacle Avoidance Module Class
 ##############################################################################
