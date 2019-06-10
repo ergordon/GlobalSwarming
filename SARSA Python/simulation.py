@@ -22,17 +22,20 @@ class Simulation:
     search_space = [[-20,20],
                     [-20,20]]
 
-    visualize = False  #whether to show a plot animation of the agent positions
+    visualize = True  #whether to show a plot animation of the agent positions
 
-    load_agents = False  #whether to load the agents.pkl file (loads agents exactly as they upon completion of training)
+    load_agents = True  #whether to load the agents.pkl file (loads agents exactly as they upon completion of training)
     load_training_data = False #whether to load the agent training data (loads q tables and states into the modules that exist in the agent initialization function)
     
     #TODO think of better name for this
-    take_best_action = False #whether to select next actions based on highest Q table entry or use Q table values as probabilities for each action 
+    take_best_action = True #whether to select next actions based on highest Q table entry or use Q table values as probabilities for each action 
 
     #targets = np.array([-40,40])
     targets = np.array([random.randint(search_space[0][0], search_space[0][1]),
                         random.randint(search_space[1][0], search_space[1][1])])
+
+
+    obstacles = np.array([10,20,30,40])
 
 
 ##############################################################################

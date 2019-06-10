@@ -65,7 +65,7 @@ plt.plot(iterations,avg_reward)
 plt.fill_between(iterations,max_reward,min_reward,color='blue',alpha='0.05')
 
 f3 = plt.figure(3)
-span = 20
+span = 200#20
 rolling_min = pd.Series(min_reward).rolling(window=span).mean()
 rolling_max = pd.Series(max_reward).rolling(window=span).mean()
 rolling_avg = pd.Series(avg_reward).rolling(window=span).mean()
