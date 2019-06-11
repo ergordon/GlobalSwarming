@@ -72,6 +72,7 @@ class Agent:
             # print(i)
             # print('module weights')
             # print(self.modules[i].get_action_weights())
+        
 
         # print('summed weights')
         # print(action_weights)
