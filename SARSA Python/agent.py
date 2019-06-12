@@ -16,7 +16,7 @@ class Agent:
     #these are the weights for each module. they should sum to 1. 
     #If they don't, they will be scaled accordingly during initialization
     #also, there should be a weight entry for each module
-    module_weights = [.2,.8 ]#[0.25,0.75] 
+    module_weights = [0.33,0.33,.33]#[0.0001,0.99] 
     
 
     #class constructor
@@ -27,6 +27,12 @@ class Agent:
         self.total_reward = 0       #running reward received by the agent
         self.modules = []           #a list of modules that the agent carries out
         
+        #TODO consider a priority system in addition to weighting functions. 
+        # Also impose a restriciton on weightin functions to be in the range [0,1]
+        # Then if module returns >0.95 for the weight, add a bias to its module weights
+        # could maybe add bias only to select weights such as largest two
+        # 
+
         self.modules.append(module.CohesionModule(self)) #cohesion module makes the agents stay together as a swarm
         self.modules.append(module.CollisionModule(self)) #collision module prevents the agents from hitting each other
         # self.modules.append(module.BoundaryModule(self)) #boundary module prevents the agents from leaving the search space
@@ -35,14 +41,14 @@ class Agent:
 
 
         #make sure there is a module weight for each module
-        if(len(self.modules) != len(self.module_weights)):
+        if(len(self.modules) != len(Agent.module_weights)):
             sys.exit('number of module weights and number of modules must be the same. Fix these definitions in the Agent class')
 
         #make sure the module weight list sums to 1
         if(sum(self.module_weights) != 1):
-            weight_sum = sum(self.module_weights)
-            for i in range(len(self.module_weights)):   
-                self.module_weights[i] = self.module_weights[i]/weight_sum
+            weight_sum = sum(Agent.module_weights)
+            for i in range(len(Agent.module_weights)):   
+                Agent.module_weights[i] = Agent.module_weights[i]/weight_sum
 
     #change the agent's position based on the action passed in
     def take_action(self,act):
@@ -56,22 +62,39 @@ class Agent:
         elif  act == Action.MOVE_MINUS_Y :
             self.position = self.position + [0,-step_size]
         else: #act == Action.STAY
+            ]
             self.position = self.position + [0,0]
 
     #add the passed in incremental reward to the agents total reward
     def add_total_reward(self,incremental_reward):
         self.total_reward = self.total_reward + incremental_reward
+        
 
     #select the next action to preform based on a softmax of each module
     def select_next_action(self):
         # print("selecting the next action!!!")
+
+
+
+
         action_weights = np.zeros(len(Action))
         for i in range(0,len(self.modules)):
-            action_weights = action_weights + self.module_weights[i]*self.modules[i].get_action_weights()
-            # print('index')
-            # print(i)
-            # print('module weights')
-            # print(self.modules[i].get_action_weights())
+            mod_action_weights = self.modules[i].get_action_weights()
+            #normalize the weights to create probabilities
+            if(np.sum(mod_action_weights) != 0):
+                mod_action_weights = mod_action_weights / np.sum(mod_action_weights)
+            else:
+                mod_action_weights = np.ones(len(Action))/len(Action)
+
+            action_weights = action_weights + self.modules[i].get_module_weight()*mod_action_weights
+            
+            
+            
+            # action_weights = action_weights + Agent.module_weights[i]*self.modules[i].get_action_weights()
+        #     print('index')
+        #     print(i)
+        #     print('module weights')
+        #     print(self.modules[i].get_action_weights())
 
         # print('summed weights')
         # print(action_weights)

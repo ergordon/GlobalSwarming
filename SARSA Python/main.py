@@ -216,11 +216,11 @@ for e in range(0,Simulation.num_episodes):
                 # #select the next action (action_prime) for the agent to take 
                 # mod.select_next_action()
 
-                #find what the state (state_prime) would be if that action were taken
+                # # find what the state (state_prime) would be if that action were taken
                 # mod.update_state_prime()
 
-                #TODO move this up a level. Will only select one action based on all modules
-                #select the next action (action_prime) for the agent to take 
+                # # TODO move this up a level. Will only select one action based on all modules
+                # # select the next action (action_prime) for the agent to take 
                 # mod.select_next_action()
 
 
@@ -265,12 +265,30 @@ for e in range(0,Simulation.num_episodes):
     #reset the agents (except for the Q tables and Q states) to start fresh for the next episode         
     ReinitializeAgents(agents,Simulation.init_space)
 
-    #save the trained agents to a file
-    agent_filename = filename+'/agents.pkl'
-    with open(agent_filename,'wb') as f:
-        pickle.dump(agents,f)
-        
 
+
+    #there are occasional permission errors, this block will keep retrying until the dump succeeds
+    #TODO make this save every so often in case of errors so the history isn't lost
+    agent_filename = filename+'/agents.pkl'
+
+    max_dump_attempts = 5
+    dump_attempts = 0
+    pe = True
+    while pe:
+        pe = False
+        try:
+            with open(agent_filename,'wb') as f:
+                pickle.dump(agents,f)  
+        except:
+            pe = True
+            dump_attempts = dump_attempts + 1
+            
+            print('permission error while saving to disk, retrying...')
+
+            if dump_attempts == max_dump_attempts:
+                print('******PERMISSION ERROR, COULD NOT DUMP AGENTS TO DISK********')
+        
+        
 print('training complete')
 
 
@@ -293,8 +311,6 @@ timestr = time.strftime("%m%d-%H%M")
 #     for line in mat:
 #         np.savetxt(f, line, fmt='%.2f')
 
-
-
 # #average and save the Q tables for each agent
 # for i in range(0,len(agents[0].modules)):
 #     q_table = np.array([])
@@ -306,9 +322,6 @@ timestr = time.strftime("%m%d-%H%M")
 #             working_state = agents[j].modules[i].Q.q_states[k]
 #             if(any(np.equal(q_states,working_state).all(1))):
 
-
-
-
 #store the iterations and total rewards for each agent for each episode
 iterations = np.arange(Simulation.num_episodes)
 if(os.path.isfile(filename+'/agent_rewards.pkl')):
@@ -316,8 +329,32 @@ if(os.path.isfile(filename+'/agent_rewards.pkl')):
 else:
     agent_reward_filename = filename+'/agent_rewards.pkl'
 
-with open(agent_reward_filename,'wb') as f:
-    pickle.dump([iterations, agent_rewards],f)  
+# pe = False
+
+# try:
+#     with open(agent_reward_filename,'wb') as f:
+#         pickle.dump([iterations, agent_rewards],f)  
+# except permissionError:
+#     pe = True
+
+#there are occasional permission errors, this block will keep retrying until the dump succeeds
+#TODO make this save every so often in case of errors so the history isn't lost
+max_dump_attempts = 5
+dump_attempts = 0
+pe = True
+while pe:
+    pe = False
+    try:
+        with open(agent_reward_filename,'wb') as f:
+            pickle.dump([iterations, agent_rewards],f)  
+    except:
+        pe = True
+        dump_attempts = dump_attempts + 1
+    
+        print('permission error while saving to disk, retrying...')
+
+        if dump_attempts == max_dump_attempts:
+            print('******PERMISSION ERROR, COULD NOT DUMP AGENT REWARDS TO DISK********')
 
 #close the visualization plot and create a new plot of each agents total reward over time
 plt.close()
