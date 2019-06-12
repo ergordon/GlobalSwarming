@@ -9,9 +9,11 @@ import random
 class Simulation:
 
     num_agents = 5 #number of agents to simulate
-    num_episodes = 10 #number of times to run the training scenario
-    episode_length = 50 #number of time steps in each training scenario [iterations]
-    exploitation_rise_time = 0 #the amount of time over which we transition from exploration to exploitation [seconds]
+    num_episodes = 1000 #number of times to run the training scenario
+    episode_length = 100 #number of time steps in each training scenario [iterations]
+    exploitation_rise_time = 200 #the amount of time over which we transition from exploration to exploitation [seconds]
+            #TODO change to exploitation rise percentage and make it explore for the 1st percent of every episode
+    exploitation_rise_percent = 20 #the percentage of each episode over which we transition from exploration to exploitation
 
     #bounds to initialize the agents inside of
     init_space = [[0,10],
@@ -19,17 +21,17 @@ class Simulation:
 
     #bounds to simulate the agents within
     #exiting these bounds will end the episode immediately
-    search_space = [[-20,20],
-                    [-20,20]]
+    search_space = [[-50,50],
+                    [-50,50]]
 
-    ThreeTwoOne = True
+    ThreeTwoOne = False
     visualize = ThreeTwoOne  #whether to show a plot animation of the agent positions
 
     load_agents = ThreeTwoOne #whether to load the agents.pkl file (loads agents exactly as they upon completion of training)
     load_training_data = False #whether to load the agent training data (loads q tables and states into the modules that exist in the agent initialization function)
     
     #TODO think of better name for this
-    take_best_action = True #whether to select next actions based on highest Q table entry or use Q table values as probabilities for each action 
+    take_best_action = ThreeTwoOne #whether to select next actions based on highest Q table entry or use Q table values as probabilities for each action 
 
     #targets = np.array([-40,40])
     targets = np.array([random.randint(search_space[0][0], search_space[0][1]),
@@ -47,7 +49,7 @@ class Simulation:
     #                      [10, -40, 10, 10],
     #                      [-40, 10, 30, 10]])
 
-    obstacles = np.array([[random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]),10,10], 
+    obstacles = np.array([[random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), 10, 10], 
                           [random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), 10, 10], 
                           [random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), 10, 10],
                           [random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), 10, 10],
