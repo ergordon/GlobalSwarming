@@ -9,9 +9,9 @@ import random
 class Simulation:
 
     num_agents = 5 #number of agents to simulate
-    num_episodes = 1000 #number of times to run the training scenario
-    episode_length = 200 #number of time steps in each training scenario [iterations]
-    exploitation_rise_time = 300 #the amount of time over which we transition from exploration to exploitation [seconds]
+    num_episodes = 10 #number of times to run the training scenario
+    episode_length = 50 #number of time steps in each training scenario [iterations]
+    exploitation_rise_time = 0 #the amount of time over which we transition from exploration to exploitation [seconds]
 
     #bounds to initialize the agents inside of
     init_space = [[0,10],
@@ -19,10 +19,10 @@ class Simulation:
 
     #bounds to simulate the agents within
     #exiting these bounds will end the episode immediately
-    search_space = [[-50,50],
-                    [-50,50]]
+    search_space = [[-20,20],
+                    [-20,20]]
 
-    ThreeTwoOne = False
+    ThreeTwoOne = True
     visualize = ThreeTwoOne  #whether to show a plot animation of the agent positions
 
     load_agents = ThreeTwoOne #whether to load the agents.pkl file (loads agents exactly as they upon completion of training)
@@ -39,13 +39,21 @@ class Simulation:
     ## [x, y, width, height]
     #obstacles = np.array([[-40,-40,30,50], [10, -40, 20, 50], [-40, 10, 60, 10]])
     #obstacles = np.array([[-40,-40,30,50]])
-    obstacles = np.array([[-40,-40,10,10], 
-                          [-15, -20, 10, 10], 
-                          [15, 10, 10, 10],
-                          [-5, 30, 10, 10],
-                          [15, -20, 10, 10], 
-                          [10, -40, 10, 10],
-                          [-40, 10, 30, 10]])
+    #obstacles = np.array([[-40,-40,10,10], 
+    #                      [-15, -20, 10, 10], 
+    #                      [15, 10, 10, 10],
+    #                      [-5, 30, 10, 10],
+    #                      [15, -20, 10, 10], 
+    #                      [10, -40, 10, 10],
+    #                      [-40, 10, 30, 10]])
+
+    obstacles = np.array([[random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]),10,10], 
+                          [random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), 10, 10], 
+                          [random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), 10, 10],
+                          [random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), 10, 10],
+                          [random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), 10, 10], 
+                          [random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), 10, 10],
+                          [random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), 10, 10]])
 ##############################################################################
 #   Simulation Class
 ##############################################################################

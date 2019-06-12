@@ -930,9 +930,9 @@ class ObstacleAvoidanceModule(Module):
     #rewards for being within (or out of) range. 1st entry is the reward 
     # for being within the range specified by the first entry in ranges_squared
     #the last entry is the reward (punishment) for being out of range
-    rewards = [-100,-1,0] 
+    rewards = [-100,-10,0] 
     #the discrete ranges at which the agent can collect rewards
-    ranges_squared = [1,5]
+    ranges_squared = [5,15]
 
     #class constructor
     def __init__(self,parent_agt):
