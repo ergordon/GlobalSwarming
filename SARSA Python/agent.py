@@ -91,6 +91,7 @@ class Agent:
             elif (Simulation.ControllerType == 1): # Importance Function Approach
                 action_weights = action_weights + self.modules[i].get_module_weight()*mod_action_weights
             else:
+                print("Level Not Yet Unlocked")
                 pass            
                 
 

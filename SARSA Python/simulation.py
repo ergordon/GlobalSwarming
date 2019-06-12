@@ -8,10 +8,12 @@ import random
 #A class containing high level simulation variables
 class Simulation:
 
-    num_agents = 40 #number of agents to simulate
+    num_agents = 25 #number of agents to simulate
     num_episodes = 1 #number of times to run the training scenario
-    episode_length = 500 #number of time steps in each training scenario [iterations]
-    exploitation_rise_time = 20 #the amount of time over which we transition from exploration to exploitation [seconds]
+    episode_length = 100 #number of time steps in each training scenario [iterations]
+    exploitation_rise_time = 200 #the amount of time over which we transition from exploration to exploitation [seconds]
+            #TODO change to exploitation rise percentage and make it explore for the 1st percent of every episode
+    exploitation_rise_percent = 20 #the percentage of each episode over which we transition from exploration to exploitation
 
     #bounds to initialize the agents inside of
     init_space = [[0,10],
@@ -66,7 +68,7 @@ class Simulation:
     #                      [10, -40, 10, 10],
     #                      [-40, 10, 30, 10]])
 
-    obstacles = np.array([[random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]),10,10], 
+    obstacles = np.array([[random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), 10, 10], 
                           [random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), 10, 10], 
                           [random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), 10, 10],
                           [random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), 10, 10],
