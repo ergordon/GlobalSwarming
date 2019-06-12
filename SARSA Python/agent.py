@@ -16,7 +16,11 @@ class Agent:
     #these are the weights for each module. they should sum to 1. 
     #If they don't, they will be scaled accordingly during initialization
     #also, there should be a weight entry for each module
+<<<<<<< HEAD
     module_weights = [0.2,0.2,0.2,0.2] 
+=======
+    module_weights = [1]#[0.0001,0.99] 
+>>>>>>> 7925e035c43b6c545f860e3876116f0fd41b552e
     
 
     #class constructor
@@ -33,9 +37,15 @@ class Agent:
         # could maybe add bias only to select weights such as largest two
         
 
+<<<<<<< HEAD
         self.modules.append(module.CohesionModule(self)) #cohesion module makes the agents stay together as a swarm
         self.modules.append(module.CollisionModule(self)) #collision module prevents the agents from hitting each other
         self.modules.append(module.BoundaryModule(self)) #boundary module prevents the agents from leaving the search space
+=======
+        #self.modules.append(module.CohesionModule(self)) #cohesion module makes the agents stay together as a swarm
+        #self.modules.append(module.CollisionModule(self)) #collision module prevents the agents from hitting each other
+        # self.modules.append(module.BoundaryModule(self)) #boundary module prevents the agents from leaving the search space
+>>>>>>> 7925e035c43b6c545f860e3876116f0fd41b552e
         # self.modules.append(module.TargetSeekModule(self)) #collision module prevents the agents from hitting each other
         self.modules.append(module.ObstacleAvoidanceModule(self))
 
@@ -71,10 +81,6 @@ class Agent:
 
     #select the next action to preform based on a softmax of each module
     def select_next_action(self):
-        # print("selecting the next action!!!")
-
-
-
 
         action_weights = np.zeros(len(Action))
         for i in range(0,len(self.modules)):
@@ -85,6 +91,7 @@ class Agent:
             else:
                 mod_action_weights = np.ones(len(Action))/len(Action)
 
+<<<<<<< HEAD
             # action_weights = action_weights + self.modules[i].get_module_weight()*mod_action_weights
             
             
@@ -96,6 +103,13 @@ class Agent:
 
         # print('summed weights')
         # print(action_weights)
+=======
+            if(len(self.modules) > 1):
+                action_weights = action_weights + self.modules[i].get_module_weight()*mod_action_weights
+            else:            
+                action_weights = action_weights + Agent.module_weights[i]*self.modules[i].get_action_weights()
+
+>>>>>>> 7925e035c43b6c545f860e3876116f0fd41b552e
         #then select another action here.....
          #normalize the weights to create probabilities
         if(np.sum(action_weights) != 0):
