@@ -2,6 +2,7 @@ from agent import Agent
 from simulation import Simulation
 import numpy as np
 from action import Action
+from module import Module
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import time
@@ -88,6 +89,29 @@ except OSError:
 
 ##############################################################################
 #   Simulation Variables
+##############################################################################
+
+##############################################################################
+#   Save Simulation Configuration Settings
+##############################################################################
+
+## Save Configuration to a test file
+    if(not Simulation.visualize):
+        file = open(os.path.join(path ,'Simulation_Configuration.txt'),'w') 
+
+        file.write("num_agents:  " + str(Simulation.num_agents)+"\n")
+        file.write("num_episodes:  " + str(Simulation.num_episodes)+"\n")
+        file.write("episode_length :  " + str(Simulation.episode_length)+"\n")
+        file.write("exploitation_rise_time :  " + str(Simulation.exploitation_rise_time )+"\n")
+        file.write("init_space:  " + str(Simulation.init_space)+"\n")
+        file.write("search_space :  " + str(Simulation.search_space)+"\n")
+
+        #file.write("Mean Luminance:  " + str(statistics.mean(LuminanceExact))+"\n")
+        #file.write("STDe Luminance:  " + str(statistics.stdev(LuminanceExact))+"\n")
+        #file.write("Mean Area :  " + str(statistics.mean(Area))+"\n")
+        file.close() 
+##############################################################################
+#   Save Simulation Configuration Settings
 ##############################################################################
 
 ##############################################################################

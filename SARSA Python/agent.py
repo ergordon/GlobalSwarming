@@ -16,7 +16,7 @@ class Agent:
     #these are the weights for each module. they should sum to 1. 
     #If they don't, they will be scaled accordingly during initialization
     #also, there should be a weight entry for each module
-    module_weights = [1]#[0.0001,0.99] 
+    module_weights = Simulation.module_weights
     
 
     #class constructor
@@ -31,13 +31,18 @@ class Agent:
         # Also impose a restriciton on weightin functions to be in the range [0,1]
         # Then if module returns >0.95 for the weight, add a bias to its module weights
         # could maybe add bias only to select weights such as largest two
-        # 
-
-        #self.modules.append(module.CohesionModule(self)) #cohesion module makes the agents stay together as a swarm
-        #self.modules.append(module.CollisionModule(self)) #collision module prevents the agents from hitting each other
-        # self.modules.append(module.BoundaryModule(self)) #boundary module prevents the agents from leaving the search space
-        # self.modules.append(module.TargetSeekModule(self)) #collision module prevents the agents from hitting each other
-        self.modules.append(module.ObstacleAvoidanceModule(self))
+         
+        ## Activate Modules
+        if (Simulation.CohesionModule):
+            self.modules.append(module.CohesionModule(self))
+        if (Simulation.CollisionAvoidanceModule):
+            self.modules.append(module.CollisionModule(self)) #collision module prevents the agents from hitting each other
+        if (Simulation.OutOfBoundsModule):
+            self.modules.append(module.BoundaryModule(self)) 
+        if (Simulation.TargetSeekingModule):
+            self.modules.append(module.TargetSeekModule(self)) #collision module prevents the agents from hitting each other
+        if (Simulation.ObstacleAvoidanceModule):
+            self.modules.append(module.ObstacleAvoidanceModule(self))
 
 
         #make sure there is a module weight for each module
@@ -81,10 +86,13 @@ class Agent:
             else:
                 mod_action_weights = np.ones(len(Action))/len(Action)
 
-            if(len(self.modules) > 1):
+            if (Simulation.ControllerType == 0): # Steve+Bucci Approach
+                action_weights = action_weights + Agent.module_weights[i]*self.modules[i].get_action_weights()      
+            elif (Simulation.ControllerType == 1): # Importance Function Approach
                 action_weights = action_weights + self.modules[i].get_module_weight()*mod_action_weights
-            else:            
-                action_weights = action_weights + Agent.module_weights[i]*self.modules[i].get_action_weights()
+            else:
+                pass            
+                
 
         #then select another action here.....
          #normalize the weights to create probabilities
