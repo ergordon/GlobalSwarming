@@ -37,7 +37,7 @@ class Agent:
         self.modules.append(module.CollisionModule(self)) #collision module prevents the agents from hitting each other
         # self.modules.append(module.BoundaryModule(self)) #boundary module prevents the agents from leaving the search space
         # self.modules.append(module.TargetSeekModule(self)) #collision module prevents the agents from hitting each other
-        self.modules.append(module.ObstacleAvoidanceModule(self))
+        # self.modules.append(module.ObstacleAvoidanceModule(self))
 
 
         #make sure there is a module weight for each module
