@@ -16,7 +16,7 @@ class Agent:
     #these are the weights for each module. they should sum to 1. 
     #If they don't, they will be scaled accordingly during initialization
     #also, there should be a weight entry for each module
-    module_weights = [0.33,0.33,.33]#[0.0001,0.99] 
+    module_weights = [0.33,0.33]#[0.0001,0.99] 
     
 
     #class constructor
@@ -37,7 +37,7 @@ class Agent:
         self.modules.append(module.CollisionModule(self)) #collision module prevents the agents from hitting each other
         # self.modules.append(module.BoundaryModule(self)) #boundary module prevents the agents from leaving the search space
         # self.modules.append(module.TargetSeekModule(self)) #collision module prevents the agents from hitting each other
-
+        self.modules.append(module.ObstacleAvoidanceModule(self))
 
 
         #make sure there is a module weight for each module

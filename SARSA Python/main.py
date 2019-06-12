@@ -11,6 +11,7 @@ import os.path
 import argparse
 import random
 import copy as cp
+import imageio
 
 ##############################################################################
 #   Argument Parser
@@ -41,9 +42,16 @@ def checkInBounds(position,bounds):
 def ReinitializeAgents(agents,bounds):
     #reintizilize target
     search_space = Simulation.search_space
-    Simulation.targets = np.array([-40,40])
-    # Simulation.targets = np.array([random.randint(search_space[0][0], search_space[0][1]),
-    #                      random.randint(search_space[1][0], search_space[1][1])])
+    #Simulation.targets = np.array([-40,40])
+    Simulation.targets = np.array([random.randint(search_space[0][0], search_space[0][1]),
+                         random.randint(search_space[1][0], search_space[1][1])])
+    Simulation.obstacles = np.array([[random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]),10,10], 
+                          [random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), 10, 10], 
+                          [random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), 10, 10],
+                          [random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), 10, 10],
+                          [random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), 10, 10], 
+                          [random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), 10, 10],
+                          [random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), 10, 10]])
     #initialize agent parameters
     for i in range(0,len(agents)):
         #TODO make this initial position randomized
@@ -103,7 +111,6 @@ if Simulation.load_agents:
         initialized = True
 
 if not initialized:
-    print("BOOHOOHOO")
     #if not, initialize a set of agents from scratch
     #initialize agent positions
     for i in range(0,Simulation.num_agents):
@@ -156,6 +163,8 @@ if Simulation.load_training_data:
 
 #plotting for visualization
 if(Simulation.visualize):
+    fig, ax = plt.subplots()
+    images = []
     frame_rate = 10
     axis_bounds = [Simulation.search_space[0][0], Simulation.search_space[0][1], Simulation.search_space[1][0], Simulation.search_space[1][1]]
     plt.axis(axis_bounds)
@@ -188,12 +197,17 @@ for e in range(0,Simulation.num_episodes):
                 # agnt.position = np.array([0,0], dtype='f')
 
         if(Simulation.visualize):
+            plt.grid(linestyle='--', linewidth='0.5', color='grey')
             for agnt in agents:
                 plt.plot(agnt.position[0],agnt.position[1],'ro')
                 plt.axis(axis_bounds)
+                
                 for mod in agnt.modules:
                     mod.visualize()
-
+            #convert the figure into an array and append it to images array        
+            image = np.frombuffer(fig.canvas.tostring_rgb(), dtype='uint8')
+            image  = image.reshape(fig.canvas.get_width_height()[::-1] + (3,))
+            images.append(image)
         
         for agnt in agents:
             for mod in agnt.modules:
@@ -206,24 +220,10 @@ for e in range(0,Simulation.num_episodes):
 
 
         for agnt in agents:
-
             #select the next action (action_prime) for the agent to take 
             # agnt.select_next_action()
 
             for mod in agnt.modules:
-
-                # #TODO move this up a level. Will only select one action based on all modules
-                # #select the next action (action_prime) for the agent to take 
-                # mod.select_next_action()
-
-                # # find what the state (state_prime) would be if that action were taken
-                # mod.update_state_prime()
-
-                # # TODO move this up a level. Will only select one action based on all modules
-                # # select the next action (action_prime) for the agent to take 
-                # mod.select_next_action()
-
-
                 #determine the reward for executing the action (not prime) in the state (not prime)
                 #action (not prime) brings agent from state (not prime) to state_prime, and reward is calulated based on state_prime
                 mod.update_instant_reward()
@@ -321,6 +321,11 @@ timestr = time.strftime("%m%d-%H%M")
 #         for k in range(0, agents[j].modules[i].Q.q_states):
 #             working_state = agents[j].modules[i].Q.q_states[k]
 #             if(any(np.equal(q_states,working_state).all(1))):
+
+#export the visualizer as a *.gif
+if(Simulation.visualize):
+    kwargs_write = {'fps':10, 'quantizer':'nq'}
+    imageio.mimsave(os.path.join(filename, "Animation.gif"), images, fps=10)   
 
 #store the iterations and total rewards for each agent for each episode
 iterations = np.arange(Simulation.num_episodes)
