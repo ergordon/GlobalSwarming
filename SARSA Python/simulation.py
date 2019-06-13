@@ -8,12 +8,12 @@ import random
 #A class containing high level simulation variables
 class Simulation:
 
-    num_agents = 25 #number of agents to simulate
-    num_episodes = 1 #number of times to run the training scenario
+    num_agents = 4 #number of agents to simulate
+    num_episodes = 10 #number of times to run the training scenario
     episode_length = 100 #number of time steps in each training scenario [iterations]
-    exploitation_rise_time = 200 #the amount of time over which we transition from exploration to exploitation [seconds]
+    exploitation_rise_time = 0 #the amount of time over which we transition from exploration to exploitation [seconds]
             #TODO change to exploitation rise percentage and make it explore for the 1st percent of every episode
-    exploitation_rise_percent = 20 #the percentage of each episode over which we transition from exploration to exploitation
+    exploitation_rise_percent = 0 #the percentage of each episode over which we transition from exploration to exploitation
 
     #bounds to initialize the agents inside of
     init_space = [[0,10],
@@ -21,8 +21,8 @@ class Simulation:
 
     #bounds to simulate the agents within
     #exiting these bounds will end the episode immediately
-    search_space = [[-100,100],
-                    [-100,100]]
+    search_space = [[-30,30],
+                    [-30,30]]
 
     ThreeTwoOne = True
     visualize = ThreeTwoOne  #whether to show a plot animation of the agent positions
@@ -45,6 +45,8 @@ class Simulation:
     #If they don't, they will be scaled accordingly during initialization
     #also, there should be a weight entry for each module
     module_weights = [0.1, 0.2, 0.1, 0.8, 0.4]#[0.0001,0.99] 
+    #module_weights = [0.01, 0.02, 0.01, 0.8, 0.04]#[0.0001,0.99] 
+    #module_weights = [1]
 
     # Controller to be activated.
     # 0 = Steve and Bucci Controller
@@ -58,7 +60,7 @@ class Simulation:
 
     # Obstacles to Avoid
     ## [x, y, width, height]
-    #obstacles = np.array([[-40,-40,30,50], [10, -40, 20, 50], [-40, 10, 60, 10]])
+    #obstacles = np.array([[-30,-40,30,50], [10, -40, 20, 50], [-40, 10, 60, 10]])
     #obstacles = np.array([[-40,-40,30,50]])
     #obstacles = np.array([[-40,-40,10,10], 
     #                      [-15, -20, 10, 10], 
@@ -76,6 +78,15 @@ class Simulation:
                           [random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), 10, 10],
                           [random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), 10, 10]])
 
+
+    obstacle_collision_count = 0        # Number of collisions (Agent-Agent)
+    obstacle_episode_collision_count = [] # Number of collisions during a single episode (Agent-Agent)
+
+    agent_collision_count = 0        # Number of collisions (Agent-Agent)
+    agent_episode_collision_count = [] # Number of collisions during a single episode (Agent-Agent)
+
+    boundary_collision_count = 0        # Number of collisions (Agent-Agent)
+    boundary_episode_collision_count = [] # Number of collisions during a single episode (Agent-Agent)
 ##############################################################################
 #   Simulation Class
 ##############################################################################

@@ -249,8 +249,6 @@ class CollisionModule(Module):
         self.action_prime = Action.STAY     #safest not to do anyting for first action
         self.gamma = 0                   #discount factor. keep in range [0,1]. can be tuned to affect Q learning
 
-        self.collision_count = 0        #number of times this module has recorded a collision (with another agent) for this agent
-    
     #visualization for this module. 
     # draw a transparent circle for each tracked agent for each reward range 
     def visualize(self):
@@ -272,7 +270,8 @@ class CollisionModule(Module):
         super().auxilariy_functions() #inherited class function
         for i in range(0,len(self.state_prime)):
             if(np.array_equal(self.state_prime[i],np.array([0,0]))):
-                self.collision_count = self.collision_count + 1
+                Simulation.agent_collision_count = Simulation.agent_collision_count + 1
+                print("Agent Collision "+str(Simulation.agent_collision_count))
 
     #add an agent to the list of agents to be tracked by this module
     def start_tracking(self,agt):
@@ -446,8 +445,6 @@ class BoundaryModule(Module):
         self.action_prime = Action.STAY    #safest not to do anyting for first action
         self.gamma = 0                     #discount factor. keep in range [0,1]. can be tuned to affect Q learning
 
-        self.collision_count = 0           #number of times this module has recorded a collision (with another agent) for this agent
-    
         self.state = np.zeros((len(Simulation.search_space),len(Simulation.search_space[0])))
         self.state_prime = np.zeros((len(Simulation.search_space),len(Simulation.search_space[0])))
         self.instant_reward = np.zeros(len(Simulation.search_space))
@@ -472,9 +469,16 @@ class BoundaryModule(Module):
     #for the collision module, this is used to check for and track collisions between agents. 
     def auxilariy_functions(self):
         super().auxilariy_functions() #inherited class function
-        # for i in range(0,len(self.state_prime)):
-        #     if(np.array_equal(self.state_prime[i],np.array([0,0]))):
-        #         self.collision_count = self.collision_count + 1
+        for i in range(0,len(Simulation.search_space)):  
+            #handle upper bounds
+            if(self.state_prime[i,0] <= BoundaryModule.ranges[0]):
+                Simulation.boundary_collision_count = Simulation.boundary_collision_count + 1
+                #print("Boundary Collision "+str(Simulation.boundary_collision_count))
+            #handle lower bounds
+            if(self.state_prime[i,1] >= -BoundaryModule.ranges[0]):
+                Simulation.boundary_collision_count = Simulation.boundary_collision_count + 1
+                #print("Boundary Collision "+str(Simulation.boundary_collision_count))
+
     
     #update the Q table for this module
     def update_q(self):
@@ -526,9 +530,6 @@ class BoundaryModule(Module):
     #determine the reward for executing the action (not prime) in the state (not prime)
     #action (not prime) brings agent from state (not prime) to state_prime, and reward is calulated based on state_prime
     def update_instant_reward(self):
-
-        threshold = 4
-        reward = -2
 
         for i in range(0,len(Simulation.search_space)):  
             
@@ -776,14 +777,13 @@ class ObstacleAvoidanceModule(Module):
         self.action_prime = Action.STAY     #safest not to do anyting for first action
         self.gamma = 0.7                   #discount factor. keep in range [0,1]. can be tuned to affect Q learning
 
-        self.collision_count = 0        #number of times this module has recorded a collision (with another agent) for this agent
-    
         self.state = np.zeros((len(Simulation.obstacles),2+len(Simulation.obstacles[0])))
         self.state_prime = np.zeros((len(Simulation.obstacles),2+len(Simulation.obstacles[0])))
         self.instant_reward = np.zeros(len(Simulation.obstacles))
 
         for i in range(0,len(Simulation.obstacles)):
-            self.Q.append(Qlearning())   
+            self.Q.append(Qlearning())  
+         
 
     #visualization for this module. 
     # draw a transparent circle for each tracked agent for each reward range 
@@ -801,9 +801,22 @@ class ObstacleAvoidanceModule(Module):
     #for the collision module, this is used to check for and track collisions between agents. 
     def auxilariy_functions(self):
         super().auxilariy_functions() #inherited class function
-        for i in range(0,len(self.state_prime)):
-            if(np.array_equal(self.state_prime[i],np.array([0,0]))):
-                self.collision_count = self.collision_count + 1
+        #print(self.state_prime)
+        for k in range(0,len(Simulation.obstacles)):
+            if (abs(self.state_prime[k,0]) <= 1.5 or abs(self.state_prime[k,2]) <= 1.5):
+                if (self.state_prime[k,5] == 1):
+                    Simulation.obstacle_collision_count =  Simulation.obstacle_collision_count + 1
+                    #print("Obstacle X Collision "+str( Simulation.obstacle_collision_count))
+                else:
+                    pass
+            elif (abs(self.state_prime[k,1]) <= 1.5 or abs(self.state_prime[k,3]) <= 1.5):
+                if (self.state_prime[k,4] == 1):
+                    Simulation.obstacle_collision_count =  Simulation.obstacle_collision_count + 1
+                    #print("Obstacle Y Collision "+str( Simulation.obstacle_collision_count))
+                else:
+                    pass
+            else:
+                pass
 
     #update the Q table for this module
     def update_q(self):

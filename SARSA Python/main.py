@@ -41,6 +41,15 @@ def checkInBounds(position,bounds):
 #TODO actually use bounds
 #reset the agents to initial conditions (except for the Q states and tables)
 def ReinitializeAgents(agents,bounds):
+    # Save Last Episodes Collisions, Reset Collision
+    Simulation.obstacle_episode_collision_count.append(Simulation.obstacle_collision_count)
+    Simulation.obstacle_collision_count = 0
+
+    Simulation.agent_episode_collision_count.append(Simulation.agent_collision_count)
+    Simulation.agent_collision_count = 0
+
+    Simulation.boundary_episode_collision_count.append(Simulation.boundary_collision_count)
+    Simulation.boundary_collision_count = 0
     #reintizilize target
     search_space = Simulation.search_space
     #Simulation.targets = np.array([-40,40])
@@ -349,7 +358,7 @@ timestr = time.strftime("%m%d-%H%M")
 #export the visualizer as a *.gif
 if(Simulation.visualize):
     kwargs_write = {'fps':10, 'quantizer':'nq'}
-    imageio.mimsave(os.path.join(filename, "Animation.gif"), images, fps=10)   
+    imageio.mimsave(os.path.join(filename, "Animation"+timestr+".gif"), images, fps=10)
 
 #store the iterations and total rewards for each agent for each episode
 iterations = np.arange(Simulation.num_episodes)
@@ -385,7 +394,7 @@ while pe:
         if dump_attempts == max_dump_attempts:
             print('******PERMISSION ERROR, COULD NOT DUMP AGENT REWARDS TO DISK********')
 
-#close the visualization plot and create a new plot of each agents total reward over time
+## Iterations-Reward Plot
 plt.close()
 for i in range(0,Simulation.num_agents):
     plt.plot(iterations,agent_rewards[:,i])
@@ -398,6 +407,22 @@ if(os.path.isfile(filename+'/IterationsVReward.jpeg')):
 else:
     plt.savefig(os.path.join(filename, "IterationsVReward.jpeg") , orientation='landscape', quality=95)
 
+plt.show()
+
+## Collision Box and Whisker Plot
+fig1, ax1 = plt.subplots()
+ax1.set_title('Collision Tracker')
+ax1.boxplot([Simulation.agent_episode_collision_count, Simulation.obstacle_episode_collision_count, Simulation.boundary_episode_collision_count])
+plt.xlabel("Collision Type")
+plt.ylabel("Collisions")
+ax1.set_xticklabels(['Agent Collisions', 'Obstacle Collisions', 'Boundary Collisions'])
+
+
+if(os.path.isfile(filename+'/Collisions.jpeg')):
+    fig1.savefig(os.path.join(filename, "Collisions"+timestr+".jpeg") , orientation='landscape', quality=95)
+else:
+    fig1.savefig(os.path.join(filename, "Collisions.jpeg") , orientation='landscape', quality=95)
+    
 plt.show()
 ##############################################################################
 #   data
