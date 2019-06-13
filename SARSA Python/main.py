@@ -50,22 +50,26 @@ def ReinitializeAgents(agents,bounds):
 
     Simulation.boundary_episode_collision_count.append(Simulation.boundary_collision_count)
     Simulation.boundary_collision_count = 0
-    #reintizilize target
-    search_space = Simulation.search_space
-    #Simulation.targets = np.array([-40,40])
-    Simulation.targets = np.array([random.randint(search_space[0][0], search_space[0][1]),
-                         random.randint(search_space[1][0], search_space[1][1])])
-    Simulation.obstacles = np.array([[random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]),10,10], 
-                          [random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), 10, 10], 
-                          [random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), 10, 10],
-                          [random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), 10, 10],
-                          [random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), 10, 10], 
-                          [random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), 10, 10],
-                          [random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), 10, 10]])
+
+    Simulation.target_episode_entries_count.append(Simulation.target_entries_count)
+    Simulation.target_entries_count = 0
+    
+    #Reinitialize Setting Parameters
+    if (Simulation.Arena == 0):
+        search_space = Simulation.search_space
+        #Simulation.targets = np.array([-40,40])
+        Simulation.targets = np.array([random.randint(search_space[0][0], search_space[0][1]),
+                                       random.randint(search_space[1][0], search_space[1][1])])
+
+        Simulation.obstacles = np.array([random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), 10, 10])
+        for i in range(1,Simulation.num_obstacles):
+            temp_obstacles = np.array([random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), 10, 10])
+            Simulation.obstacles = np.vstack((Simulation.obstacles, temp_obstacles))
+
     #initialize agent parameters
     for i in range(0,len(agents)):
-        #TODO make this initial position randomized
-        agents[i].position = np.array([2*i,2*i], dtype='f')
+        init_space = Simulation.init_space
+        agents[i].position = np.array([random.randint(init_space[0][0], init_space[0][1]),random.randint(init_space[1][0], init_space[1][1])], dtype='f')
         agents[i].total_reward = 0
         
     #initialize module parameters
@@ -147,7 +151,8 @@ if not initialized:
     #if not, initialize a set of agents from scratch
     #initialize agent positions
     for i in range(0,Simulation.num_agents):
-        position = np.array([2*i,2*i], dtype='f')
+        init_space = Simulation.init_space
+        position = np.array([random.randint(init_space[0][0], init_space[0][1]),random.randint(init_space[1][0], init_space[1][1])], dtype='f')
         agents.append(Agent(position))
 
     #initialize module parameters such as who each agent is tracking
@@ -218,7 +223,6 @@ for e in range(0,Simulation.num_episodes):
 
             #take the action determined in the last step
             #update agent positions on plots
-            #TODO use action across multiple modules
             agnt.take_action(agnt.modules[0].action)
 
             #check if any agent went out of search space.
@@ -226,8 +230,6 @@ for e in range(0,Simulation.num_episodes):
             if not (checkInBounds(agnt.position,Simulation.search_space)):
                 print("agent left search space, ending episode")
                 agent_out_of_bounds = True
-                # instead, move agent back in bounds.
-                # agnt.position = np.array([0,0], dtype='f')
 
         if(Simulation.visualize):
             plt.grid(linestyle='--', linewidth='0.5', color='grey')
@@ -297,7 +299,10 @@ for e in range(0,Simulation.num_episodes):
 
     #reset the agents (except for the Q tables and Q states) to start fresh for the next episode         
     ReinitializeAgents(agents,Simulation.init_space)
-
+    
+    for agnt in agents:
+        for mod in agnt.modules:
+            mod.reset_init()
 
 
     #there are occasional permission errors, this block will keep retrying until the dump succeeds
@@ -416,6 +421,18 @@ ax1.boxplot([Simulation.agent_episode_collision_count, Simulation.obstacle_episo
 plt.xlabel("Collision Type")
 plt.ylabel("Collisions")
 ax1.set_xticklabels(['Agent Collisions', 'Obstacle Collisions', 'Boundary Collisions'])
+
+print(Simulation.target_episode_entries_count)
+
+total_collisions = np.sum([Simulation.agent_episode_collision_count, Simulation.obstacle_episode_collision_count, Simulation.boundary_episode_collision_count], axis=0)
+
+if(os.path.isfile(filename+'/total_collisions.pkl')):
+    total_collisions_filename = filename+'/total_collisions'+timestr+'.pkl'
+else:
+    total_collisions_filename = filename+'/total_collisions.pkl'
+
+with open(total_collisions_filename,'wb') as f:
+    pickle.dump([iterations, total_collisions_filename],f)  
 
 
 if(os.path.isfile(filename+'/Collisions.jpeg')):

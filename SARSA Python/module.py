@@ -56,10 +56,6 @@ class Module:
         sys.exit('get_action_weights not implemented for this module. This function must be implemented for each module in the derived class')
 
 ##############################################################################
-#   Module Base Class
-##############################################################################    
-
-##############################################################################
 #   Begin Cohesion Module Class
 ##############################################################################
 
@@ -217,10 +213,6 @@ class CohesionModule(Module):
         return action_weights
 
 ##############################################################################
-#   End Cohesion Module Class
-##############################################################################
-
-##############################################################################
 #   Begin Collision Module Class
 ##############################################################################
 
@@ -271,7 +263,7 @@ class CollisionModule(Module):
         for i in range(0,len(self.state_prime)):
             if(np.array_equal(self.state_prime[i],np.array([0,0]))):
                 Simulation.agent_collision_count = Simulation.agent_collision_count + 1
-                print("Agent Collision "+str(Simulation.agent_collision_count))
+                #print("Agent Collision "+str(Simulation.agent_collision_count))
 
     #add an agent to the list of agents to be tracked by this module
     def start_tracking(self,agt):
@@ -410,10 +402,6 @@ class CollisionModule(Module):
         #     action_weights = np.ones(len(Action))/len(Action)
 
         return action_weights
-
-##############################################################################
-#   End Collision Module Class
-##############################################################################
 
 ##############################################################################
 #   Begin Boundary Module Class
@@ -598,10 +586,6 @@ class BoundaryModule(Module):
         return action_weights
 
 ##############################################################################
-#   End Boundary Module Class
-##############################################################################
-
-##############################################################################
 #   Begin Target Seek Module Class
 ##############################################################################
 
@@ -615,7 +599,8 @@ class TargetSeekModule(Module):
     rewards = [10, -1]
     #the discrete ranges at which the agent can collect rewards
     #ranges_squared = [25,225,625]
-    ranges_squared = [25]
+    ranges_squared = [100]
+
     #class constructor
     def __init__(self,parent_agt):
         super().__init__(parent_agt) #inherited class initialization
@@ -629,6 +614,8 @@ class TargetSeekModule(Module):
         self.action = Action.STAY         # safest not to do anything for first action
         self.action_prime = Action.STAY   # safest not to do anything for first action
         self.gamma = 0.9                 # discount factor. keep in range [0,1]. can be tuned to affect Q learning
+
+        self.in_target = False
         # self.target = Simulation.targets  # target location
 
     #visualization for this module. 
@@ -651,6 +638,27 @@ class TargetSeekModule(Module):
             ax = plt.gca()
             ax.set_aspect('equal')
             ax.add_artist(circle)
+
+    #Track number of agents in the target range
+    def auxilariy_functions(self):
+        super().auxilariy_functions() #inherited class function
+        dist_squared = 0
+        for i in range(0,len(self.state_prime)):
+            dist_squared = dist_squared + self.state_prime[i]**2
+
+        if (dist_squared <= self.ranges_squared[0]):
+            if (self.in_target == False):
+                Simulation.target_entries_count = Simulation.target_entries_count + 1
+                self.in_target = True
+        
+        if (Simulation.target_entries_count == Simulation.num_agents):
+            search_space = Simulation.search_space
+            Simulation.targets = np.array([random.randint(search_space[0][0], search_space[0][1]),
+                            random.randint(search_space[1][0], search_space[1][1])])
+            print("New Target!")
+            Simulation.target_entries_count = 0
+
+
 
     #update the Q table for this module
     def update_q(self):
@@ -738,9 +746,9 @@ class TargetSeekModule(Module):
 
         return action_weights
 
-##############################################################################
-#   End Target Seek Module Class
-##############################################################################
+    def reset_init(self):
+        self.in_target = False
+        
 
 ##############################################################################
 #   Begin Obstacle Avoidance Module Class
@@ -755,7 +763,7 @@ class ObstacleAvoidanceModule(Module):
     #the last entry is the reward (punishment) for being out of range
     rewards = [-100,-10,0] 
     #the discrete ranges at which the agent can collect rewards
-    ranges_squared = [5,15]
+    ranges_squared = [4,15]
 
     #class constructor
     def __init__(self,parent_agt):
@@ -968,8 +976,3 @@ class ObstacleAvoidanceModule(Module):
         # else:
         #     action_weights = np.ones(len(Action))/len(Action)
         return action_weights
-
-
-##############################################################################
-#   End Obstacle Avoidance Module Class
-##############################################################################
