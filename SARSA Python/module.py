@@ -714,12 +714,6 @@ class TargetSeekModule(Module):
         
         Qrow = self.Q.fetch_row_by_state(self.state_prime) 
         
-        # print('Q row is: ')
-        # print(Qrow)
-        # print('state prime is: ')
-        # print(self.state_prime)
-        
-
         #for each possible agent action
         for i in range (0,len(Action)):
             #get the appropriate Q value Q table row corresponding to the current state 
