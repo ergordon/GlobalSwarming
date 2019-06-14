@@ -655,7 +655,7 @@ class TargetSeekModule(Module):
             search_space = Simulation.search_space
             Simulation.targets = np.array([random.randint(search_space[0][0], search_space[0][1]),
                             random.randint(search_space[1][0], search_space[1][1])])
-            print("New Target!")
+            #print("New Target!")
             Simulation.target_entries_count = 0
 
 
@@ -701,8 +701,8 @@ class TargetSeekModule(Module):
 
         #not in range, apply last reward (punishment)
         if rewarded == False:
-            self.instant_reward = TargetSeekModule.rewards[-1]
-            #self.instant_reward = -math.log(dist_squared + 10) + 5 #EQN5
+            #self.instant_reward = TargetSeekModule.rewards[-1]
+            self.instant_reward = -math.log(dist_squared + 10) + 5 #EQN5
 
     def get_module_weight(self):
         
@@ -727,6 +727,7 @@ class TargetSeekModule(Module):
             #get the appropriate Q value Q table row corresponding to the current state 
             #and the action being iterated over
             Qval = Qrow[i]
+            ## Try Qval = np.array(Qrow[i], dtype=float128) This might fix runtime error.
 
             #exploitation vs exploration constant
             #big T encourages exploration

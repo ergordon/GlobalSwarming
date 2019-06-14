@@ -16,10 +16,10 @@ class Simulation:
     if (Arena == 0): # Custom Terrain. Edit These Ones 
         
         num_agents = 3                 # number of agents to simulate
-        num_episodes = 2               # number of times to run the training scenario
-        episode_length = 1000            # number of time steps in each training scenario [iterations]
-        exploitation_rise_time = 10     # the amount of time over which we transition from exploration to exploitation [seconds]
-        exploitation_rise_percent = 10  # the percentage of each episode over which we transition from exploration to exploitation
+        num_episodes = 8000               # number of times to run the training scenario
+        episode_length = 500            # number of time steps in each training scenario [iterations]
+        exploitation_rise_time = 30     # the amount of time over which we transition from exploration to exploitation [seconds]
+        exploitation_rise_percent = 30  # the percentage of each episode over which we transition from exploration to exploitation
 
         #bounds to initialize the agents inside of
         init_space = [[0,10],
@@ -30,10 +30,10 @@ class Simulation:
         search_space = [[-30,30],
                         [-30,30]]
 
-        visualize = True            # whether to show a plot animation of the agent positions
+        visualize = False         # whether to show a plot animation of the agent positions
         load_agents = True          # whether to load the agents.pkl file (loads agents exactly as they upon completion of training)
         load_training_data = False  # whether to load the agent training data (loads q tables and states into the modules that exist in the agent initialization function)
-        take_best_action = True     # whether to select next actions based on highest Q table entry or use Q table values as probabilities for each action 
+        take_best_action = False     # whether to select next actions based on highest Q table entry or use Q table values as probabilities for each action 
 
 
         # Activate Modules
