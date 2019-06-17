@@ -45,13 +45,13 @@ def ReinitializeAgents(agents,bounds):
     #Simulation.targets = np.array([-40,40])
     Simulation.targets = np.array([random.randint(search_space[0][0], search_space[0][1]),
                          random.randint(search_space[1][0], search_space[1][1])])
-    Simulation.obstacles = np.array([[random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]),10,10], 
-                          [random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), 10, 10], 
-                          [random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), 10, 10],
-                          [random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), 10, 10],
-                          [random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), 10, 10], 
-                          [random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), 10, 10],
-                          [random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), 10, 10]])
+    Simulation.obstacles = np.array([[random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]),random.randint(1,10), random.randint(1,10)], 
+                          [random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), random.randint(1,10), random.randint(1,10)], 
+                          [random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), random.randint(1,10), random.randint(1,10)],
+                          [random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), random.randint(1,10), random.randint(1,10)],
+                          [random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), random.randint(1,10), random.randint(1,10)], 
+                          [random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), random.randint(1,10), random.randint(1,10)],
+                          [random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), random.randint(1,10), random.randint(1,10)]])
     #initialize agent parameters
     for i in range(0,len(agents)):
         #TODO make this initial position randomized
@@ -134,24 +134,37 @@ if not initialized:
             agents[i].modules[m].update_state()
             agents[i].modules[m].state_prime = np.copy(agents[i].modules[m].state)
 
-if Simulation.load_training_data:
-    if os.path.isfile('training_data.pkl'):
-        #if so, load it
-        print("Q learning data found, loading it now")
-        with open('training_data.pkl', 'rb') as f:
-            [module_names, tables, states] = pickle.load(f)
+# if Simulation.load_training_data:
+#     if os.path.isfile('training_data.pkl'):
+#         #if so, load it
+#         print("Q learning data found, loading it now")
+#         with open('training_data.pkl', 'rb') as f:
+#             [module_names, tables, states] = pickle.load(f)
         
-        # for agnt in agents:
-        #     for mod in agnt.modules
-        #         agents[0].modules[i].__class__.__name__
+#         # for agnt in agents:
+#         #     for mod in agnt.modules
+#         #         agents[0].modules[i].__class__.__name__
         
-        for h in range(0,len(module_names)):
-            for i in range(0,Simulation.num_agents):
-                for j in range(0,len(agents[0].modules)):
-                    print('loading training data!!!')
-                    if agents[i].modules[j].__class__.__name__ == module_names[h]:
-                        agents[i].modules[j].Q.q_table = cp.copy(tables[h])
-                        agents[i].modules[j].Q.q_states = cp.copy(states[h])
+#         for h in range(0,len(module_names)):
+#             for i in range(0,Simulation.num_agents):
+#                 for j in range(0,len(agents[0].modules)):
+#                     print('loading training data!!!')
+#                     if agents[i].modules[j].__class__.__name__ == module_names[h]:
+#                         agents[i].modules[j].Q.q_table = cp.copy(tables[h])
+#                         agents[i].modules[j].Q.q_states = cp.copy(states[h])
+
+    if Simulation.load_training_data:
+        for i in range(0,len(agents[0].modules)):
+            filename = agents[0].modules[i].__class__.__name__ + '_training_data.pkl'
+            if os.path.isfile(filename):
+                print("Q learning data found, loading it now")        
+                with open(filename, 'rb') as f:
+                    [module_name, table, states] = pickle.load(f)
+
+                for j in range(0,Simulation.num_agents):
+                    agents[j].modules[i].Q.q_table = cp.copy(table)
+                    agents[j].modules[i].Q.q_states = cp.copy(state)
+
 
 ##############################################################################
 #   Initialization
@@ -176,16 +189,19 @@ if(Simulation.visualize):
 
 print('beginning training')
 for e in range(0,Simulation.num_episodes):
+    Simulation.episode_iter_num = 0
+
     print("beginning episode #" + str(e+1))
 
     for t in range(0,Simulation.episode_length):
+        
         agent_out_of_bounds = False
+        Simulation.episode_iter_num = t
 
         for agnt in agents:
 
             #take the action determined in the last step
             #update agent positions on plots
-            #TODO use action across multiple modules
             agnt.take_action(agnt.modules[0].action)
 
             #check if any agent went out of search space.
@@ -193,8 +209,6 @@ for e in range(0,Simulation.num_episodes):
             if not (checkInBounds(agnt.position,Simulation.search_space)):
                 print("agent left search space, ending episode")
                 agent_out_of_bounds = True
-                # instead, move agent back in bounds.
-                # agnt.position = np.array([0,0], dtype='f')
 
         if(Simulation.visualize):
             plt.grid(linestyle='--', linewidth='0.5', color='grey')
@@ -208,7 +222,7 @@ for e in range(0,Simulation.num_episodes):
             image = np.frombuffer(fig.canvas.tostring_rgb(), dtype='uint8')
             image  = image.reshape(fig.canvas.get_width_height()[::-1] + (3,))
             images.append(image)
-        
+
         for agnt in agents:
             for mod in agnt.modules:
                 #find what the state (state_prime) would be if that action were taken
@@ -220,9 +234,6 @@ for e in range(0,Simulation.num_episodes):
 
 
         for agnt in agents:
-            #select the next action (action_prime) for the agent to take 
-            # agnt.select_next_action()
-
             for mod in agnt.modules:
                 #determine the reward for executing the action (not prime) in the state (not prime)
                 #action (not prime) brings agent from state (not prime) to state_prime, and reward is calulated based on state_prime
@@ -268,7 +279,6 @@ for e in range(0,Simulation.num_episodes):
 
 
     #there are occasional permission errors, this block will keep retrying until the dump succeeds
-    #TODO make this save every so often in case of errors so the history isn't lost
     agent_filename = filename+'/agents.pkl'
 
     max_dump_attempts = 5
@@ -306,22 +316,6 @@ print(end_time-start_time)
 ##############################################################################
 timestr = time.strftime("%m%d-%H%M")
 
-# mat = agents[0].modules[0].Q.q_table# np.matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
-# with open('outfile.txt') as f:
-#     for line in mat:
-#         np.savetxt(f, line, fmt='%.2f')
-
-# #average and save the Q tables for each agent
-# for i in range(0,len(agents[0].modules)):
-#     q_table = np.array([])
-#     q_states = np.array([])
-#     number_experienced = np.array([])
-
-#     for j in range(0,num_agents):
-#         for k in range(0, agents[j].modules[i].Q.q_states):
-#             working_state = agents[j].modules[i].Q.q_states[k]
-#             if(any(np.equal(q_states,working_state).all(1))):
-
 #export the visualizer as a *.gif
 if(Simulation.visualize):
     kwargs_write = {'fps':10, 'quantizer':'nq'}
@@ -334,13 +328,7 @@ if(os.path.isfile(filename+'/agent_rewards.pkl')):
 else:
     agent_reward_filename = filename+'/agent_rewards.pkl'
 
-# pe = False
 
-# try:
-#     with open(agent_reward_filename,'wb') as f:
-#         pickle.dump([iterations, agent_rewards],f)  
-# except permissionError:
-#     pe = True
 
 #there are occasional permission errors, this block will keep retrying until the dump succeeds
 #TODO make this save every so often in case of errors so the history isn't lost

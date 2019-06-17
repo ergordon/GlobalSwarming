@@ -16,16 +16,9 @@ class Agent:
     #these are the weights for each module. they should sum to 1. 
     #If they don't, they will be scaled accordingly during initialization
     #also, there should be a weight entry for each module
-<<<<<<< HEAD
-    module_weights = [0.2,0.2,0.2,0.2] 
-=======
-    module_weights = [1]#[0.0001,0.99] 
->>>>>>> 7925e035c43b6c545f860e3876116f0fd41b552e
+    module_weights = [0.33] 
     
-
     #class constructor
-    #TODO consider a class that houses the main simulation logic and provides access for upper level simulation variables such as the seach space.
-    #search space here allows for per-agent seach spaces, but is less 'elegant'
     def __init__(self,pos): 
         self.position = pos         #the positon of the agent
         self.total_reward = 0       #running reward received by the agent
@@ -37,17 +30,11 @@ class Agent:
         # could maybe add bias only to select weights such as largest two
         
 
-<<<<<<< HEAD
         self.modules.append(module.CohesionModule(self)) #cohesion module makes the agents stay together as a swarm
-        self.modules.append(module.CollisionModule(self)) #collision module prevents the agents from hitting each other
-        self.modules.append(module.BoundaryModule(self)) #boundary module prevents the agents from leaving the search space
-=======
-        #self.modules.append(module.CohesionModule(self)) #cohesion module makes the agents stay together as a swarm
-        #self.modules.append(module.CollisionModule(self)) #collision module prevents the agents from hitting each other
+        # self.modules.append(module.CollisionModule(self)) #collision module prevents the agents from hitting each other
         # self.modules.append(module.BoundaryModule(self)) #boundary module prevents the agents from leaving the search space
->>>>>>> 7925e035c43b6c545f860e3876116f0fd41b552e
         # self.modules.append(module.TargetSeekModule(self)) #collision module prevents the agents from hitting each other
-        self.modules.append(module.ObstacleAvoidanceModule(self))
+        # self.modules.append(module.ObstacleAvoidanceModule(self))
 
 
         #make sure there is a module weight for each module
@@ -81,49 +68,35 @@ class Agent:
 
     #select the next action to preform based on a softmax of each module
     def select_next_action(self):
-
+        
         action_weights = np.zeros(len(Action))
-        for i in range(0,len(self.modules)):
-            mod_action_weights = self.modules[i].get_action_weights()
-            #normalize the weights to create probabilities
-            if(np.sum(mod_action_weights) != 0):
-                mod_action_weights = mod_action_weights / np.sum(mod_action_weights)
-            else:
-                mod_action_weights = np.ones(len(Action))/len(Action)
 
-<<<<<<< HEAD
-            # action_weights = action_weights + self.modules[i].get_module_weight()*mod_action_weights
+        unused = self.modules[0].get_module_weight()
+
+        if(len(self.modules) == 1):
+            #if only using one module, just use its action weights as is
+            action_weights = self.modules[0].get_action_weights()
             
-            
-            action_weights = action_weights + Agent.module_weights[i]*self.modules[i].get_action_weights()
-        #     print('index')
-        #     print(i)
-        #     print('module weights')
-        #     print(self.modules[i].get_action_weights())
-
-        # print('summed weights')
-        # print(action_weights)
-=======
-            if(len(self.modules) > 1):
-                action_weights = action_weights + self.modules[i].get_module_weight()*mod_action_weights
-            else:            
-                action_weights = action_weights + Agent.module_weights[i]*self.modules[i].get_action_weights()
-
->>>>>>> 7925e035c43b6c545f860e3876116f0fd41b552e
-        #then select another action here.....
-         #normalize the weights to create probabilities
-        if(np.sum(action_weights) != 0):
-            action_weights = action_weights / np.sum(action_weights)
         else:
-            action_weights = np.ones(len(Action))/len(Action)
 
-        #use a discrete random variable distribution to select the next action
-        x=list(map(int,Action))
-        px=action_weights
-        sample=rv_discrete(values=(x,px)).rvs(size=1)
+            # if multiple modules, combine action weights by normalizing and multiplying by the module weights before summing
+            for i in range(0,len(self.modules)):
+                 
+                mod_action_weights = self.modules[i].get_action_weights()
 
-        #set state_prime to be the selected next action
-        # action_prime = action.Action(sample) 
+                #normalize the weights to create probabilities
+                if(np.sum(mod_action_weights) != 0):
+                    mod_action_weights = mod_action_weights / np.sum(mod_action_weights)
+                else:
+                    mod_action_weights = np.ones(len(Action))/len(Action)
+
+                action_weights = action_weights + self.modules[i].get_module_weight()*mod_action_weights
+            
+            # for i in range(0,len(self.modules)):
+            #     action_weights = action_weights + Agent.module_weights[i]*self.modules[i].get_action_weights()
+
+        
+
 
         #set state_prime to be the selected next action
         if(Simulation.take_best_action):
@@ -136,12 +109,30 @@ class Agent:
                 index = random.randint(0,len(indices)-1)
                 action_prime = Action(indices[index])
         else:
+
+            # #exploitation vs exploration constant
+            # #big T encourages exploration
+            # #small T encourages exploitation
+            # T = 1
+            # #linearly change T to decrease exploration and increase exploitation over time
+            # # curr_time = time.time()
+            # if(Simulation.episode_iter_num/Simulation.episode_length*100.0 < Simulation.exploitation_rise_percent):
+            #     T = 1000.0 - (1000.0-0.1)*Simulation.episode_iter_num/Simulation.episode_length
+            # else:
+            #     T = 0.1
+
+            #then select another action here.....
+            #normalize the weights to create probabilities
+            if(np.sum(action_weights) != 0):
+                action_weights = action_weights / np.sum(action_weights)
+            else:
+                action_weights = np.ones(len(Action))/len(Action)
+
             #use a discrete random variable distribution to select the next action
             x=list(map(int,Action))
             px=action_weights
             sample=rv_discrete(values=(x,px)).rvs(size=1)
             action_prime = Action(sample)
-
 
         for mod in self.modules:
             mod.action_prime = action_prime  

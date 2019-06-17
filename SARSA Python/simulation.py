@@ -9,29 +9,37 @@ import random
 class Simulation:
 
     num_agents = 5 #number of agents to simulate
-    num_episodes = 1000 #number of times to run the training scenario
+    
+     #TODO i think num_episodes = 1 breaks something, come back and fix
+    num_episodes = 2 #number of times to run the training scenario
     episode_length = 100 #number of time steps in each training scenario [iterations]
-    exploitation_rise_time = 200 #the amount of time over which we transition from exploration to exploitation [seconds]
+    exploitation_rise_time = 100 #the amount of time over which we transition from exploration to exploitation [seconds]
             #TODO change to exploitation rise percentage and make it explore for the 1st percent of every episode
     exploitation_rise_percent = 20 #the percentage of each episode over which we transition from exploration to exploitation
 
     #bounds to initialize the agents inside of
-    init_space = [[0,10],
-                [0,10]]
+    init_space = [[-10,10],
+                [-10,10]]
 
     #bounds to simulate the agents within
     #exiting these bounds will end the episode immediately
-    search_space = [[-50,50],
-                    [-50,50]]
+    search_space = [[-25,25],
+                    [-25,25]]
+    # search_space = [[-20,20],
+    #                 [-20,20]]
 
-    ThreeTwoOne = False
+
+
+    ThreeTwoOne = True
     visualize = ThreeTwoOne  #whether to show a plot animation of the agent positions
 
-    load_agents = ThreeTwoOne #whether to load the agents.pkl file (loads agents exactly as they upon completion of training)
-    load_training_data = False #whether to load the agent training data (loads q tables and states into the modules that exist in the agent initialization function)
-    
+    load_agents = False #whether to load the agents.pkl file (loads agents exactly as they upon completion of training)
+    load_training_data = ThreeTwoOne #whether to load the agent training data (loads q tables and states into the modules that exist in the agent initialization function)
+    #TODO fix load_training_data, gave permission error when saving to disk at the end
+
+
     #TODO think of better name for this
-    take_best_action = ThreeTwoOne #whether to select next actions based on highest Q table entry or use Q table values as probabilities for each action 
+    take_best_action = False #whether to select next actions based on highest Q table entry or use Q table values as probabilities for each action 
 
     #targets = np.array([-40,40])
     targets = np.array([random.randint(search_space[0][0], search_space[0][1]),
@@ -49,13 +57,25 @@ class Simulation:
     #                      [10, -40, 10, 10],
     #                      [-40, 10, 30, 10]])
 
-    obstacles = np.array([[random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), 10, 10], 
-                          [random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), 10, 10], 
-                          [random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), 10, 10],
-                          [random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), 10, 10],
-                          [random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), 10, 10], 
-                          [random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), 10, 10],
-                          [random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), 10, 10]])
+    #TODO create obstacle objects instead of using an array.
+    obstacles = np.array([[random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), random.randint(1,10), random.randint(1,10)], 
+                          [random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), random.randint(1,10), random.randint(1,10)], 
+                          [random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), random.randint(1,10), random.randint(1,10)],
+                          [random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), random.randint(1,10), random.randint(1,10)],
+                          [random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), random.randint(1,10), random.randint(1,10)], 
+                          [random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), random.randint(1,10), random.randint(1,10)],
+                          [random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), random.randint(1,10), random.randint(1,10)]])
+
+    
+    #TODO try obstacle avoidance module with only one obstacle
+    # obstacles = np.array([[random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), 10, 10]])
+
+    #DO NOT EDIT VARIABLES BELOW THIS COMMENT
+
+    episode_iter_num = 0 #DO NOT EDIT. variable used only to track the current interation of the episode. used with exploration/exploitation
+
+
+
 ##############################################################################
 #   Simulation Class
 ##############################################################################
