@@ -55,10 +55,10 @@ class Module:
     def get_action_weights(self):
         sys.exit('get_action_weights not implemented for this module. This function must be implemented for each module in the derived class')
 
-    def get_q_data(self):
+    def get_q_data(self, collapse):
         pass
 
-    def load_q_data(self):
+    def load_q_data(self,q_states,q_tables):
         pass
 
 ##############################################################################
@@ -227,12 +227,12 @@ class CohesionModule(Module):
         return action_weights
 
 
-    def get_q_data():
+    def get_q_data(self,collapse):
         pass
 
 
     def load_q_data(self,q_states,q_tables):
-        super.load_q_data()
+        super.load_q_data(q_states,q_tables)
 
         #TODO have some sanity checks on load
 
@@ -265,7 +265,7 @@ class CollisionModule(Module):
         
         self.state = np.array([]) #the vectors from the agent to the tracked agents 
         self.state_prime = np.array([]) #same as state but for the next step. used for qlearning before assigning to state
-        self.Q = Qlearning()    #define a Qleaning object for each module instance        
+        self.Q = []    #define a Qleaning object for each module instance        
         
         self.init_time = time.time() #store the time at which the agent was initialized
         
@@ -310,7 +310,9 @@ class CollisionModule(Module):
             else:
                 self.state = np.zeros((1,2))
                 self.state_prime = np.zeros((1,2))
-                self.instant_reward = np.zeros((1,1))        
+                self.instant_reward = np.zeros((1,1))  
+
+            self.Q.append(Qlearning())          
         
         super().start_tracking(agt) 
 
@@ -318,7 +320,7 @@ class CollisionModule(Module):
     def update_q(self):
         #accessed through the Qlearning object
         for i in range(0,len(self.tracked_agents)):
-            self.Q.update_q(self.state[i],self.state_prime[i],self.action,self.action_prime,self.alpha,self.gamma,self.instant_reward[i])
+            self.Q[i].update_q(self.state[i],self.state_prime[i],self.action,self.action_prime,self.alpha,self.gamma,self.instant_reward[i])
 
     #update the state that the agent is currently in
     #for this module, it is the the set of vectors pointing from the agent to each other agent in the swarm
@@ -407,7 +409,7 @@ class CollisionModule(Module):
         action_weights = np.zeros(len(Action))
         #sum the action tables for every tracked agent
         for i in range (0,len(self.tracked_agents)):
-            action_weights = action_weights + self.Q.fetch_row_by_state(self.state_prime[i])
+            action_weights = action_weights + self.Q[i].fetch_row_by_state(self.state_prime[i])
         
         #for each possible agent action
         for i in range (0,len(action_weights)):
@@ -443,7 +445,7 @@ class CollisionModule(Module):
 
 
     def load_q_data(self,q_states,q_tables):
-        super.load_q_data()
+        super.load_q_data(q_states,q_tables)
 
         for i in range(0,len(self.tracked_agents)):
             self.Q[i].q_table = q_tables
@@ -476,8 +478,7 @@ class BoundaryModule(Module):
         self.state = np.array([]) #the vectors from the agent to the tracked agents 
         self.state_prime = np.array([]) #same as state but for the next step. used for qlearning before assigning to state
         self.Q = []    #define a Qleaning object for each module instance   
-             
-        
+            
         self.init_time = time.time() #store the time at which the agent was initialized
 
         self.action = Action.STAY          #safest not to do anyting for first action
@@ -486,15 +487,6 @@ class BoundaryModule(Module):
 
         self.collision_count = 0           #number of times this module has recorded a collision (with another agent) for this agent
     
-        #old
-        # self.state = np.zeros((len(Simulation.search_space),len(Simulation.search_space[0])))
-        # self.state_prime = np.zeros((len(Simulation.search_space),len(Simulation.search_space[0])))
-        # self.instant_reward = np.zeros(len(Simulation.search_space))
-
-        # for i in range(len(Simulation.search_space)):
-        #     self.Q.append(Qlearning())   
-
-        # # new
         self.state = np.zeros((len(Simulation.search_space)*2,1))
         self.state_prime = np.zeros((len(Simulation.search_space)*2,1))
         self.instant_reward = np.zeros(len(Simulation.search_space)*2)
@@ -502,7 +494,6 @@ class BoundaryModule(Module):
         for i in range(len(Simulation.search_space)*2):
             self.Q.append(Qlearning())   
         
-
     #visualization for this module. 
     # draw a dotted line showing the boundary threshold
     def visualize(self):
@@ -526,11 +517,6 @@ class BoundaryModule(Module):
     #update the Q table for this module
     def update_q(self):
         #accessed through the Qlearning object
-        #old
-        # for i in range(0,len(Simulation.search_space)):
-        #     self.Q[i].update_q(self.state[i],self.state_prime[i],self.action,self.action_prime,self.alpha,self.gamma,self.instant_reward[i])             
-        
-        #new
         for i in range(0,len(Simulation.search_space)*2):
             self.Q[i].update_q(self.state[i],self.state_prime[i],self.action,self.action_prime,self.alpha,self.gamma,self.instant_reward[i])             
 
@@ -539,16 +525,6 @@ class BoundaryModule(Module):
     #for this module, it is a vector containing distances from the agent to each boundary
     # Ordering is [+x,-x,+y,-y] (append [+z,-z] for 3D case)
     def update_state(self):
-        
-        # #old
-        # for i in range(0,len(Simulation.search_space)):   
-        #     #round to whole numbers for discretization
-        #     state = np.empty([2,])
-        #     state[0] = np.round(Simulation.search_space[i][1] - self.parent_agent.position[i])
-        #     state[1] = np.round(Simulation.search_space[i][0] - self.parent_agent.position[i])
-        #     self.state[i] = state
-
-        # new
         for i in range(0,len(Simulation.search_space)):   
             #round to whole numbers for discretization
             self.state[i*2] = np.round(Simulation.search_space[i][1] - self.parent_agent.position[i]) 
@@ -558,16 +534,7 @@ class BoundaryModule(Module):
     # executing an action and the Q object needs both the orignal state and the state after exectuion 
     # for this module, it is the set of vectors pointing from the agent to each other tracked agent
     def update_state_prime(self):
-        
-        # #old
-        # for i in range(0,len(Simulation.search_space)):   
-        #     #round to whole numbers for discretization
-        #     state = np.empty([2,])
-        #     state[0] = np.round(Simulation.search_space[i][1] - self.parent_agent.position[i])
-        #     state[1] = np.round(Simulation.search_space[i][0] - self.parent_agent.position[i])
-        #     self.state_prime[i] = state
 
-        # new
         for i in range(0,len(Simulation.search_space)):   
             #round to whole numbers for discretization
             self.state_prime[i*2] = np.round(Simulation.search_space[i][1] - self.parent_agent.position[i]) 
@@ -578,15 +545,6 @@ class BoundaryModule(Module):
         
         min_dist = 1.7976931348623157e+308
 
-        # #old
-        # for i in range(0,len(Simulation.search_space)):  
-            
-        #     if np.abs(self.state_prime[i,0]) < min_dist:
-        #         min_dist = np.abs(self.state_prime[i,0])
-        #     if np.abs(self.state_prime[i,1]) < min_dist:
-        #         min_dist = np.abs(self.state_prime[i,1])
-
-        #new
         for i in range(0,len(Simulation.search_space)):  
             if np.abs(self.state_prime[i*2]) < min_dist:
                 min_dist = np.abs(self.state_prime[i*2])
@@ -598,35 +556,11 @@ class BoundaryModule(Module):
         else:
             return 0
 
-        #now pass into a weighting function
-        # if min_dist == 0:
-        #     return 1
-        # else:
-        #     return -1*(min_dist/(3.5+min_dist)-1)
-
 
     #determine the reward for executing the action (not prime) in the state (not prime)
     #action (not prime) brings agent from state (not prime) to state_prime, and reward is calulated based on state_prime
     def update_instant_reward(self):
         
-        #old
-        # for i in range(0,len(Simulation.search_space)):  
-            
-        #     self.instant_reward[i] = 0
-
-        #     #handle upper bounds
-        #     if(self.state_prime[i,0] >= BoundaryModule.ranges[0]):
-        #         self.instant_reward[i] = self.instant_reward[i] + BoundaryModule.rewards[-1]
-        #     else:
-        #         self.instant_reward[i] = self.instant_reward[i] + BoundaryModule.rewards[0]
-                                
-        #     #handle lower bounds
-        #     if(self.state_prime[i,1] <= -BoundaryModule.ranges[0]):
-        #         self.instant_reward[i] = self.instant_reward[i] + BoundaryModule.rewards[-1]
-        #     else:
-        #         self.instant_reward[i] = self.instant_reward[i] + BoundaryModule.rewards[0]
-
-        #new
         for i in range(0,len(Simulation.search_space)):  
             
             # self.instant_reward[i*2] = 0
@@ -661,12 +595,7 @@ class BoundaryModule(Module):
         #create a set of weights for each action
         action_weights = np.zeros(len(Action))
         #sum the action tables for every tracked agent
-        
-        # #old
-        # for i in range (0,len(Simulation.search_space)):
-        #     action_weights = action_weights + self.Q[i].fetch_row_by_state(self.state_prime[i])
-        
-        # new
+
         for i in range (0,len(Simulation.search_space)*2):
             action_weights = action_weights + self.Q[i].fetch_row_by_state(self.state_prime[i])
         
@@ -705,7 +634,7 @@ class BoundaryModule(Module):
 
 
     def load_q_data(self,q_states,q_tables):
-        super.load_q_data()
+        super.load_q_data(q_states,q_tables)
 
         for i in range(0,len(Simulation.search_space)*2):
             self.Q[i].q_table = q_tables[i]
@@ -861,7 +790,7 @@ class TargetSeekModule(Module):
         return action_weights
 
     def load_q_data(self,q_states,q_tables):
-        super.load_q_data()
+        super.load_q_data(q_states,q_tables)
 
         self.Q.q_table = q_tables
         self.Q.q_states = q_states
@@ -1132,7 +1061,7 @@ class ObstacleAvoidanceModule(Module):
 
 
     def load_q_data(self,q_states,q_tables):
-        super.load_q_data()
+        super.load_q_data(q_states,q_tables)
         for i in range(0,len(Simulation.obstacles)):
             self.Q[i].q_table = q_tables
             self.Q[i].q_states = q_states
