@@ -17,8 +17,9 @@ import imageio
 ##############################################################################
 #   Argument Parser
 ##############################################################################
-# EXAMPLE: python plot_data.py --file agent_rewards_DistanceOnly.pkl
-# construct the argument parser and parse the arguments
+# EXAMPLE: python main.py --simName test --description "Hello World!"
+
+# Construct the argument parser and parse the arguments
 ap = argparse.ArgumentParser()
 ap.add_argument("--simName", type=str, default="SimulationResults", required=False,
 	help="simName == Name of Simulation or Test")
@@ -34,7 +35,7 @@ args = vars(ap.parse_args())
 # Check if a given position is within given bounds
 def checkInBounds(position,bounds):
     
-    #TODO make sure position and bound have same number of 
+    # TODO: Make sure position and bound have same number of 
     for i in range(0,len(position)):
         if not ( bounds[i][0] <= position[i] <= bounds[i][1]):
             return False
@@ -58,7 +59,6 @@ def ReinitializeAgents(agents,bounds):
     # Reinitialize Setting Parameters
     if (Simulation.Arena == 0):
         search_space = Simulation.search_space
-        # Simulation.targets = np.array([-40,40])
         Simulation.targets = np.array([random.randint(search_space[0][0]+5, search_space[0][1]-5),
                                        random.randint(search_space[1][0]+5, search_space[1][1]-5)])
 
@@ -88,7 +88,7 @@ def ReinitializeAgents(agents,bounds):
 
 agent_rewards = np.array([])   # matrix containing total reward values for each agent for each episode
 
-## Make new Directories
+# Make new Directories
 raw_path = os.getcwd()
 filename = str(args["simName"])
 path = filename
@@ -103,7 +103,7 @@ except OSError:
 # Store the program start time so we can calculate how long it took for the code to execute
 start_time = time.time() 
 
-## Save Configuration to a test file
+# Save Configuration to a test file
 if(not Simulation.visualize):
     if os.path.exists(os.path.join(path ,'Simulation_Configuration.txt')):
         file = open(os.path.join(path ,'Simulation_Configuration.txt'),'a') 
@@ -137,13 +137,7 @@ if(not Simulation.visualize):
     file.write("Target Seek Module ---- "+str(Simulation.TargetSeekingModule) + "\n")
     file.write("Obstacle Module ------- "+str(Simulation.ObstacleAvoidanceModule) + "\n \n")
     file.write("Module Weights: " + str(Simulation.module_weights) + "\n \n")
-
-    
-
     file.close() 
-##############################################################################
-#   Save Simulation Configuration Settings
-##############################################################################
 
 ##############################################################################
 #   Initialization
@@ -152,44 +146,44 @@ print('initializing agents')
 
 agents = list() #list of agents
 initialized = False
-#check if a file containing a list of agents already exits
+# Check if a file containing a list of agents already exits
 if Simulation.load_agents:
     if os.path.isfile(filename + '/agents.pkl'):
-        #if so, load it
+        # If so, load it
         print("Agent data found, loading it now")
-        #TODO handle if the desired number of agents is different from the number of agents saved to disk
+        # TODO: Handle if the desired number of agents is different from the number of agents saved to disk
         with open(filename + '/agents.pkl', 'rb') as f:
             agents = pickle.load(f)
         initialized = True
 
 if not initialized:
-    #if not, initialize a set of agents from scratch
-    #initialize agent positions
+    # If not, initialize a set of agents from scratch
+    # Initialize agent positions
     for i in range(0,Simulation.num_agents):
         init_space = Simulation.init_space
         position = np.array([random.randint(init_space[0][0], init_space[0][1]),random.randint(init_space[1][0], init_space[1][1])], dtype='f')
         agents.append(Agent(position))
 
-    #initialize module parameters such as who each agent is tracking
-    #TODO make it so the tracked agents are based on range and updated every iteration
+    # Initialize module parameters such as who each agent is tracking
+    # TODO: Make it so the tracked agents are based on range and updated every iteration
     for i in range(0,Simulation.num_agents):
         for j in range(0,Simulation.num_agents):
             if(i != j):
-                #TODO chagne this, not every module will care about tracking other agents
-                #loop through each module
+                # TODO: Chagne this, not every module will care about tracking other agents
+                # Loop through each module
                 for m in range(0,len(agents[i].modules)):
                     agents[i].modules[m].start_tracking(agents[j])
 
-    #initialize module state parameters
+    # Initialize module state parameters
     for i in range(0,Simulation.num_agents):
-        #loop through each module
+        # Loop through each module
         for m in range(0,len(agents[i].modules)):
             agents[i].modules[m].update_state()
             agents[i].modules[m].state_prime = np.copy(agents[i].modules[m].state)
 
 if Simulation.load_training_data:
     if os.path.isfile('training_data.pkl'):
-        #if so, load it
+        # If so, load it
         print("Q learning data found, loading it now")
         with open('training_data.pkl', 'rb') as f:
             [module_names, tables, states] = pickle.load(f)
@@ -207,14 +201,10 @@ if Simulation.load_training_data:
                         agents[i].modules[j].Q.q_states = cp.copy(states[h])
 
 ##############################################################################
-#   Initialization
-##############################################################################
-
-##############################################################################
 #   main algorithm
 ##############################################################################
 
-#plotting for visualization
+# Plotting for visualization
 if(Simulation.visualize):
     fig, ax = plt.subplots()
     images = []
@@ -236,12 +226,12 @@ for e in range(0,Simulation.num_episodes):
 
         for agnt in agents:
 
-            #take the action determined in the last step
-            #update agent positions on plots
+            # Take the action determined in the last step
+            #  Update agent positions on plots
             agnt.take_action(agnt.modules[0].action)
 
-            #check if any agent went out of search space.
-            #terminate episode if so
+            # Check if any agent went out of search space.
+            #  Terminate episode if so
             if not (checkInBounds(agnt.position,Simulation.search_space)):
                 print("agent left search space, ending episode")
                 Simulation.boundary_collision_count = Simulation.boundary_collision_count + 1
@@ -255,53 +245,53 @@ for e in range(0,Simulation.num_episodes):
                 
                 for mod in agnt.modules:
                     mod.visualize()
-            #convert the figure into an array and append it to images array        
+            # Convert the figure into an array and append it to images array        
             image = np.frombuffer(fig.canvas.tostring_rgb(), dtype='uint8')
             image  = image.reshape(fig.canvas.get_width_height()[::-1] + (3,))
             images.append(image)
         
         for agnt in agents:
             for mod in agnt.modules:
-                #find what the state (state_prime) would be if that action were taken
+                # Find what the state (state_prime) would be if that action were taken
                 mod.update_state_prime()
 
-            #select the next action (action_prime) for the agent to take 
+            # Select the next action (action_prime) for the agent to take 
             agnt.select_next_action()
 
         for agnt in agents:
-            #select the next action (action_prime) for the agent to take 
+            # Select the next action (action_prime) for the agent to take 
             # agnt.select_next_action()
 
             for mod in agnt.modules:
-                #determine the reward for executing the action (not prime) in the state (not prime)
-                #action (not prime) brings agent from state (not prime) to state_prime, and reward is calulated based on state_prime
+                # Determine the reward for executing the action (not prime) in the state (not prime)
+                #  Action (not prime) brings agent from state (not prime) to state_prime, and reward is calulated based on state_prime
                 mod.update_instant_reward()
                 
-                #Add the reward for this action to the total reward earned by the agent 
+                # Add the reward for this action to the total reward earned by the agent 
                 mod.update_total_reward()
                 
-                #update the Q table
+                # Update the Q table
                 mod.update_q()
 
-                #run additional functions specific to each module
-                #for example, the collision module uses this to track collisions with other agents 
+                # Run additional functions specific to each module
+                #  For example, the collision module uses this to track collisions with other agents 
                 mod.auxilariy_functions()
 
-                #prepare for next time step
+                # Prepare for next time step
                 mod.action = cp.copy(mod.action_prime)
                 mod.state  = np.copy(mod.state_prime)
  
-        #plotting for visualization
+        # Plotting for visualization
         if(Simulation.visualize):
             plt.pause(1/frame_rate)
             plt.clf()
             plt.cla()
 
-        # criteria for ending the episode early.
+        # Criteria for ending the episode early.
         if(agent_out_of_bounds):
             break    
     
-    #store the total reward for each agent at the end of each episode for algorithm performance analysis
+    # Store the total reward for each agent at the end of each episode for algorithm performance analysis
     episode_rewards = np.zeros(Simulation.num_agents) 
     for a in range(0,Simulation.num_agents):
         episode_rewards[a] = cp.copy(agents[a].total_reward)
@@ -311,7 +301,7 @@ for e in range(0,Simulation.num_episodes):
     else:
         agent_rewards = np.vstack([agent_rewards,episode_rewards])
 
-    #reset the agents (except for the Q tables and Q states) to start fresh for the next episode         
+    # Reset the agents (except for the Q tables and Q states) to start fresh for the next episode         
     ReinitializeAgents(agents,Simulation.init_space)
     
     for agnt in agents:
@@ -319,8 +309,8 @@ for e in range(0,Simulation.num_episodes):
             mod.reset_init(e)
 
 
-    #there are occasional permission errors, this block will keep retrying until the dump succeeds
-    #TODO make this save every so often in case of errors so the history isn't lost
+    # There are occasional permission errors, this block will keep retrying until the dump succeeds
+    # TODO: Make this save every so often in case of errors so the history isn't lost
     agent_filename = filename+'/agents.pkl'
 
     max_dump_attempts = 5
@@ -330,7 +320,7 @@ for e in range(0,Simulation.num_episodes):
         pe = False
         try:
             with open(agent_filename,'wb') as f:
-                pickle.dump(agents,f)  
+                pickle.dump(agents,f) 
         except:
             pe = True
             dump_attempts = dump_attempts + 1
@@ -340,11 +330,9 @@ for e in range(0,Simulation.num_episodes):
             if dump_attempts == max_dump_attempts:
                 print('******PERMISSION ERROR, COULD NOT DUMP AGENTS TO DISK********')
         
-        
-print('training complete')
+print('Training complete')
 
-
-#store the program end time so we can calculate how long it took for the code to execute
+# Store the program end time so we can calculate how long it took for the code to execute
 end_time = time.time() 
 print('Program execution time:')
 print(end_time-start_time)

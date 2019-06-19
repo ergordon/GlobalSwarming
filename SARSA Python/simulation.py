@@ -15,25 +15,25 @@ class Simulation:
 
     if (Arena == 0): # Custom Terrain. Edit These Ones 
         
-        num_agents = 3                 # number of agents to simulate
-        num_episodes = 3000            # number of times to run the training scenario
-        episode_length = 50            # number of time steps in each training scenario [iterations]
-        exploitation_rise_time = 0   # the amount of time over which we transition from exploration to exploitation [seconds]
-        exploitation_rise_percent = 0  # the percentage of each episode over which we transition from exploration to exploitation
+        num_agents = 1                     # Number of agents to simulate
+        num_episodes = 5                  # Number of times to run the training scenario
+        episode_length = 50               # Number of time steps in each training scenario [iterations]
+        exploitation_rise_time = 0       # The amount of time over which we transition from exploration to exploitation [seconds]
+        exploitation_rise_percent = 0  # The percentage of each episode over which we transition from exploration to exploitation
 
-        #bounds to initialize the agents inside of
+        # Bounds to initialize the agents inside of
         init_space = [[0,10],
                     [0,10]]
 
-        #bounds to simulate the agents within
-        #exiting these bounds will end the episode immediately
+        # Bounds to simulate the agents within
+        # Exiting these bounds will end the episode immediately
         search_space = [[-20,20],
                         [-20,20]]
 
-        visualize = False       # whether to show a plot animation of the agent positions
-        load_agents = True          # whether to load the agents.pkl file (loads agents exactly as they upon completion of training)
-        load_training_data = False  # whether to load the agent training data (loads q tables and states into the modules that exist in the agent initialization function)
-        take_best_action = False     # whether to select next actions based on highest Q table entry or use Q table values as probabilities for each action 
+        visualize = True       # Whether to show a plot animation of the agent positions
+        load_agents = True          # Whether to load the agents.pkl file (loads agents exactly as they upon completion of training)
+        load_training_data = False  # Whether to load the agent training data (loads q tables and states into the modules that exist in the agent initialization function)
+        take_best_action = True     # Whether to select next actions based on highest Q table entry or use Q table values as probabilities for each action 
 
 
         # Activate Modules
