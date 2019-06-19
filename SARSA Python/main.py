@@ -22,6 +22,8 @@ import imageio
 ap = argparse.ArgumentParser()
 ap.add_argument("--simName", type=str, default="SimulationResults", required=False,
 	help="simName == Name of Simulation or Test")
+ap.add_argument("--description", type=str, default=" ", required=False,
+	help="description == Description of the test being run") 
 args = vars(ap.parse_args())
 
 
@@ -29,7 +31,7 @@ args = vars(ap.parse_args())
 #   Helper Functions
 ##############################################################################
 
-#check if a given position is within given bounds
+# Check if a given position is within given bounds
 def checkInBounds(position,bounds):
     
     #TODO make sure position and bound have same number of 
@@ -38,8 +40,7 @@ def checkInBounds(position,bounds):
             return False
     return True
 
-#TODO actually use bounds
-#reset the agents to initial conditions (except for the Q states and tables)
+# Reset the agents to initial conditions (except for the Q states and tables)
 def ReinitializeAgents(agents,bounds):
     # Save Last Episodes Collisions, Reset Collision
     Simulation.obstacle_episode_collision_count.append(Simulation.obstacle_collision_count)
@@ -54,36 +55,32 @@ def ReinitializeAgents(agents,bounds):
     Simulation.target_episode_entries_count.append(Simulation.target_entries_count)
     Simulation.target_entries_count = 0
     
-    #Reinitialize Setting Parameters
+    # Reinitialize Setting Parameters
     if (Simulation.Arena == 0):
         search_space = Simulation.search_space
-        #Simulation.targets = np.array([-40,40])
-        Simulation.targets = np.array([random.randint(search_space[0][0], search_space[0][1]),
-                                       random.randint(search_space[1][0], search_space[1][1])])
+        # Simulation.targets = np.array([-40,40])
+        Simulation.targets = np.array([random.randint(search_space[0][0]+5, search_space[0][1]-5),
+                                       random.randint(search_space[1][0]+5, search_space[1][1]-5)])
 
-        Simulation.obstacles = np.array([random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), 10, 10])
+        Simulation.obstacles = np.array([random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), random.randint(1,10), random.randint(1,10)])
         for i in range(1,Simulation.num_obstacles):
-            temp_obstacles = np.array([random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), 10, 10])
+            temp_obstacles = np.array([random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), random.randint(1,10), random.randint(1,10)])
             Simulation.obstacles = np.vstack((Simulation.obstacles, temp_obstacles))
 
-    #initialize agent parameters
+    # Initialize agent parameters
     for i in range(0,len(agents)):
         init_space = Simulation.init_space
         agents[i].position = np.array([random.randint(init_space[0][0], init_space[0][1]),random.randint(init_space[1][0], init_space[1][1])], dtype='f')
         agents[i].total_reward = 0
         
-    #initialize module parameters
+    # Initialize module parameters
     for i in range(0,Simulation.num_agents):
-        #loop through each module
+        # Loop through each module
         for m in range(0,len(agents[i].modules)):
             agents[i].modules[m].action = Action.STAY
             agents[i].modules[m].action_prime = Action.STAY
             agents[i].modules[m].update_state()
             agents[i].modules[m].state_prime = np.copy(agents[i].modules[m].state)
-
-##############################################################################
-#   Helper Functions
-##############################################################################
 
 ##############################################################################
 #   Simulation Variables
@@ -101,28 +98,49 @@ except OSError:
     print("")
 
 ##############################################################################
-#   Simulation Variables
-##############################################################################
-
-##############################################################################
 #   Save Simulation Configuration Settings
 ##############################################################################
+# Store the program start time so we can calculate how long it took for the code to execute
+start_time = time.time() 
 
 ## Save Configuration to a test file
-    if(not Simulation.visualize):
+if(not Simulation.visualize):
+    if os.path.exists(os.path.join(path ,'Simulation_Configuration.txt')):
+        file = open(os.path.join(path ,'Simulation_Configuration.txt'),'a') 
+    else:    
         file = open(os.path.join(path ,'Simulation_Configuration.txt'),'w') 
+    file.write(" \n \n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ \n")
+    file.write(str(args["simName"])+" -- "+ str(start_time) +" \n")
+    file.write("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ \n \n")
+    file.write(str(args["description"]) + "\n \n")
+    
+    if Simulation.ControllerType == 0:
+        file.write("Active Controller: Steve and Bucci Controller \n \n")
+    elif Simulation.ControllerType == 1:
+        file.write("Active Controller: Importance Function \n \n")
+    else:
+        file.write("Active Controller: Neural Network \n \n")
 
-        file.write("num_agents:  " + str(Simulation.num_agents)+"\n")
-        file.write("num_episodes:  " + str(Simulation.num_episodes)+"\n")
-        file.write("episode_length :  " + str(Simulation.episode_length)+"\n")
-        file.write("exploitation_rise_time :  " + str(Simulation.exploitation_rise_time )+"\n")
-        file.write("init_space:  " + str(Simulation.init_space)+"\n")
-        file.write("search_space :  " + str(Simulation.search_space)+"\n")
+    file.write("~~~~ ARENA PARAMETERS ~~~~ \n")
+    file.write("num_agents:    " + str(Simulation.num_agents)+"\n")
+    file.write("num_episodes:  " + str(Simulation.num_episodes)+"\n")
+    file.write("Number of Obstacles: "+str(Simulation.num_obstacles)+"\n")
+    file.write("episode_length:  " + str(Simulation.episode_length)+"\n")
+    file.write("exploitation_rise_time:  " + str(Simulation.exploitation_rise_time )+"\n")
+    file.write("init_space:  " + str(Simulation.init_space)+"\n")
+    file.write("search_space:  " + str(Simulation.search_space)+"\n \n")
 
-        #file.write("Mean Luminance:  " + str(statistics.mean(LuminanceExact))+"\n")
-        #file.write("STDe Luminance:  " + str(statistics.stdev(LuminanceExact))+"\n")
-        #file.write("Mean Area :  " + str(statistics.mean(Area))+"\n")
-        file.close() 
+    file.write("~~~~ ACTIVE MODULES ~~~~ \n")
+    file.write("Cohesion Module ------- "+str(Simulation.CohesionModule) + "\n")
+    file.write("Collision Module ------ "+str(Simulation.CollisionAvoidanceModule) + "\n")
+    file.write("Out of Bounds Module -- "+str(Simulation.OutOfBoundsModule) + "\n")
+    file.write("Target Seek Module ---- "+str(Simulation.TargetSeekingModule) + "\n")
+    file.write("Obstacle Module ------- "+str(Simulation.ObstacleAvoidanceModule) + "\n \n")
+    file.write("Module Weights: " + str(Simulation.module_weights) + "\n \n")
+
+    
+
+    file.close() 
 ##############################################################################
 #   Save Simulation Configuration Settings
 ##############################################################################
@@ -131,9 +149,6 @@ except OSError:
 #   Initialization
 ##############################################################################
 print('initializing agents')
-
-#store the program start time so we can calculate how long it took for the code to execute
-start_time = time.time() 
 
 agents = list() #list of agents
 initialized = False
@@ -229,6 +244,7 @@ for e in range(0,Simulation.num_episodes):
             #terminate episode if so
             if not (checkInBounds(agnt.position,Simulation.search_space)):
                 print("agent left search space, ending episode")
+                Simulation.boundary_collision_count = Simulation.boundary_collision_count + 1
                 agent_out_of_bounds = True
 
         if(Simulation.visualize):
@@ -334,11 +350,7 @@ print('Program execution time:')
 print(end_time-start_time)
 
 ##############################################################################
-#   main algorithm
-##############################################################################
-
-##############################################################################
-#   data 
+#   Data Storage
 ##############################################################################
 timestr = time.strftime("%m%d-%H%M")
 
@@ -358,28 +370,27 @@ timestr = time.strftime("%m%d-%H%M")
 #             working_state = agents[j].modules[i].Q.q_states[k]
 #             if(any(np.equal(q_states,working_state).all(1))):
 
-#export the visualizer as a *.gif
+# Export the visualizer as a *.gif
 if(Simulation.visualize):
     kwargs_write = {'fps':10, 'quantizer':'nq'}
     imageio.mimsave(os.path.join(filename, "Animation"+timestr+".gif"), images, fps=10)
 
-#store the iterations and total rewards for each agent for each episode
+# Store the iterations and total rewards for each agent for each episode
 iterations = np.arange(Simulation.num_episodes)
 if(os.path.isfile(filename+'/agent_rewards.pkl')):
     agent_reward_filename = filename+'/agent_rewards'+timestr+'.pkl'
 else:
     agent_reward_filename = filename+'/agent_rewards.pkl'
 
-# pe = False
+# Store the iterations and total collisions for each episode 
+total_collisions = np.sum([Simulation.agent_episode_collision_count, Simulation.obstacle_episode_collision_count, Simulation.boundary_episode_collision_count], axis=0)
+if(os.path.isfile(filename+'/total_collisions.pkl')):
+    total_collisions_filename = filename+'/total_collisions'+timestr+'.pkl'
+else:
+    total_collisions_filename = filename+'/total_collisions.pkl'
 
-# try:
-#     with open(agent_reward_filename,'wb') as f:
-#         pickle.dump([iterations, agent_rewards],f)  
-# except permissionError:
-#     pe = True
-
-#there are occasional permission errors, this block will keep retrying until the dump succeeds
-#TODO make this save every so often in case of errors so the history isn't lost
+#NOTE: There are occasional permission errors, this block will keep retrying until the dump succeeds
+#TODO: Make this save every so often in case of errors so the history isn't lost
 max_dump_attempts = 5
 dump_attempts = 0
 pe = True
@@ -388,6 +399,8 @@ while pe:
     try:
         with open(agent_reward_filename,'wb') as f:
             pickle.dump([iterations, agent_rewards],f)  
+        with open(total_collisions_filename,'wb') as g:
+            pickle.dump([iterations, total_collisions_filename],g) 
     except:
         pe = True
         dump_attempts = dump_attempts + 1
@@ -397,7 +410,7 @@ while pe:
         if dump_attempts == max_dump_attempts:
             print('******PERMISSION ERROR, COULD NOT DUMP AGENT REWARDS TO DISK********')
 
-## Iterations-Reward Plot
+# Iterations-Reward Plot
 plt.close()
 for i in range(0,Simulation.num_agents):
     plt.plot(iterations,agent_rewards[:,i])
@@ -411,7 +424,7 @@ else:
     plt.savefig(os.path.join(filename, "IterationsVReward.jpeg") , orientation='landscape', quality=95)
 
 
-## Collision Box and Whisker Plot
+# Collision Box and Whisker Plot
 fig1, ax1 = plt.subplots()
 ax1.set_title('Collision Tracker')
 ax1.boxplot([Simulation.agent_episode_collision_count, Simulation.obstacle_episode_collision_count, Simulation.boundary_episode_collision_count])
@@ -419,38 +432,32 @@ plt.xlabel("Collision Type")
 plt.ylabel("Collisions")
 ax1.set_xticklabels(['Agent Collisions', 'Obstacle Collisions', 'Boundary Collisions'])
 
+if(os.path.isfile(filename+'/Collisions.jpeg')):
+    fig1.savefig(os.path.join(filename, "Collisions"+timestr+".jpeg") , orientation='landscape', quality=95)
+else:
+    fig1.savefig(os.path.join(filename, "Collisions.jpeg") , orientation='landscape', quality=95)
+
+# Iterations-Targets Entered Plot
 fig2, ax2 = plt.subplots()
 plt.plot(iterations,Simulation.target_reached_episode_end)
 plt.xlabel("Iterations")
 plt.ylabel("Targets Reached")
 plt.title('Iterations V. Targets Reached')
 
-if(os.path.isfile(filename+'/IterationsVReward.jpeg')):
-    plt.savefig(os.path.join(filename, "IterationsVReward"+timestr+".jpeg") , orientation='landscape', quality=95)
+if(os.path.isfile(filename+'/TargetsReached.jpeg')):
+    plt.savefig(os.path.join(filename, "TargetsReached"+timestr+".jpeg") , orientation='landscape', quality=95)
 else:
-    plt.savefig(os.path.join(filename, "IterationsVReward.jpeg") , orientation='landscape', quality=95)
+    plt.savefig(os.path.join(filename, "TargetsReached.jpeg") , orientation='landscape', quality=95)
 
-
-total_collisions = np.sum([Simulation.agent_episode_collision_count, Simulation.obstacle_episode_collision_count, Simulation.boundary_episode_collision_count], axis=0)
-
-if(os.path.isfile(filename+'/total_collisions.pkl')):
-    total_collisions_filename = filename+'/total_collisions'+timestr+'.pkl'
-else:
-    total_collisions_filename = filename+'/total_collisions.pkl'
-
-with open(total_collisions_filename,'wb') as f:
-    pickle.dump([iterations, total_collisions_filename],f)  
-
-
-if(os.path.isfile(filename+'/Collisions.jpeg')):
-    fig1.savefig(os.path.join(filename, "Collisions"+timestr+".jpeg") , orientation='landscape', quality=95)
-else:
-    fig1.savefig(os.path.join(filename, "Collisions.jpeg") , orientation='landscape', quality=95)
-    
 plt.show()
-##############################################################################
-#   data
-##############################################################################
-  
-    
 
+# Append Results Data to Simulation.txt
+if(not Simulation.visualize):
+    file = open(os.path.join(path ,'Simulation_Configuration.txt'),'a')
+    file.write("~~~~ RESULTS ~~~~ \n")
+    file.write("Program Execution Time: "+str((end_time-start_time)/60)+" minutes \n")
+    file.write("Mean Episode Agent-Agent Collisions: "+str(np.mean(Simulation.agent_episode_collision_count))+"\n")
+    file.write("Mean Episode Agent-Obstacle Collisions: "+str(np.mean(Simulation.obstacle_episode_collision_count))+"\n")
+    file.write("Mean Episode Agent-Boundary Collisions: "+str(np.mean(Simulation.boundary_episode_collision_count))+"\n")
+    file.write("Mean Numver of Targets Reached: "+str(np.mean(Simulation.target_reached_episode_end))+"\n")
+    
