@@ -42,7 +42,6 @@ def checkInBounds(position,bounds):
 def ReinitializeAgents(agents,bounds):
     #reintizilize target
     search_space = Simulation.search_space
-    #Simulation.targets = np.array([-40,40])
     Simulation.targets = np.array([random.randint(search_space[0][0], search_space[0][1]),
                          random.randint(search_space[1][0], search_space[1][1])])
     Simulation.obstacles = np.array([[random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]),random.randint(1,10), random.randint(1,10)], 
@@ -269,9 +268,10 @@ for e in range(0,Simulation.num_episodes):
         episode_rewards[a] = cp.copy(agents[a].total_reward)
 
     if agent_rewards.size == 0:
-        agent_rewards = cp.copy(episode_rewards)
+        agent_rewards = np.array([cp.copy(episode_rewards)])
     else:
         agent_rewards = np.vstack([agent_rewards,episode_rewards])
+
 
     #reset the agents (except for the Q tables and Q states) to start fresh for the next episode         
     ReinitializeAgents(agents,Simulation.init_space)

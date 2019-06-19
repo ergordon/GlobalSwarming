@@ -157,5 +157,8 @@ from simulation import Simulation
 # print('the reward is')
 # print(instant_reward)
 
-test = np.zeros((len(Simulation.search_space)*2,1))
-print(test)
+q1 = np.array([[1,2,3,4]])
+q2 = np.array([[4,3,2,1]])
+
+
+print((q1+q2)/2)

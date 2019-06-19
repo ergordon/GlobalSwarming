@@ -30,10 +30,10 @@ class Agent:
         # could maybe add bias only to select weights such as largest two
         
 
-        self.modules.append(module.CohesionModule(self)) #cohesion module makes the agents stay together as a swarm
+        # self.modules.append(module.CohesionModule(self)) #cohesion module makes the agents stay together as a swarm
         # self.modules.append(module.CollisionModule(self)) #collision module prevents the agents from hitting each other
         # self.modules.append(module.BoundaryModule(self)) #boundary module prevents the agents from leaving the search space
-        # self.modules.append(module.TargetSeekModule(self)) #collision module prevents the agents from hitting each other
+        self.modules.append(module.TargetSeekModule(self)) #collision module prevents the agents from hitting each other
         # self.modules.append(module.ObstacleAvoidanceModule(self))
 
 
