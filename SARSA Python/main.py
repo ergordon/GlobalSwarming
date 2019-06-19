@@ -252,8 +252,6 @@ for e in range(0,Simulation.num_episodes):
             #select the next action (action_prime) for the agent to take 
             agnt.select_next_action()
 
-
-
         for agnt in agents:
             #select the next action (action_prime) for the agent to take 
             # agnt.select_next_action()
@@ -302,7 +300,7 @@ for e in range(0,Simulation.num_episodes):
     
     for agnt in agents:
         for mod in agnt.modules:
-            mod.reset_init()
+            mod.reset_init(e)
 
 
     #there are occasional permission errors, this block will keep retrying until the dump succeeds
@@ -412,7 +410,6 @@ if(os.path.isfile(filename+'/IterationsVReward.jpeg')):
 else:
     plt.savefig(os.path.join(filename, "IterationsVReward.jpeg") , orientation='landscape', quality=95)
 
-plt.show()
 
 ## Collision Box and Whisker Plot
 fig1, ax1 = plt.subplots()
@@ -422,7 +419,17 @@ plt.xlabel("Collision Type")
 plt.ylabel("Collisions")
 ax1.set_xticklabels(['Agent Collisions', 'Obstacle Collisions', 'Boundary Collisions'])
 
-print(Simulation.target_episode_entries_count)
+fig2, ax2 = plt.subplots()
+plt.plot(iterations,Simulation.target_reached_episode_end)
+plt.xlabel("Iterations")
+plt.ylabel("Targets Reached")
+plt.title('Iterations V. Targets Reached')
+
+if(os.path.isfile(filename+'/IterationsVReward.jpeg')):
+    plt.savefig(os.path.join(filename, "IterationsVReward"+timestr+".jpeg") , orientation='landscape', quality=95)
+else:
+    plt.savefig(os.path.join(filename, "IterationsVReward.jpeg") , orientation='landscape', quality=95)
+
 
 total_collisions = np.sum([Simulation.agent_episode_collision_count, Simulation.obstacle_episode_collision_count, Simulation.boundary_episode_collision_count], axis=0)
 

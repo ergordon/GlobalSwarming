@@ -406,9 +406,6 @@ class CollisionModule(Module):
 ##############################################################################
 #   Begin Boundary Module Class
 ##############################################################################
-
-#module derived from the base class.
-#make the agents swarm together
 class BoundaryModule(Module):
 
     #rewards for being within (or out of) range. 1st entry is the reward 
@@ -584,12 +581,12 @@ class BoundaryModule(Module):
             action_weights = np.ones(len(Action))/len(Action)
 
         return action_weights
+    def reset_init(self,e):
+        pass
 
 ##############################################################################
 #   Begin Target Seek Module Class
 ##############################################################################
-
-#module to encourage agents to track target (Future: moving target?)
 class TargetSeekModule(Module):
 
     #rewards for being within (or out of) range. 1st entry is the reward 
@@ -599,7 +596,7 @@ class TargetSeekModule(Module):
     rewards = [10, -1]
     #the discrete ranges at which the agent can collect rewards
     #ranges_squared = [25,225,625]
-    ranges_squared = [100]
+    ranges_squared = [25]
 
     #class constructor
     def __init__(self,parent_agt):
@@ -616,6 +613,7 @@ class TargetSeekModule(Module):
         self.gamma = 0.9                 # discount factor. keep in range [0,1]. can be tuned to affect Q learning
 
         self.in_target = False
+        self.targets_entered = 0
         # self.target = Simulation.targets  # target location
 
     #visualization for this module. 
@@ -642,6 +640,11 @@ class TargetSeekModule(Module):
     #Track number of agents in the target range
     def auxilariy_functions(self):
         super().auxilariy_functions() #inherited class function
+
+        if(Simulation.target_agents_remaining > 0):
+            self.in_target = False
+            Simulation.target_agents_remaining = Simulation.target_agents_remaining - 1
+
         dist_squared = 0
         for i in range(0,len(self.state_prime)):
             dist_squared = dist_squared + self.state_prime[i]**2
@@ -649,16 +652,16 @@ class TargetSeekModule(Module):
         if (dist_squared <= self.ranges_squared[0]):
             if (self.in_target == False):
                 Simulation.target_entries_count = Simulation.target_entries_count + 1
+                self.targets_entered = self.targets_entered + 1
                 self.in_target = True
-        
+
         if (Simulation.target_entries_count == Simulation.num_agents):
             search_space = Simulation.search_space
             Simulation.targets = np.array([random.randint(search_space[0][0], search_space[0][1]),
                             random.randint(search_space[1][0], search_space[1][1])])
-            #print("New Target!")
             Simulation.target_entries_count = 0
-
-
+            Simulation.target_agents_remaining = Simulation.num_agents
+            #print("New Target")
 
     #update the Q table for this module
     def update_q(self):
@@ -702,7 +705,9 @@ class TargetSeekModule(Module):
         #not in range, apply last reward (punishment)
         if rewarded == False:
             #self.instant_reward = TargetSeekModule.rewards[-1]
-            self.instant_reward = -math.log(dist_squared + 10) + 5 #EQN5
+            self.instant_reward = -25.3*(-math.log(math.sqrt(dist_squared) + 10) + 5)
+            #self.instant_reward = -math.log(dist_squared + 10) + 5
+        #print(self.instant_reward)
 
     def get_module_weight(self):
         
@@ -726,8 +731,8 @@ class TargetSeekModule(Module):
         for i in range (0,len(Action)):
             #get the appropriate Q value Q table row corresponding to the current state 
             #and the action being iterated over
-            Qval = Qrow[i]
-            ## Try Qval = np.array(Qrow[i], dtype=float128) This might fix runtime error.
+            #Qval = Qrow[i]
+            Qval = np.array(Qrow[i], dtype=np.float128)
 
             #exploitation vs exploration constant
             #big T encourages exploration
@@ -740,23 +745,21 @@ class TargetSeekModule(Module):
                 T = 0.1
             #calculate the weight for this action
             action_weights[i] = np.exp(Qval/T)
-
             #set the weight to the max float size in case it is beyond pythons max float size
             if(action_weights[i] == float('inf')):
                 action_weights[i] = 1.7976931348623157e+308
-
         return action_weights
 
-    def reset_init(self):
+    def reset_init(self,e):
+        #print("Reinisitialized")
         self.in_target = False
+        Simulation.target_reached_episode_end[e] = self.targets_entered
+        self.targets_entered = 0
         
 
 ##############################################################################
 #   Begin Obstacle Avoidance Module Class
 ##############################################################################
-
-#module derived from the base class.
-#make the agents swarm together
 class ObstacleAvoidanceModule(Module):
 
     #rewards for being within (or out of) range. 1st entry is the reward 

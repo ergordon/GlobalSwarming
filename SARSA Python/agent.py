@@ -97,14 +97,30 @@ class Agent:
 
         #then select another action here.....
          #normalize the weights to create probabilities
-        if(np.sum(action_weights) != 0):
+        if(np.sum(action_weights) == float('inf')):
+            sum_action_weights = 1.7976931348623157e+308
+            action_weights = action_weights / sum_action_weights
+        else:
+            sum_action_weights = np.sum(action_weights)
+
+        if(sum_action_weights != 0):
             action_weights = action_weights / np.sum(action_weights)
         else:
             action_weights = np.ones(len(Action))/len(Action)
+        
+        # Hack Fix. Implement when other options are depleted
+        # if(np.sum(action_weights) == 0 or np.sum(action_weights) == np.inf):
+        #     action_weights = np.ones(len(Action))/len(Action)
+        #     print("Action Weights If "+str(action_weights))
+        # else:
+        #     action_weights = action_weights / np.sum(action_weights)
+        #     print("Action Weights Else "+str(action_weights))
 
         #use a discrete random variable distribution to select the next action
         x=list(map(int,Action))
         px=action_weights
+        
+        #print(px)
         sample=rv_discrete(values=(x,px)).rvs(size=1)
 
         #set state_prime to be the selected next action
