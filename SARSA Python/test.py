@@ -4,8 +4,8 @@ import agent as agent
 import action as action
 import matplotlib.pyplot as plt
 import pickle
-
-import simulation as sim
+from simulation import Simulation
+from qlearning import Qlearning
 
 # vec1 = np.array([[1,3,1],
 #                  [1,1,1]])
@@ -141,19 +141,37 @@ import simulation as sim
 # agt1.modules[0].start_tracking(agt2)
 # agt1.modules[0].update_state()
 
-rewards = [10, 5, -1]
-#the discrete ranges at which the agent can collect rewards
-ranges_squared = [25,225,625]
+# rewards = [10, 5, -1]
+# #the discrete ranges at which the agent can collect rewards
+# ranges_squared = [25,225,625]
 
-dist_squared = 24
+# dist_squared = 24
 
-instant_reward = 0
-rewarded = False
-for i in range(0,len(ranges_squared)):
-    if dist_squared <= ranges_squared[i]:
-        instant_reward = rewards[i]
-        rewarded = True    
-        break
+# instant_reward = 0
+# rewarded = False
+# for i in range(0,len(ranges_squared)):
+#     if dist_squared <= ranges_squared[i]:
+#         instant_reward = rewards[i]
+#         rewarded = True    
+#         break
 
-print('the reward is')
-print(instant_reward)
+# print('the reward is')
+# print(instant_reward)
+
+# test = np.empty((2,), dtype=object)
+# test = np.array([])
+
+
+# test[0] = Qlearning()
+# test[1] = Qlearning()
+
+# test[0].fetch_row_by_state(np.array([2,2], dtype='f'))
+
+
+test = np.empty(len(Simulation.search_space)*2, dtype=object)
+for i in range(0,len(test)):
+    test[i] = Qlearning()
+
+print(test)
+for i in range(0,len(test)):
+    print(test[i].fetch_row_by_state(np.array([2,2], dtype='f')))

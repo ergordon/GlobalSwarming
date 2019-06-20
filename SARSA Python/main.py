@@ -148,8 +148,6 @@ if(not Simulation.visualize):
 #   Initialization
 ##############################################################################
 print('initializing agents')
-
-agents = list() #list of agents
 initialized = False
 # Check if a file containing a list of agents already exits
 if Simulation.load_agents:
@@ -158,7 +156,7 @@ if Simulation.load_agents:
         print("Agent data found, loading it now")
         # TODO: Handle if the desired number of agents is different from the number of agents saved to disk
         with open(filename + '/agents.pkl', 'rb') as f:
-            agents = pickle.load(f)
+            Simulation.agents = pickle.load(f)
         initialized = True
 
 if not initialized:
@@ -167,43 +165,57 @@ if not initialized:
     for i in range(0,Simulation.num_agents):
         init_space = Simulation.init_space
         position = np.array([random.randint(init_space[0][0], init_space[0][1]),random.randint(init_space[1][0], init_space[1][1])], dtype='f')
-        agents.append(Agent(position))
+        Simulation.agents.append(Agent(position))
 
     # Initialize module parameters such as who each agent is tracking
     # TODO: Make it so the tracked agents are based on range and updated every iteration
     for i in range(0,Simulation.num_agents):
         for j in range(0,Simulation.num_agents):
             if(i != j):
-                # TODO: Chagne this, not every module will care about tracking other agents
+                # TODO: Change this, not every module will care about tracking other agents
                 # Loop through each module
-                for m in range(0,len(agents[i].modules)):
-                    agents[i].modules[m].start_tracking(agents[j])
+                for m in range(0,len(Simulation.agents[i].modules)):
+                    Simulation.agents[i].modules[m].start_tracking(Simulation.agents[j])
 
     # Initialize module state parameters
     for i in range(0,Simulation.num_agents):
-        # Loop through each module
-        for m in range(0,len(agents[i].modules)):
-            agents[i].modules[m].update_state()
-            agents[i].modules[m].state_prime = np.copy(agents[i].modules[m].state)
+        #loop through each module
+        for m in range(0,len(Simulation.agents[i].modules)):
+            Simulation.agents[i].modules[m].update_state()
+            Simulation.agents[i].modules[m].state_prime = np.copy(Simulation.agents[i].modules[m].state)
 
-if Simulation.load_training_data:
-    if os.path.isfile('training_data.pkl'):
-        # If so, load it
-        print("Q learning data found, loading it now")
-        with open('training_data.pkl', 'rb') as f:
-            [module_names, tables, states] = pickle.load(f)
+# if Simulation.load_training_data:
+#     if os.path.isfile('training_data.pkl'):
+#         #if so, load it
+#         print("Q learning data found, loading it now")
+#         with open('training_data.pkl', 'rb') as f:
+#             [module_names, tables, states] = pickle.load(f)
         
-        # for agnt in agents:
-        #     for mod in agnt.modules
-        #         agents[0].modules[i].__class__.__name__
+#         # for agnt in Simulation.agents:
+#         #     for mod in agnt.modules
+#         #         Simulation.agents[0].modules[i].__class__.__name__
         
-        for h in range(0,len(module_names)):
-            for i in range(0,Simulation.num_agents):
-                for j in range(0,len(agents[0].modules)):
-                    print('loading training data!!!')
-                    if agents[i].modules[j].__class__.__name__ == module_names[h]:
-                        agents[i].modules[j].Q.q_table = cp.copy(tables[h])
-                        agents[i].modules[j].Q.q_states = cp.copy(states[h])
+#         for h in range(0,len(module_names)):
+#             for i in range(0,Simulation.num_agents):
+#                 for j in range(0,len(Simulation.agents[0].modules)):
+#                     print('loading training data!!!')
+#                     if Simulation.agents[i].modules[j].__class__.__name__ == module_names[h]:
+#                         Simulation.agents[i].modules[j].Q.q_table = cp.copy(tables[h])
+#                         Simulation.agents[i].modules[j].Q.q_states = cp.copy(states[h])
+
+    # if Simulation.load_training_data:
+    #     for i in range(0,len(Simulation.agents[0].modules)):
+    #         filename = Simulation.agents[0].modules[i].__class__.__name__ + '_training_data.pkl'
+    #         if os.path.isfile(filename):
+    #             print("Q learning data found, loading it now")        
+    #             with open(filename, 'rb') as f:
+    #                 [module_name, table, states] = pickle.load(f)
+
+    #             for j in range(0,Simulation.num_agents):
+    #                 for k in range(0, Simulation.agents[j].modules[i].Q):
+    #                     Simulation.agents[j].modules[i].Q[k].q_table = cp.copy(table)
+    #                     Simulation.agents[j].modules[i].Q[k].q_states = cp.copy(states)
+
 
 ##############################################################################
 #   main algorithm
@@ -224,12 +236,16 @@ if(Simulation.visualize):
 
 print('beginning training')
 for e in range(0,Simulation.num_episodes):
+    Simulation.episode_iter_num = 0
+
     print("beginning episode #" + str(e+1))
 
     for t in range(0,Simulation.episode_length):
+        
         agent_out_of_bounds = False
+        Simulation.episode_iter_num = t
 
-        for agnt in agents:
+        for agnt in Simulation.agents:
 
             # Take the action determined in the last step
             #  Update agent positions on plots
@@ -244,7 +260,7 @@ for e in range(0,Simulation.num_episodes):
 
         if(Simulation.visualize):
             plt.grid(linestyle='--', linewidth='0.5', color='grey')
-            for agnt in agents:
+            for agnt in Simulation.agents:
                 plt.plot(agnt.position[0],agnt.position[1],'ro')
                 plt.axis(axis_bounds)
                 
@@ -254,8 +270,8 @@ for e in range(0,Simulation.num_episodes):
             image = np.frombuffer(fig.canvas.tostring_rgb(), dtype='uint8')
             image  = image.reshape(fig.canvas.get_width_height()[::-1] + (3,))
             images.append(image)
-        
-        for agnt in agents:
+
+        for agnt in Simulation.agents:
             for mod in agnt.modules:
                 # Find what the state (state_prime) would be if that action were taken
                 mod.update_state_prime()
@@ -263,10 +279,7 @@ for e in range(0,Simulation.num_episodes):
             # Select the next action (action_prime) for the agent to take 
             agnt.select_next_action()
 
-        for agnt in agents:
-            # Select the next action (action_prime) for the agent to take 
-            # agnt.select_next_action()
-
+        for agnt in Simulation.agents:
             for mod in agnt.modules:
                 # Determine the reward for executing the action (not prime) in the state (not prime)
                 #  Action (not prime) brings agent from state (not prime) to state_prime, and reward is calulated based on state_prime
@@ -299,17 +312,17 @@ for e in range(0,Simulation.num_episodes):
     # Store the total reward for each agent at the end of each episode for algorithm performance analysis
     episode_rewards = np.zeros(Simulation.num_agents) 
     for a in range(0,Simulation.num_agents):
-        episode_rewards[a] = cp.copy(agents[a].total_reward)
+        episode_rewards[a] = cp.copy(Simulation.agents[a].total_reward)
 
     if agent_rewards.size == 0:
-        agent_rewards = cp.copy(episode_rewards)
+        agent_rewards = np.array([cp.copy(episode_rewards)])
     else:
         agent_rewards = np.vstack([agent_rewards,episode_rewards])
 
     # Reset the agents (except for the Q tables and Q states) to start fresh for the next episode         
-    ReinitializeAgents(agents,Simulation.init_space)
+    ReinitializeAgents(Simulation.agents,Simulation.init_space)
     
-    for agnt in agents:
+    for agnt in Simulation.agents:
         for mod in agnt.modules:
             mod.reset_init(e)
 
@@ -325,12 +338,13 @@ for e in range(0,Simulation.num_episodes):
         pe = False
         try:
             with open(agent_filename,'wb') as f:
-                pickle.dump(agents,f) 
+                pickle.dump(Simulation.agents,f)  
         except:
             pe = True
             dump_attempts = dump_attempts + 1
             
             print('permission error while saving to disk, retrying...')
+            time.sleep(0.5)
 
             if dump_attempts == max_dump_attempts:
                 print('******PERMISSION ERROR, COULD NOT DUMP AGENTS TO DISK********')
@@ -346,22 +360,6 @@ print(end_time-start_time)
 #   Data Storage
 ##############################################################################
 timestr = time.strftime("%m%d-%H%M")
-
-# mat = agents[0].modules[0].Q.q_table# np.matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
-# with open('outfile.txt') as f:
-#     for line in mat:
-#         np.savetxt(f, line, fmt='%.2f')
-
-# #average and save the Q tables for each agent
-# for i in range(0,len(agents[0].modules)):
-#     q_table = np.array([])
-#     q_states = np.array([])
-#     number_experienced = np.array([])
-
-#     for j in range(0,num_agents):
-#         for k in range(0, agents[j].modules[i].Q.q_states):
-#             working_state = agents[j].modules[i].Q.q_states[k]
-#             if(any(np.equal(q_states,working_state).all(1))):
 
 # Export the visualizer as a *.gif
 if(Simulation.visualize):
@@ -399,6 +397,7 @@ while pe:
         dump_attempts = dump_attempts + 1
     
         print('permission error while saving to disk, retrying...')
+        time.sleep(0.5)
 
         if dump_attempts == max_dump_attempts:
             print('******PERMISSION ERROR, COULD NOT DUMP AGENT REWARDS TO DISK********')

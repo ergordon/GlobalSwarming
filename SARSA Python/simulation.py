@@ -16,8 +16,8 @@ class Simulation:
     if (Arena == 0): # Custom Terrain. Edit These Ones 
         
         num_agents = 3                 # Number of agents to simulate
-        num_episodes = 5            # Number of times to run the training scenario
-        episode_length = 400            # Number of time steps in each training scenario [iterations]
+        num_episodes = 3            # Number of times to run the training scenario
+        episode_length = 50            # Number of time steps in each training scenario [iterations]
         exploitation_rise_time = 0   # The amount of time over which we transition from exploration to exploitation [seconds]
         exploitation_rise_percent = 0  # The percentage of each episode over which we transition from exploration to exploitation
 
@@ -30,7 +30,7 @@ class Simulation:
         search_space = [[-20,20],
                         [-20,20]]
 
-        visualize = True       # Whether to show a plot animation of the agent positions
+        visualize = True            # Whether to show a plot animation of the agent positions
         load_agents = True          # Whether to load the agents.pkl file (loads agents exactly as they upon completion of training)
         load_training_data = False  # Whether to load the agent training data (loads q tables and states into the modules that exist in the agent initialization function)
         take_best_action = True     # Whether to select next actions based on highest Q table entry or use Q table values as probabilities for each action 
@@ -40,8 +40,8 @@ class Simulation:
         CohesionModule = False            # Cohesion module makes the agents stay together as a swarm
         CollisionAvoidanceModule = False  # Collision module prevents the agents from hitting each other
         OutOfBoundsModule = False         # Boundary module prevents the agents from leaving the search space
-        TargetSeekingModule = True        # Target module encourages agents to travel to waypoint
-        ObstacleAvoidanceModule = False  # Obstacle module prevents the agents from hitting obstacles
+        TargetSeekingModule = False       # Target module encourages agents to travel to waypoint
+        ObstacleAvoidanceModule = True  # Obstacle module prevents the agents from hitting obstacles
 
         # These are the weights for each module. they should sum to 1. 
         # If they don't, they will be scaled accordingly during initialization
@@ -67,8 +67,8 @@ class Simulation:
 
         # Obstacles to Avoid
         ## [x, y, width, height]
-        #bstacles = np.array([[-30,-40,30,50], [10, -40, 20, 50], [-40, 10, 60, 10]])
-        num_obstacles = 6
+        #obstacles = np.array([[-30,-40,30,50], [10, -40, 20, 50], [-40, 10, 60, 10]])
+        num_obstacles = 3
         obstacles = np.array([random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), random.randint(1,10), random.randint(1,10)])
         for i in range(1,num_obstacles):
             temp_obstacles = np.array([random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), random.randint(1,10), random.randint(1,10)])
@@ -198,6 +198,9 @@ class Simulation:
     target_episode_entries_count = []     # Number agents in a target at the end of an episode
     target_reached_episode_end = np.zeros(num_episodes)       # Number of targets the agents arrived at in one episode
     target_agents_remaining = 0
+
+    episode_iter_num = 0   # Track the current interation of the episode. Used with exploration/exploitation
+    agents = list()        # List of agents
 ##############################################################################
 #   Simulation Class
 ##############################################################################

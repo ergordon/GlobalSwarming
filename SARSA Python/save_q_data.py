@@ -2,10 +2,29 @@ import numpy as np
 import module as module
 import agent as agent
 import pickle
+import argparse
+import os.path
 
+
+##############################################################################
+#   Argument Parser
+##############################################################################
+# EXAMPLE: python plot_data.py --file agent_rewards_DistanceOnly.pkl
+# construct the argument parser and parse the arguments
+ap = argparse.ArgumentParser()
+ap.add_argument("--simName", type=str, default="SimulationResults", required=False,
+	help="simName == Name of Simulation or Test")
+args = vars(ap.parse_args())
+
+##############################################################################
+#   Data 
+##############################################################################
+
+path = args["simName"]
+agents = np.array ([])
 
 #load the agents saved during the training process 
-with open('agents.pkl', 'rb') as f:
+with open(path+'/agents.pkl', 'rb') as f:
     agents = pickle.load(f)
 
 
@@ -27,6 +46,8 @@ for i in range(0,len(agents[0].modules)):
     #iterate over each agent
     for j in range(0,num_agents):
         #iterage over each state for this module for this state
+        #TODO handle when Q is an array....
+        #this is difficult because some modules have a single Q, some have one for each object, some have 4 always
         for k in range(0, agents[j].modules[i].Q.q_states.shape[0]):
 
             working_state = agents[j].modules[i].Q.q_states[k] #the current state being compared
@@ -35,7 +56,6 @@ for i in range(0,len(agents[0].modules)):
             #check for any entries in the current q_table for this module
             if q_states.shape[0] != 0:
                 
-                #TODO: implement this in the qlearning class for row fetches
                 #check if the working state already exists in the q table for this module 
                 matches = np.equal(q_states,[working_state]).all(1).nonzero()
 
@@ -51,7 +71,7 @@ for i in range(0,len(agents[0].modules)):
                     matching_index = matches[0][0] 
                     q_table[matching_index] = np.add(q_table[matching_index], working_q_row)
                     number_experienced[matching_index] = np.add(number_experienced[matching_index], np.array([1]))
-                    
+            
             else: #q_states.shape[0] != 0:
                 #no entries found yet, initialize with current values
                 q_states = working_state
@@ -78,7 +98,13 @@ for i in range(0,len(agents[0].modules)):
     tables.append(q_table)
     states.append(q_states)
 
-#save the results to disk
-save_data_filename = 'training_data.pkl'
-with open(save_data_filename,'wb') as f:
-    pickle.dump([module_names, tables,states],f)  
+for i in range(0,len(module_names)):
+    save_data_filename = module_names[i] + '_training_data.pkl'
+    with open(os.path.join(path, save_data_filename),'wb') as f:
+        pickle.dump([module_names[i], tables[i], states[i]],f)  
+
+
+# #save the results to disk
+# save_data_filename = 'training_data.pkl'
+# with open(save_data_filename,'wb') as f:
+#     pickle.dump([module_names, tables,states],f)  
