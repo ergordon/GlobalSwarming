@@ -8,10 +8,10 @@ import random
 #A class containing high level simulation variables
 class Simulation:
 
-    num_agents = 3 #number of agents to simulate
+    num_agents = 1 #number of agents to simulate
     
-    num_episodes = 2 #number of times to run the training scenario
-    episode_length = 100 #number of time steps in each training scenario [iterations]
+    num_episodes = 1000 #number of times to run the training scenario
+    episode_length = 50 #number of time steps in each training scenario [iterations]
     exploitation_rise_time = 400 #the amount of time over which we transition from exploration to exploitation [seconds]
             #TODO change to exploitation rise percentage and make it explore for the 1st percent of every episode
     exploitation_rise_percent = 20 #the percentage of each episode over which we transition from exploration to exploitation
@@ -22,16 +22,15 @@ class Simulation:
 
     #bounds to simulate the agents within
     #exiting these bounds will end the episode immediately
-    search_space = [[-25,25],
-                    [-25,25]]
-    # search_space = [[-10,10],
-    #                 [-10,10]]
-
+    search_space = [[-20,20],
+                    [-20,20]]
+    # search_space = [[-15,15],
+    #                 [-15,15]]
 
     ThreeTwoOne = True
     visualize = ThreeTwoOne  #whether to show a plot animation of the agent positions
 
-    load_agents = ThreeTwoOne #whether to load the agents.pkl file (loads agents exactly as they upon completion of training)
+    load_agents = ThreeTwoOne   #whether to load the agents.pkl file (loads agents exactly as they upon completion of training)
     load_training_data = False #whether to load the agent training data (loads q tables and states into the modules that exist in the agent initialization function)
     #TODO fix load_training_data, gave permission error when saving to disk at the end
 
@@ -40,8 +39,7 @@ class Simulation:
     take_best_action = ThreeTwoOne #whether to select next actions based on highest Q table entry or use Q table values as probabilities for each action 
 
     #targets = np.array([-40,40])
-    targets = np.array([random.randint(search_space[0][0], search_space[0][1]),
-                        random.randint(search_space[1][0], search_space[1][1])])
+    targets = np.array([random.randint(search_space[0][0], search_space[0][1]), random.randint(search_space[1][0], search_space[1][1])])
 
     # Obstacles to Avoid
     ## [x, y, width, height]
@@ -71,7 +69,7 @@ class Simulation:
 
     episode_iter_num = 0 #DO NOT EDIT. variable used only to track the current interation of the episode. used with exploration/exploitation
 
-
+    agents = list() #list of agents
 
 ##############################################################################
 #   Simulation Class

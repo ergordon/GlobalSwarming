@@ -5,6 +5,7 @@ import action as action
 import matplotlib.pyplot as plt
 import pickle
 from simulation import Simulation
+from qlearning import Qlearning
 
 # vec1 = np.array([[1,3,1],
 #                  [1,1,1]])
@@ -157,8 +158,20 @@ from simulation import Simulation
 # print('the reward is')
 # print(instant_reward)
 
-q1 = np.array([[1,2,3,4]])
-q2 = np.array([[4,3,2,1]])
+# test = np.empty((2,), dtype=object)
+# test = np.array([])
 
 
-print((q1+q2)/2)
+# test[0] = Qlearning()
+# test[1] = Qlearning()
+
+# test[0].fetch_row_by_state(np.array([2,2], dtype='f'))
+
+
+test = np.empty(len(Simulation.search_space)*2, dtype=object)
+for i in range(0,len(test)):
+    test[i] = Qlearning()
+
+print(test)
+for i in range(0,len(test)):
+    print(test[i].fetch_row_by_state(np.array([2,2], dtype='f')))
