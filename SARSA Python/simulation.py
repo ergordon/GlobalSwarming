@@ -15,10 +15,10 @@ class Simulation:
 
     if (Arena == 0): # Custom Terrain. Edit These Ones 
         
-        num_agents = 1                     # Number of agents to simulate
-        num_episodes = 5                  # Number of times to run the training scenario
-        episode_length = 50               # Number of time steps in each training scenario [iterations]
-        exploitation_rise_time = 0       # The amount of time over which we transition from exploration to exploitation [seconds]
+        num_agents = 3                 # Number of agents to simulate
+        num_episodes = 5            # Number of times to run the training scenario
+        episode_length = 400            # Number of time steps in each training scenario [iterations]
+        exploitation_rise_time = 0   # The amount of time over which we transition from exploration to exploitation [seconds]
         exploitation_rise_percent = 0  # The percentage of each episode over which we transition from exploration to exploitation
 
         # Bounds to initialize the agents inside of
@@ -40,8 +40,8 @@ class Simulation:
         CohesionModule = False            # Cohesion module makes the agents stay together as a swarm
         CollisionAvoidanceModule = False  # Collision module prevents the agents from hitting each other
         OutOfBoundsModule = False         # Boundary module prevents the agents from leaving the search space
-        TargetSeekingModule = False        # Target module encourages agents to travel to waypoint
-        ObstacleAvoidanceModule = True  # Obstacle module prevents the agents from hitting obstacles
+        TargetSeekingModule = True        # Target module encourages agents to travel to waypoint
+        ObstacleAvoidanceModule = False  # Obstacle module prevents the agents from hitting obstacles
 
         # These are the weights for each module. they should sum to 1. 
         # If they don't, they will be scaled accordingly during initialization
@@ -54,8 +54,16 @@ class Simulation:
         # 2 = NeuralNetwork
         ControllerType = 0
 
-        targets = np.array([random.randint(search_space[0][0]+5, search_space[0][1]-5),
-                            random.randint(search_space[1][0]+5, search_space[1][1]-5)])
+        target_random = False
+        #target_array = np.array([[-40,40],[20,-10],[50,50],[40,-50]]) # If target_random is False
+        target_array = np.array([[10,10],[-10,-10],[-10,10],[10,-10]]) # If target_random is False
+        if(target_random):
+            targets = np.array([random.randint(search_space[0][0]+5, search_space[0][1]-5),
+                                random.randint(search_space[1][0]+5, search_space[1][1]-5)])
+        else:
+            targets = target_array[0]
+        
+        
 
         # Obstacles to Avoid
         ## [x, y, width, height]
@@ -75,13 +83,13 @@ class Simulation:
         exploitation_rise_percent = 0  # the percentage of each episode over which we transition from exploration to exploitation
 
         #bounds to initialize the agents inside of
-        init_space = [[-40,-30],
-                    [-40,-30]]
+        init_space = [[-60,-40],
+                    [-60,-40]]
 
         #bounds to simulate the agents within
         #exiting these bounds will end the episode immediately
-        search_space = [[-60,60],
-                        [-60,60]]
+        search_space = [[-80,80],
+                        [-80,80]]
 
         visualize = True            # whether to show a plot animation of the agent positions
         load_agents = True          # whether to load the agents.pkl file (loads agents exactly as they upon completion of training)
@@ -107,16 +115,15 @@ class Simulation:
         # 2 = NeuralNetwork
         ControllerType = 0
 
-        #targets = np.array([-40,40])
-        targets = np.array([random.randint(search_space[0][0], search_space[0][1]),
-                            random.randint(search_space[1][0], search_space[1][1])])
+        #targets = np.array([-40,40],[20,-10],[50,50],[40,-50])
+        targets = np.array([40,-50])
 
         # Obstacles to Avoid
         ## [x, y, width, height]
-        obstacles = np.array([[-10,-40,30,15], 
-                              [-35, -15, 30, 20],
-                              [35, -10, 10, 30],
-                              [0, 25, 20, 10]])
+        obstacles = np.array([[-10,-60,30,15], 
+                              [-45, -15, 30, 20],
+                              [45, -10, 10, 30],
+                              [-5, 25, 20, 30]])
         for i in range(0,10):
             temp_obstacles = np.array([random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), 1, 1])
             obstacles = np.vstack((obstacles, temp_obstacles))

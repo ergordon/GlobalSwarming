@@ -396,6 +396,8 @@ class CollisionModule(Module):
 
         return action_weights
 
+    def reset_init(self,e):
+        pass
 
 ##############################################################################
 #   Begin Boundary Module Class
@@ -593,9 +595,7 @@ class TargetSeekModule(Module):
     def auxilariy_functions(self):
         super().auxilariy_functions() # Inherited class function
 
-        if(Simulation.target_agents_remaining > 0):
-            self.in_target = False
-            Simulation.target_agents_remaining = Simulation.target_agents_remaining - 1
+        
 
         dist_squared = 0
         for i in range(0,len(self.state_prime)):
@@ -607,10 +607,23 @@ class TargetSeekModule(Module):
                 self.targets_entered = self.targets_entered + 1
                 self.in_target = True
 
+        if(Simulation.target_agents_remaining > 0):
+                    self.in_target = False
+                    Simulation.target_agents_remaining = Simulation.target_agents_remaining -1
+                    
         if (Simulation.target_entries_count == Simulation.num_agents):
             search_space = Simulation.search_space
-            Simulation.targets = np.array([random.randint(search_space[0][0], search_space[0][1]),
-                            random.randint(search_space[1][0], search_space[1][1])])
+
+            if(Simulation.target_random):
+                Simulation.targets = np.array([random.randint(search_space[0][0]+5, search_space[0][1]-5),
+                                random.randint(search_space[1][0]+5, search_space[1][1]-5)])
+            else:
+                if(self.targets_entered <= len(Simulation.target_array)):
+                    Simulation.targets = Simulation.target_array[self.targets_entered-1]
+                else:
+                    pass
+            #print(Simulation.targets)
+
             Simulation.target_entries_count = 0
             Simulation.target_agents_remaining = Simulation.num_agents
 

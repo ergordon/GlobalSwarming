@@ -43,6 +43,9 @@ def checkInBounds(position,bounds):
 
 # Reset the agents to initial conditions (except for the Q states and tables)
 def ReinitializeAgents(agents,bounds):
+
+    search_space = Simulation.search_space 
+    
     # Save Last Episodes Collisions, Reset Collision
     Simulation.obstacle_episode_collision_count.append(Simulation.obstacle_collision_count)
     Simulation.obstacle_collision_count = 0
@@ -56,12 +59,14 @@ def ReinitializeAgents(agents,bounds):
     Simulation.target_episode_entries_count.append(Simulation.target_entries_count)
     Simulation.target_entries_count = 0
     
-    # Reinitialize Setting Parameters
-    if (Simulation.Arena == 0):
-        search_space = Simulation.search_space
+    if(Simulation.target_random):
         Simulation.targets = np.array([random.randint(search_space[0][0]+5, search_space[0][1]-5),
                                        random.randint(search_space[1][0]+5, search_space[1][1]-5)])
+    else:
+        Simulation.targets = Simulation.target_array[0]
 
+    # Reinitialize Setting Parameters
+    if (Simulation.Arena == 0):
         Simulation.obstacles = np.array([random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), random.randint(1,10), random.randint(1,10)])
         for i in range(1,Simulation.num_obstacles):
             temp_obstacles = np.array([random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), random.randint(1,10), random.randint(1,10)])
