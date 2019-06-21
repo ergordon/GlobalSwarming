@@ -347,7 +347,6 @@ class CollisionModule(Module):
 
     # Add an agent to the list of agents to be tracked by this module
     def start_tracking(self,agt):
-        #super().start_tracking(agt) # Make sure this works correctly
         # First check if the agent is already being tracked
         if agt not in self.tracked_agents:
             if(len(self.tracked_agents) != 0):
@@ -411,7 +410,7 @@ class CollisionModule(Module):
             # # the function is always negative but is asymtotic to 0 as dist_squared approaches infinity
             # self.instant_reward[i] = 10.0*(dist_squared/(10.0+dist_squared)-1.0)
 
-            
+    #TODO move to base class        
     # Update parent agents total reward based on the module's current instant reward
     def update_total_reward(self):
         reward = sum(self.instant_reward)
@@ -432,6 +431,7 @@ class CollisionModule(Module):
             if dist_squared < min_dist_squared:
                 min_dist_squared = dist_squared
 
+        #TODO consider adding some padding. maybe the agent step size?
         if min_dist_squared <= CollisionModule.ranges_squared[-1]:
             return 1
         else:

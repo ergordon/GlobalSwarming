@@ -150,71 +150,57 @@ if(not Simulation.visualize):
 print('initializing agents')
 initialized = False
 # Check if a file containing a list of agents already exits
-if Simulation.load_agents:
-    if os.path.isfile(filename + '/agents.pkl'):
-        # If so, load it
-        print("Agent data found, loading it now")
-        # TODO: Handle if the desired number of agents is different from the number of agents saved to disk
-        with open(filename + '/agents.pkl', 'rb') as f:
-            Simulation.agents = pickle.load(f)
-        initialized = True
+# if Simulation.load_agents:
+#     if os.path.isfile(filename + '/agents.pkl'):
+#         # If so, load it
+#         print("Agent data found, loading it now")
+#         # TODO: Handle if the desired number of agents is different from the number of agents saved to disk
+#         with open(filename + '/agents.pkl', 'rb') as f:
+#             Simulation.agents = pickle.load(f)
+#         initialized = True
 
-if not initialized:
+# if not initialized:
     # If not, initialize a set of agents from scratch
-    # Initialize agent positions
-    for i in range(0,Simulation.num_agents):
-        init_space = Simulation.init_space
-        position = np.array([random.randint(init_space[0][0], init_space[0][1]),random.randint(init_space[1][0], init_space[1][1])], dtype='f')
-        Simulation.agents.append(Agent(position))
 
-    # Initialize module parameters such as who each agent is tracking
-    # TODO: Make it so the tracked agents are based on range and updated every iteration
-    for i in range(0,Simulation.num_agents):
-        for j in range(0,Simulation.num_agents):
-            if(i != j):
-                # TODO: Change this, not every module will care about tracking other agents
-                # Loop through each module
-                for m in range(0,len(Simulation.agents[i].modules)):
-                    Simulation.agents[i].modules[m].start_tracking(Simulation.agents[j])
+# Initialize agent positions
+for i in range(0,Simulation.num_agents):
+    init_space = Simulation.init_space
+    # position = np.array([random.randint(init_space[0][0], init_space[0][1]),random.randint(init_space[1][0], init_space[1][1])], dtype='f')
+    position = np.array([2*i,2*i], dtype='f')
+    Simulation.agents.append(Agent(position))
 
-    # Initialize module state parameters
-    for i in range(0,Simulation.num_agents):
-        #loop through each module
-        for m in range(0,len(Simulation.agents[i].modules)):
-            Simulation.agents[i].modules[m].update_state()
-            Simulation.agents[i].modules[m].state_prime = np.copy(Simulation.agents[i].modules[m].state)
+# Initialize module parameters such as who each agent is tracking
+# TODO: Make it so the tracked agents are based on range and updated every iteration
+for i in range(0,Simulation.num_agents):
+    for j in range(0,Simulation.num_agents):
+        if(i != j):
+            # TODO: Change this, not every module will care about tracking other agents
+            # Loop through each module
+            for m in range(0,len(Simulation.agents[i].modules)):
+                Simulation.agents[i].modules[m].start_tracking(Simulation.agents[j])
 
-# if Simulation.load_training_data:
-#     if os.path.isfile('training_data.pkl'):
-#         #if so, load it
-#         print("Q learning data found, loading it now")
-#         with open('training_data.pkl', 'rb') as f:
-#             [module_names, tables, states] = pickle.load(f)
+# Initialize module state parameters
+for i in range(0,Simulation.num_agents):
+    #loop through each module
+    for m in range(0,len(Simulation.agents[i].modules)):
+        Simulation.agents[i].modules[m].update_state()
+        Simulation.agents[i].modules[m].state_prime = np.copy(Simulation.agents[i].modules[m].state)
+
+
+#TODO handle modules with collapsable_Q=False
+if Simulation.load_training_data:
+    for i in range(0,len(Simulation.agents[0].modules)):
+        training_filename = path +'/'+ Simulation.agents[0].modules[i].__class__.__name__ + '_training_data.pkl'
         
-#         # for agnt in Simulation.agents:
-#         #     for mod in agnt.modules
-#         #         Simulation.agents[0].modules[i].__class__.__name__
-        
-#         for h in range(0,len(module_names)):
-#             for i in range(0,Simulation.num_agents):
-#                 for j in range(0,len(Simulation.agents[0].modules)):
-#                     print('loading training data!!!')
-#                     if Simulation.agents[i].modules[j].__class__.__name__ == module_names[h]:
-#                         Simulation.agents[i].modules[j].Q.q_table = cp.copy(tables[h])
-#                         Simulation.agents[i].modules[j].Q.q_states = cp.copy(states[h])
+        if os.path.isfile(training_filename):
+            print("Q learning data found, loading it now")        
+            with open(training_filename, 'rb') as f:
+                [module_name, table, states] = pickle.load(f)
 
-    # if Simulation.load_training_data:
-    #     for i in range(0,len(Simulation.agents[0].modules)):
-    #         filename = Simulation.agents[0].modules[i].__class__.__name__ + '_training_data.pkl'
-    #         if os.path.isfile(filename):
-    #             print("Q learning data found, loading it now")        
-    #             with open(filename, 'rb') as f:
-    #                 [module_name, table, states] = pickle.load(f)
-
-    #             for j in range(0,Simulation.num_agents):
-    #                 for k in range(0, Simulation.agents[j].modules[i].Q):
-    #                     Simulation.agents[j].modules[i].Q[k].q_table = cp.copy(table)
-    #                     Simulation.agents[j].modules[i].Q[k].q_states = cp.copy(states)
+            for agt in Simulation.agents:
+                for Q in agt.modules[i].Q:
+                    Q.q_table = cp.copy(table)
+                    Q.q_states = cp.copy(states)
 
 
 ##############################################################################
