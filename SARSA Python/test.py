@@ -168,10 +168,29 @@ from qlearning import Qlearning
 # test[0].fetch_row_by_state(np.array([2,2], dtype='f'))
 
 
-test = np.empty(len(Simulation.search_space)*2, dtype=object)
-for i in range(0,len(test)):
-    test[i] = Qlearning()
+vector1 = np.array([1,1]) #D1
+vector2 = np.array([2,2]) #D1
+vector3 = np.array([3,3]) #D2
+vector4 = np.array([4,4]) #D2
 
-print(test)
-for i in range(0,len(test)):
-    print(test[i].fetch_row_by_state(np.array([2,2], dtype='f')))
+table = np.empty((2,),dtype=object)
+
+temp_table_1 = np.array([vector1, vector2])
+temp_table_2 = np.array([vector3, vector4])
+
+print(temp_table_1)
+print(temp_table_2)
+table[0] = temp_table_1
+table[1] = temp_table_2
+
+print(table)
+
+vector5 = np.array([5,5])
+vector6 = np.array([6,6])
+
+table[0] = np.vstack([table[0],vector5])
+table[0] = np.vstack([table[0],vector6])
+
+print(table)
+
+print(table[0][1])
