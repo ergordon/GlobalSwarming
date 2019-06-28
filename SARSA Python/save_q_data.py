@@ -4,6 +4,9 @@ import agent as agent
 import pickle
 import argparse
 import os.path
+import time
+
+start = time.time()
 
 
 ##############################################################################
@@ -53,7 +56,6 @@ for i in range(0,len(agents[0].modules)):
                     #check for any entries in the current q_table for this module
                     if q_states.shape[0] != 0:
                         
-                        #this comparison might be where the issue is
                         #check if the working state already exists in the q table for this module 
                         matches = np.equal(q_states,[working_state]).all(1).nonzero()
 
@@ -85,7 +87,7 @@ for i in range(0,len(agents[0].modules)):
             for e in range(0,q_states.shape[0]):
                 if d != e:
                     if np.equal(q_states[e],test_state).all():
-                        print('duplicate found oh no!!!!')
+                        print('duplicate state found from single agent, there is most likely an error in the Qlearning class')
                         print(test_state)
                         print(q_states[e])
 
@@ -93,9 +95,58 @@ for i in range(0,len(agents[0].modules)):
         for d in range(0,q_states.shape[0]):
             q_table[d] = np.divide(q_table[d],number_experienced[d])
     else:
-        #TODO finish me!!!
-        #here i need to implement code for the boundary module
-        pass
+        q_states = np.empty((len(agents[0].modules[i].Q),), dtype=object)
+        q_table = np.empty((len(agents[0].modules[i].Q),), dtype=object)
+        number_experienced = np.empty((len(agents[0].modules[i].Q),), dtype=object)
+
+        for q in range(0,len(agents[0].modules[i].Q)):
+            for agnt in agents:
+                Q = agnt.modules[i].Q[q]
+                for j in range(0, Q.q_states.shape[0]):
+                    working_state = Q.q_states[j] #the current state being compared
+                    working_q_row = Q.q_table[j] #the corresponding qtable entry to the current state
+
+
+                    #check for any entries in the current q_table for this module for this Q
+                    if q_states[q] is not None:
+                        
+                        #check if the working state already exists in the q table for this module 
+                        matches = np.equal(q_states[q],[working_state]).all(1).nonzero()
+
+                        if matches[0].size == 0:
+                            #working state not in q states for this module, add it along with the row
+                            q_states[q] = np.vstack([q_states[q], working_state])
+                            q_table[q] = np.vstack([q_table[q], working_q_row])
+                            number_experienced[q] = np.vstack([number_experienced[q], np.array([1])])
+                        else:
+                            #working state already in q states for this module, 
+                            #sum the working q row with the corresponding entry in the q table for this module
+                            #incerement the number of times this row has been updated
+                            matching_index = matches[0][0] 
+                            q_table[q][matching_index] = np.add(q_table[q][matching_index], working_q_row)
+                            number_experienced[q][matching_index] = np.add(number_experienced[q][matching_index], np.array([1]))
+                    
+                    else: #q_states[q] is None
+                        #no entries found yet, initialize with current values
+                        q_states[q] = working_state
+                        q_table[q] = working_q_row
+                        number_experienced[q] = np.array([1])     
+
+            # sanity check for duplicate q state entries
+            for d in range(0,q_states[q].shape[0]):
+                test_state = q_states[q][d]
+                for e in range(0,q_states[q].shape[0]):
+                    if d != e:
+                        if np.equal(q_states[q][e],test_state).all():
+                            print('duplicate state found from single agent, there is most likely an error in the Qlearning class')
+                            print(test_state)
+                            print(q_states[q][e])
+
+            #average the q rows based on the number of times they were updated
+            for d in range(0,q_states[q].shape[0]):
+                q_table[q][d] = np.divide(q_table[q][d],number_experienced[q][d])
+
+        print(q_table)
 
     #store the results in lists
     module_names.append(agents[0].modules[i].__class__.__name__)
@@ -107,3 +158,9 @@ for i in range(0,len(module_names)):
     with open(os.path.join(path, save_data_filename),'wb') as f:
         pickle.dump([module_names[i], tables[i], states[i]],f)  
 
+end = time.time()
+
+duration = end - start
+
+print('operation took')
+print(duration)

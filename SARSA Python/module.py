@@ -84,7 +84,7 @@ class Module:
             if(curr_time - self.init_time < Simulation.exploitation_rise_time):
                 T = 1000.0 - (1000.0-1)*(curr_time - self.init_time)/Simulation.exploitation_rise_time
             else:
-                T = .05
+                T = 0.05
 
             # Calculate the weight for this action
             action_weights[i] = np.exp(Qval/T)
@@ -98,7 +98,8 @@ class Module:
         #     action_weights = action_weights / np.sum(action_weights)
         # else:
         #     action_weights = np.ones(len(Action))/len(Action)
-
+        # print('action_weights are')
+        # print(action_weights)
         return action_weights
 
 
@@ -108,73 +109,10 @@ class Module:
         for i in range(0,len(self.Q)):
             self.Q[i].update_q(self.state[i],self.state_prime[i],self.action,self.action_prime,self.alpha,self.gamma,self.instant_reward[i])
 
-    def load_q_data(self,q_states,q_tables):
-        pass
-
-    # Get the q table and q states for this module. 
-    # The collapse flag (True/False) will tell whether the data from each Q[i] 
-    #  needs to be combined before being returned or if it should be returned as an array 
-    def get_q_data(self, collapse): #maybe instead return a 'collapsable' flag that is set in each module????
-        # TODO: Put the following into a helper function that can be used here and at the final merging
-        
-        if(collapse):
-            q_table = np.array([])            # Temporary storage for the q table for this module
-            q_states = np.array([])           # Temporary storage for the q states for this module
-            number_experienced = np.array([]) # The number of times each state shows up across all agents
-
-            # Iterate over each Q table for this module
-            for i in range(0,len(self.Q)):
-                for j in range(0,self.Q[i].q_states.shape[0]):
-                    working_state = self.Q[i].q_states[j] # The current state being compared
-                    working_q_row = self.Q[i].q_table[j]  # The corresponding qtable entry to the current state
-
-                    if q_states.shape[0] != 0:
-                        # Check if the working state already exists in the q table for this module 
-                        matches = np.equal(q_states,[working_state]).all(1).nonzero()
-
-                        if matches[0].size == 0:
-                            # Working state not in q states for this module, add it along with the row
-                            q_states = np.vstack([q_states, working_state])
-                            q_table = np.vstack([q_table, working_q_row])
-                            number_experienced = np.vstack([number_experienced, np.array([1])])
-                        else:
-                            # Working state already in q states for this module, 
-                            #  sum the working q row with the corresponding entry in the q table for this module
-                            #  incerement the number of times this row has been updated
-                            matching_index = matches[0][0] 
-                            q_table[matching_index] = np.add(q_table[matching_index], working_q_row)
-                            number_experienced[matching_index] = np.add(number_experienced[matching_index], np.array([1]))
-                    
-                    else: #q_states.shape[0] == 0:
-                        # No entries found yet, initialize with current values
-                        # TODO: Would be much faster if i set it to be the entire q table insead of just the working one 
-                        q_states = working_state
-                        q_table = working_q_row
-                        number_experienced = np.array([1]) 
-            
-            # #sanity check for duplicate q state entries
-            # for d in range(0,q_states.shape[0]):
-            #     test_state = q_states[d]
-            #     for e in range(0,q_states.shape[0]):
-            #         if d != e:
-            #             if np.equal(q_states[e],test_state).all():
-            #                 print('duplicate found oh no!!!!')
-            #                 print(test_state)
-            #                 print(q_states[e])
-
-            # Average the q rows based on the number of times they were updated
-            for j in range(0,q_states.shape[0]):
-                q_table[j] = np.divide(q_table[j],number_experienced[j])
-
-        else:
-            # self.state = np.zeros((len(Simulation.search_space)*2,1))
-            tables = np.empty((len(self.Q),))
-            states = np.empty((len(self.Q),))
-            
-            # TODO: Check if copy is needed
-            for i in range(0,len(self.Q)):
-                tables[i] = self.Q[i].q_table
-                states[i] = self.Q[i].q_states
+    # Update parent agents total reward based on the module's current instant reward
+    def update_total_reward(self):
+        reward = sum(self.instant_reward)
+        self.parent_agent.add_total_reward(reward)
 
     def reset_init(self,e):
         pass
@@ -195,7 +133,7 @@ class CohesionModule(Module):
     def __init__(self,parent_agt):
         super().__init__(parent_agt) #Inherited class initialization
         
-        self.gamma = 0.01                      # Discount factor. keep in range [0,1]. can be tuned to affect Q learning
+        self.gamma = 0.1                      # Discount factor. keep in range [0,1]. can be tuned to affect Q learning
         self.Q = np.empty((1,), dtype=object)
         self.Q[0] = Qlearning()
         self.collapsable_Q = True              # Whether or now the Q table array can be collapsed/combined into a single Q table
@@ -239,21 +177,21 @@ class CohesionModule(Module):
         for i in range(0,len(self.state_prime[0])):
             dist_squared = dist_squared + self.state_prime[0,i]**2
         
-        # Tiered reward scheme
-        #  Loop through each range to give the appropriate reward
-        rewarded = False
-        for i in range(0,len(CohesionModule.ranges_squared)):
-            if dist_squared <= CohesionModule.ranges_squared[i]:
-                self.instant_reward[0] = CohesionModule.rewards[i]
-                rewarded = True    
-                break
+        # # Tiered reward scheme
+        # #  Loop through each range to give the appropriate reward
+        # rewarded = False
+        # for i in range(0,len(CohesionModule.ranges_squared)):
+        #     if dist_squared <= CohesionModule.ranges_squared[i]:
+        #         self.instant_reward[0] = CohesionModule.rewards[i]
+        #         rewarded = True    
+        #         break
         
-        # Not in range, apply last reward (punishment)
-        if rewarded == False:
-            self.instant_reward[0] = CohesionModule.rewards[-1]
+        # # Not in range, apply last reward (punishment)
+        # if rewarded == False:
+        #    self.instant_reward[0] = CohesionModule.rewards[-1]
 
-        #continuous reward scheme
-        # self.instant_reward[0] = 2 - .1*dist_squared
+        # continuous reward scheme
+        self.instant_reward[0] = 2 - .1*dist_squared
 
 
     # Visualization for this module. 
@@ -284,22 +222,11 @@ class CohesionModule(Module):
 
         # Now pass into a weighting function
         # return -2/(1+np.exp(dist_squared/120)) + 1
-        
+
         if dist_squared >= CohesionModule.ranges_squared[0]:
             return 1
         else:
             return 0
-
-
-    def load_q_data(self,q_states,q_tables):
-        super.load_q_data(q_states,q_tables)
-        
-        pass
-
-        # TODO: Have some sanity checks on load
-        
-        # self.Q.q_table = q_tables
-        # self.Q.q_states = q_states
 
 ##############################################################################
 #   Begin Collision Module Class
@@ -319,9 +246,7 @@ class CollisionModule(Module):
         self.gamma = 0                   # Discount factor. keep in range [0,1]. can be tuned to affect Q learning
         #self.collision_count = 0        # Number of times this module has recorded a collision (with another agent) for this agent
         self.collapsable_Q = True        # Whether or now the Q table array can be collapsed/combined into a single Q table
-        
-    
-        
+          
     # Visualization for this module. 
     # Draw a transparent circle for each tracked agent for each reward range 
     def visualize(self):
@@ -410,12 +335,6 @@ class CollisionModule(Module):
             # # the function is always negative but is asymtotic to 0 as dist_squared approaches infinity
             # self.instant_reward[i] = 10.0*(dist_squared/(10.0+dist_squared)-1.0)
 
-    #TODO move to base class        
-    # Update parent agents total reward based on the module's current instant reward
-    def update_total_reward(self):
-        reward = sum(self.instant_reward)
-        self.parent_agent.add_total_reward(reward)
-
     def get_module_weight(self):
         
         min_dist_squared = 1.7976931348623157e+308
@@ -442,14 +361,6 @@ class CollisionModule(Module):
         #     return 1
         # else:
         #     return -1*(min_dist_squared/(1+min_dist_squared)-1)
-
-    def load_q_data(self,q_states,q_tables):
-        super.load_q_data(q_states,q_tables)
-
-        for i in range(0,len(self.tracked_agents)):
-            self.Q[i].q_table = q_tables
-            self.Q[i].q_states = q_states
-
 
     def reset_init(self,e):
         pass
@@ -545,20 +456,6 @@ class BoundaryModule(Module):
             else:
                 self.instant_reward[i*2+1] = BoundaryModule.rewards[0]
 
-
-    # Update parent agents total reward based on the module's current instant reward
-    def update_total_reward(self):
-        reward = sum(self.instant_reward)
-        self.parent_agent.add_total_reward(reward)
-
-
-    def load_q_data(self,q_states,q_tables):
-        super.load_q_data(q_states,q_tables)
-
-        for i in range(0,len(Simulation.search_space)*2):
-            self.Q[i].q_table = q_tables[i]
-            self.Q[i].q_states = q_states[i]
-
     def reset_init(self,e):
         pass
 
@@ -605,9 +502,9 @@ class TargetSeekModule(Module):
     def auxilariy_functions(self):
         super().auxilariy_functions() # Inherited class function
 
-        dist_squared = 0
-        for i in range(0,len(self.state_prime[0])):
-            dist_squared = dist_squared + self.state_prime[0,i]**2
+        # dist_squared = 0
+        # for i in range(0,len(self.state_prime[0])):
+        #     dist_squared = dist_squared + self.state_prime[0,i]**2
 
         if (dist_squared <= self.ranges_squared[0]):
             if (self.in_target == False):
@@ -675,6 +572,9 @@ class TargetSeekModule(Module):
         for i in range(0,len(self.state_prime[0])):
             dist_squared = dist_squared + self.state_prime[0,i]**2
 
+        # print('start over')
+        # print(self.state_prime)
+        # print(dist_squared)
         # Tiered reward scheme
         #  Loop through each range to give the appropriate reward
         rewarded = False
@@ -685,7 +585,7 @@ class TargetSeekModule(Module):
                 rewarded = True    
                 break
 
-        # Not in range, apply last reward (punishment)
+        # # Not in range, apply last reward (punishment)
         if rewarded == False:
             #self.instant_reward[0] = TargetSeekModule.rewards[-1]
             #self.instant_reward[0] = -2.5*(-math.log(math.sqrt(dist_squared) + 10) + 5)
@@ -707,11 +607,6 @@ class TargetSeekModule(Module):
         # return -2/(1+np.exp(dist_squared/4)) + 1
 
 
-    def load_q_data(self,q_states,q_tables):
-        super.load_q_data(q_states,q_tables)
-
-        self.Q.q_table = q_tables
-        self.Q.q_states = q_states
 
     # Reset the initialized variables at the end of an episode.
     def reset_init(self,e):
@@ -765,6 +660,7 @@ class ObstacleAvoidanceModule(Module):
                                 Simulation.obstacles[i][2]+2*padding,Simulation.obstacles[i][3]+2*padding,
                                 linewidth=1,edgecolor='lightgray',facecolor='none')
             ax.add_patch(rect)
+        
         ax.set_aspect('equal')
 
 
@@ -893,11 +789,6 @@ class ObstacleAvoidanceModule(Module):
             else:
                 self.instant_reward[i] = ObstacleAvoidanceModule.rewards[-1]
 
-    # Update parent agents total reward based on the module's current instant reward
-    def update_total_reward(self):
-        reward = sum(self.instant_reward)
-        self.parent_agent.add_total_reward(reward)
-
     def get_module_weight(self):
 
         #find if within the largest range of any obstacle
@@ -920,9 +811,3 @@ class ObstacleAvoidanceModule(Module):
             return 1
         else:
             return 0
-
-    def load_q_data(self,q_states,q_tables):
-        super.load_q_data(q_states,q_tables)
-        for i in range(0,len(Simulation.obstacles)):
-            self.Q[i].q_table = q_tables
-            self.Q[i].q_states = q_states

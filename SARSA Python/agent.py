@@ -77,46 +77,46 @@ class Agent:
         for i in range(0,len(self.modules)):
             mod_action_weights = self.modules[i].get_action_weights()
 
-            # Normalize the weights to create probabilities
-            if(np.sum(mod_action_weights) != 0):
-                mod_action_weights = mod_action_weights / np.sum(mod_action_weights)
-            else:
-                mod_action_weights = np.ones(len(Action))/len(Action)
-
             if (Simulation.ControllerType == 0): # Steve+Bucci Approach
-                action_weights = action_weights + Agent.module_weights[i]*self.modules[i].get_action_weights() 
+                action_weights = action_weights + Agent.module_weights[i]*mod_action_weights 
 
             elif (Simulation.ControllerType == 1): # Importance Function Approach
-                #action_weights = action_weights + self.modules[i].get_module_weight()*mod_action_weights
+                
                 if(len(self.modules) == 1):
                     # If only using one module, just use its action weights as is
-                    action_weights = self.modules[0].get_action_weights()
+                    action_weights = mod_action_weights
                 else:
+                    # Normalize the weights to put them all on the same order of magnitude
+                    if(np.sum(mod_action_weights) != 0):
+                        mod_action_weights = mod_action_weights / np.sum(mod_action_weights)
+                    else:
+                        mod_action_weights = np.ones(len(Action))/len(Action)
+                    
                     action_weights = action_weights + self.modules[i].get_module_weight()*mod_action_weights
             else:
                 print("Level Not Yet Unlocked")
                 pass            
-                
-        # Then select another action here.....
+
+        sum_action_weights = 0        
         # Normalize the weights to create probabilities
         if(np.sum(action_weights) == float('inf')):
             sum_action_weights = 1.7976931348623157e+308
-            action_weights = action_weights / sum_action_weights
         else:
             sum_action_weights = np.sum(action_weights)
 
-        if(sum_action_weights != 0):
-            action_weights = action_weights / np.sum(action_weights)
-        else:
+        #TODO remember that double norm might be needed for 'inf' case.... investigate!
+        if sum_action_weights == 0:
             action_weights = np.ones(len(Action))/len(Action)
+        elif sum_action_weights != 1:
+            action_weights = action_weights/sum_action_weights
+            action_weights = action_weights/np.sum(action_weights)
+        else:
+            action_weights = action_weights / sum_action_weights
 
         # Use a discrete random variable distribution to select the next action
         x=list(map(int,Action))
         px=action_weights
         sample=rv_discrete(values=(x,px)).rvs(size=1)
-
-        # Set state_prime to be the selected next action
-        # action_prime = action.Action(sample) 
 
         # Set state_prime to be the selected next action
         if(Simulation.take_best_action):

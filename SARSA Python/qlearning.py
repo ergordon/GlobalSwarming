@@ -22,17 +22,17 @@ class Qlearning:
 
         # Get the row of the Q table corresponding to the state
         Q_s = self.q_table[s_index]
-
+        
         # Get the row of the Q table corresponding to the passed in state_prime
         Q_s_p = self.fetch_row_by_state(state_prime)
         
         # Get the numerical index values for the Action enumeration
         a_index = action.value        
         a_p_index = action_prime.value
-
+        
         # Update the Q table at the state,action index pair
         self.q_table[s_index, a_index]  = Q_s[a_index] + alpha*(reward + gamma*Q_s_p[a_p_index] - Q_s[a_index])
-
+        
     # Getch the index of the row in the Q table that corresponds
     #  to a given state. If now row exist for the state, make one
     def fetch_row_index_by_state(self, state):

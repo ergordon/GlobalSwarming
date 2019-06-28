@@ -47,32 +47,25 @@ for i in range(0,len(agents[0].modules)):
     if(agents[0].modules[i].collapsable_Q):
         #directly copy first agent's data.
         #iterage over each state for this module for this state
-        for Q in agents[0].modules[i].Q:
-            for j in range(0, Q.q_states.shape[0]):
+        for a in range(0,len(agents)):
+            for q in range(0,len(agents[a].modules[i].Q)):
+                Q = agents[a].modules[i].Q[q]
 
-                working_state = tuple(Q.q_states[j]) #the current state being compared
-                working_q_row = Q.q_table[j] #the corresponding qtable entry to the current state
+                for s in range(0,Q.q_states.shape[0]):
 
-                q_table_dict.update({working_state:working_q_row})
-                number_experienced.update({working_state:1})
+                    working_state = tuple(Q.q_states[s]) #the current state being compared
+                    working_q_row = Q.q_table[s] #the corresponding qtable entry to the current state
 
-
-        #iterate over each remaining agent
-        for agnt in agents[1:]:
-            #iterage over each state for this module for this state
-            for Q in agnt.modules[i].Q:
-                for j in range(0, Q.q_states.shape[0]):
-
-                    working_state = tuple(Q.q_states[j]) #the current state being compared
-                    working_q_row = Q.q_table[j] #the corresponding qtable entry to the current state
-
-                    if working_state in q_table_dict:
-                        q_table_dict[working_state] = q_table_dict[working_state] + working_q_row
-                        number_experienced[working_state] = number_experienced[working_state] + 1 
-                    else:
+                    if a == 0 and q == 0:
                         q_table_dict.update({working_state:working_q_row})
                         number_experienced.update({working_state:1})
-        
+                    else:
+                        if working_state in q_table_dict:
+                            q_table_dict[working_state] = q_table_dict[working_state] + working_q_row
+                            number_experienced[working_state] = number_experienced[working_state] + 1 
+                        else:
+                            q_table_dict.update({working_state:working_q_row})
+                            number_experienced.update({working_state:1})
         
         #average the q rows based on the number of times they were updated
         #then put back into numpy array because thats how the algorithm expects it
@@ -90,7 +83,7 @@ for i in range(0,len(agents[0].modules)):
                 q_states = np.asarray(q_state)
                 q_table = q_table_dict[q_state]
         
-    else:
+    else: #Q not collapsable
         q_states = np.empty((len(agents[0].modules[i].Q),), dtype=object)
         q_table = np.empty((len(agents[0].modules[i].Q),), dtype=object)
         

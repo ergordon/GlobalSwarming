@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import pickle
 from simulation import Simulation
 from qlearning import Qlearning
+import time
 
 # vec1 = np.array([[1,3,1],
 #                  [1,1,1]])
@@ -168,10 +169,176 @@ from qlearning import Qlearning
 # test[0].fetch_row_by_state(np.array([2,2], dtype='f'))
 
 
-test = np.empty(len(Simulation.search_space)*2, dtype=object)
-for i in range(0,len(test)):
-    test[i] = Qlearning()
+# vector1 = np.array([1,1]) #D1
+# vector2 = np.array([2,2]) #D1
+# vector3 = np.array([3,3]) #D2
+# vector4 = np.array([4,4]) #D2
 
-print(test)
-for i in range(0,len(test)):
-    print(test[i].fetch_row_by_state(np.array([2,2], dtype='f')))
+# table = np.empty((2,),dtype=object)
+
+# temp_table_1 = np.array([vector1, vector2])
+# temp_table_2 = np.array([vector3, vector4])
+
+# print(temp_table_1)
+# print(temp_table_2)
+# table[0] = temp_table_1
+# table[1] = temp_table_2
+
+# print(table)
+
+# vector5 = np.array([5,5])
+# vector6 = np.array([6,6])
+
+# table[0] = np.vstack([table[0],vector5])
+# table[0] = np.vstack([table[0],vector6])
+
+# print(table)
+
+# keys = np.array([])
+# values = np.array([])
+
+# BigDict = {}
+# for i in range(0, 100000):
+#     key = np.array([i,i])
+#     value = np.array([i,i])
+#     BigDict.update({hash(tuple(key)): value })
+
+#     if i == 0:
+#         keys = np.array([i,i])
+#         values = np.array([i,i])
+#     else:
+#         keys = np.vstack([keys, np.array([i,i])])
+#         values = np.vstack([values, np.array([i,i])])
+
+
+# # print(keys)
+
+# start = time.time()
+
+
+# for i in range(0, 100000):
+#     key = np.array([i,i])
+#     tmp = BigDict[hash(tuple(key))]
+
+
+# end = time.time()
+
+# duration = end - start
+
+# print('operation(s) took')
+# print(duration)
+
+
+# #########################################################
+
+# start = time.time()
+
+
+# for i in range(0, 100000):
+#     key = np.array([i,i])
+    
+#     #check if the working state already exists in the q table for this module 
+#     matches = np.equal(keys,[key]).all(1).nonzero()
+
+#     matching_index = matches[0][0] 
+#     tmp = values[matching_index]
+
+
+# end = time.time()
+
+# duration = end - start
+
+# print('operation(s) took')
+# print(duration)
+
+
+# keys = np.array([])
+# values = np.array([])
+
+# BigDict = {}
+# # BigDict.update({1:2})
+# for i in range(0, 10):
+#     key = np.array([i,i])
+#     value = np.array([i,i])
+#     BigDict.update({tuple(key): value })
+
+
+# for key in BigDict:
+#     if keys.shape[0] == 0:
+#         keys = np.asarray(key)
+#         values = BigDict[key]
+#     else:
+#         keys = np.vstack([keys, np.asarray(key)])
+#         values = np.vstack([values, BigDict[key]])
+
+
+# print(keys)
+# print(values)
+
+# boundary module example???
+# agents = list()
+# position = np.array([0,0])
+
+# for a in range(0,2):
+#     agents.append(agent.Agent(position))
+#     for q in range(0,len(agents[a].modules[0].Q)):
+
+#         for j in range(1,10):
+#             state = np.array([j/10, -(j/10)])
+#             index = agents[a].modules[0].Q[q].fetch_row_index_by_state(state)
+#             agents[a].modules[0].Q[q].q_table[index] = np.array([a+q,a+q,a+q,a+q,a+q])
+            
+
+# print(agents[0].modules[0].Q[0].q_table)
+# print(agents[0].modules[0].Q[0].q_states)
+# print(agents[0].modules[0].Q[1].q_table)
+# print(agents[0].modules[0].Q[1].q_states)
+# print(agents[1].modules[0].Q[0].q_table)
+# print(agents[1].modules[0].Q[0].q_states)
+# print(agents[1].modules[0].Q[1].q_table)
+# print(agents[1].modules[0].Q[1].q_states)
+
+# agent_filename = 'test/agents.pkl'
+# with open(agent_filename,'wb') as f:
+#     pickle.dump(agents,f)
+
+
+
+#cohesion module example
+# agents = list()
+# position = np.array([0,0])
+
+# for a in range(0,4):
+#     agents.append(agent.Agent(position))
+    
+#     for j in range(1,10):
+#         state = np.array([j/10, -(j/10)])
+#         index = agents[a].modules[0].Q[0].fetch_row_index_by_state(state)
+#         agents[a].modules[0].Q[0].q_table[index] = np.array([a,a,a,a,a])
+#             #Q[0]?
+
+#     print(agents[a].modules[0].Q[0].q_table)
+#     print(agents[a].modules[0].Q[0].q_states)
+    
+# agent_filename = 'test/agents.pkl'
+# with open(agent_filename,'wb') as f:
+#     pickle.dump(agents,f)
+
+
+
+
+
+# load the saved data and see whats inside...
+training_filename = 'test/CohesionModule_training_data.pkl'
+with open(training_filename, 'rb') as f:
+    [module_name, table, states] = pickle.load(f)
+
+print(module_name)
+print(table)
+print(states)
+
+# myDict = {}
+# myDict.update({'A':1})
+# print(myDict['A'])
+# myDict['A'] = myDict['A'] + 1
+# print(myDict['A'])
