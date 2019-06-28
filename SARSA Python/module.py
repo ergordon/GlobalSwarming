@@ -84,7 +84,7 @@ class Module:
             if(curr_time - self.init_time < Simulation.exploitation_rise_time):
                 T = 1000.0 - (1000.0-1)*(curr_time - self.init_time)/Simulation.exploitation_rise_time
             else:
-                T = 1
+                T = .05
 
             # Calculate the weight for this action
             action_weights[i] = np.exp(Qval/T)
@@ -347,7 +347,6 @@ class CollisionModule(Module):
 
     # Add an agent to the list of agents to be tracked by this module
     def start_tracking(self,agt):
-        #super().start_tracking(agt) # Make sure this works correctly
         # First check if the agent is already being tracked
         if agt not in self.tracked_agents:
             if(len(self.tracked_agents) != 0):
@@ -411,7 +410,7 @@ class CollisionModule(Module):
             # # the function is always negative but is asymtotic to 0 as dist_squared approaches infinity
             # self.instant_reward[i] = 10.0*(dist_squared/(10.0+dist_squared)-1.0)
 
-            
+    #TODO move to base class        
     # Update parent agents total reward based on the module's current instant reward
     def update_total_reward(self):
         reward = sum(self.instant_reward)
@@ -432,6 +431,7 @@ class CollisionModule(Module):
             if dist_squared < min_dist_squared:
                 min_dist_squared = dist_squared
 
+        #TODO consider adding some padding. maybe the agent step size?
         if min_dist_squared <= CollisionModule.ranges_squared[-1]:
             return 1
         else:
@@ -568,13 +568,13 @@ class BoundaryModule(Module):
 class TargetSeekModule(Module):
 
     rewards = [10, -1]       # Discrete rewards for a given range
-    ranges_squared = [25]    # The discrete ranges at which the agent can collect rewards
+    ranges_squared = [100]    # The discrete ranges at which the agent can collect rewards
 
     # Class constructor
     def __init__(self,parent_agt):
         super().__init__(parent_agt)    # Inherited class initialization
         
-        self.gamma = 0.9                # Discount factor. keep in range [0,1]. can be tuned to affect Q learning
+        self.gamma = 0.99                # Discount factor. keep in range [0,1]. can be tuned to affect Q learning
         
         self.Q = np.empty((1,), dtype=object)
         self.Q[0] = Qlearning()
@@ -612,29 +612,46 @@ class TargetSeekModule(Module):
         if (dist_squared <= self.ranges_squared[0]):
             if (self.in_target == False):
                 Simulation.target_entries_count = Simulation.target_entries_count + 1
-                self.targets_entered = self.targets_entered + 1
+                #print("Agent in Target")
                 self.in_target = True
 
         if(Simulation.target_agents_remaining > 0):
-                    self.in_target = False
-                    Simulation.target_agents_remaining = Simulation.target_agents_remaining -1
-                    
+            self.in_target = False
+            Simulation.target_agents_remaining = Simulation.target_agents_remaining -1
+            
         if (Simulation.target_entries_count == Simulation.num_agents):
-            search_space = Simulation.search_space
-
+            arena_space = Simulation.arena_space
             if(Simulation.target_random):
-                Simulation.targets = np.array([random.randint(search_space[0][0]+5, search_space[0][1]-5),
-                                random.randint(search_space[1][0]+5, search_space[1][1]-5)])
+                print("New Target")
+                Simulation.targets = np.array([random.randint(arena_space[0][0]+5, arena_space[0][1]-5),
+                                random.randint(arena_space[1][0]+5, arena_space[1][1]-5)])
+                #print("Target Entered at "+str(time.time() - self.init_time)+" seconds")
+                #print("Target Entered at "+str(Simulation.episode_iter_num)+" iterations")
             else:
-                if(self.targets_entered <= len(Simulation.target_array)):
-                    Simulation.targets = Simulation.target_array[self.targets_entered-1]
-                else:
-                    pass
-            #print(Simulation.targets)
+                #self.targets_entered = self.targets_entered + 1
+                if self.targets_entered <= len(Simulation.target_array)-1:
+                    self.targets_entered = self.targets_entered + 1
+                    if(self.targets_entered < len(Simulation.target_array)):
+                        #self.targets_entered = self.targets_entered + 1
+                        Simulation.targets = Simulation.target_array[self.targets_entered]
+                        print("New Target")
+                        # print("Target Entered at "+str(time.time() - self.init_time)+" seconds")
+                        # print("Target Entered at "+str(Simulation.episode_iter_num)+" iterations")
+                        Simulation.target_histogram_data.append([self.targets_entered, Simulation.episode_iter_num])
+                    else:
+                        #self.targets_entered = self.targets_entered + 1
+                        print("Final Target Reached")
+                        #if(self.targets_entered == len(Simulation.target_array)):
+                        Simulation.target_histogram_data.append([self.targets_entered, Simulation.episode_iter_num])
+                        
+                #print("Target Entered at "+str(time.time() - self.init_time)+" seconds")
+                #print("Target Entered at "+str(Simulation.episode_iter_num)+" iterations")
+                #Simulation.target_histogram_data.append([self.targets_entered, Simulation.episode_iter_num])
 
             Simulation.target_entries_count = 0
             Simulation.target_agents_remaining = Simulation.num_agents
-
+        
+    
     # Update the state that the agent is currently in
     #  For this module, it is the vector pointing from the agent to the target
     def update_state(self):
@@ -670,9 +687,10 @@ class TargetSeekModule(Module):
 
         # Not in range, apply last reward (punishment)
         if rewarded == False:
-            self.instant_reward[0] = TargetSeekModule.rewards[-1]
+            #self.instant_reward[0] = TargetSeekModule.rewards[-1]
             #self.instant_reward[0] = -2.5*(-math.log(math.sqrt(dist_squared) + 10) + 5)
-            #self.instant_reward[0] = -math.log(dist_squared + 10) + 5
+            self.instant_reward[0] = -math.log(dist_squared + 10) + 5
+            #self.instant_reward[0] = -dist_squared*0.02+10
 
     def get_module_weight(self):
         

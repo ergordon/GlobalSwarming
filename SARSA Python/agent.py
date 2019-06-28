@@ -54,7 +54,7 @@ class Agent:
 
     # Change the agent's position based on the action passed in
     def take_action(self,act):
-        step_size = 2
+        step_size = 1
         if act == Action.MOVE_PLUS_X :
             self.position = self.position + [step_size,0]
         elif  act == Action.MOVE_MINUS_X :

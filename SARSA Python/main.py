@@ -44,7 +44,7 @@ def checkInBounds(position,bounds):
 # Reset the agents to initial conditions (except for the Q states and tables)
 def ReinitializeAgents(agents,bounds):
 
-    search_space = Simulation.search_space 
+    arena_space = Simulation.arena_space 
     
     # Save Last Episodes Collisions, Reset Collision
     Simulation.obstacle_episode_collision_count.append(Simulation.obstacle_collision_count)
@@ -60,16 +60,16 @@ def ReinitializeAgents(agents,bounds):
     Simulation.target_entries_count = 0
     
     if(Simulation.target_random):
-        Simulation.targets = np.array([random.randint(search_space[0][0]+5, search_space[0][1]-5),
-                                       random.randint(search_space[1][0]+5, search_space[1][1]-5)])
+        Simulation.targets = np.array([random.randint(arena_space[0][0], arena_space[0][1]),
+                                       random.randint(arena_space[1][0], arena_space[1][1])])
     else:
         Simulation.targets = Simulation.target_array[0]
 
     # Reinitialize Setting Parameters
     if (Simulation.Arena == 0):
-        Simulation.obstacles = np.array([random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), random.randint(1,10), random.randint(1,10)])
+        Simulation.obstacles = np.array([random.randint(arena_space[0][0], arena_space[0][1]),random.randint(arena_space[0][0], arena_space[0][1]), random.randint(1,10), random.randint(1,10)])
         for i in range(1,Simulation.num_obstacles):
-            temp_obstacles = np.array([random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), random.randint(1,10), random.randint(1,10)])
+            temp_obstacles = np.array([random.randint(arena_space[0][0], arena_space[0][1]),random.randint(arena_space[0][0], arena_space[0][1]), random.randint(1,10), random.randint(1,10)])
             Simulation.obstacles = np.vstack((Simulation.obstacles, temp_obstacles))
 
     # Initialize agent parameters
@@ -150,7 +150,8 @@ if(not Simulation.visualize):
 print('initializing agents')
 initialized = False
 # Check if a file containing a list of agents already exits
-if Simulation.load_agents:
+
+if (Simulation.load_agents):
     if os.path.isfile(filename + '/agents.pkl'):
         # If so, load it
         print("Agent data found, loading it now")
@@ -165,6 +166,7 @@ if not initialized:
     for i in range(0,Simulation.num_agents):
         init_space = Simulation.init_space
         position = np.array([random.randint(init_space[0][0], init_space[0][1]),random.randint(init_space[1][0], init_space[1][1])], dtype='f')
+        #position = np.array([2*i,2*i], dtype='f')
         Simulation.agents.append(Agent(position))
 
     # Initialize module parameters such as who each agent is tracking
@@ -184,37 +186,21 @@ if not initialized:
             Simulation.agents[i].modules[m].update_state()
             Simulation.agents[i].modules[m].state_prime = np.copy(Simulation.agents[i].modules[m].state)
 
-# if Simulation.load_training_data:
-#     if os.path.isfile('training_data.pkl'):
-#         #if so, load it
-#         print("Q learning data found, loading it now")
-#         with open('training_data.pkl', 'rb') as f:
-#             [module_names, tables, states] = pickle.load(f)
-        
-#         # for agnt in Simulation.agents:
-#         #     for mod in agnt.modules
-#         #         Simulation.agents[0].modules[i].__class__.__name__
-        
-#         for h in range(0,len(module_names)):
-#             for i in range(0,Simulation.num_agents):
-#                 for j in range(0,len(Simulation.agents[0].modules)):
-#                     print('loading training data!!!')
-#                     if Simulation.agents[i].modules[j].__class__.__name__ == module_names[h]:
-#                         Simulation.agents[i].modules[j].Q.q_table = cp.copy(tables[h])
-#                         Simulation.agents[i].modules[j].Q.q_states = cp.copy(states[h])
 
-    # if Simulation.load_training_data:
-    #     for i in range(0,len(Simulation.agents[0].modules)):
-    #         filename = Simulation.agents[0].modules[i].__class__.__name__ + '_training_data.pkl'
-    #         if os.path.isfile(filename):
-    #             print("Q learning data found, loading it now")        
-    #             with open(filename, 'rb') as f:
-    #                 [module_name, table, states] = pickle.load(f)
+    #TODO handle modules with collapsable_Q=False
+    if Simulation.load_training_data:
+        for i in range(0,len(Simulation.agents[0].modules)):
+            training_filename = path +'/'+ Simulation.agents[0].modules[i].__class__.__name__ + '_training_data.pkl'
+            
+            if os.path.isfile(training_filename):
+                print("Q learning data found, loading it now")        
+                with open(training_filename, 'rb') as f:
+                    [module_name, table, states] = pickle.load(f)
 
-    #             for j in range(0,Simulation.num_agents):
-    #                 for k in range(0, Simulation.agents[j].modules[i].Q):
-    #                     Simulation.agents[j].modules[i].Q[k].q_table = cp.copy(table)
-    #                     Simulation.agents[j].modules[i].Q[k].q_states = cp.copy(states)
+                for agt in Simulation.agents:
+                    for Q in agt.modules[i].Q:
+                        Q.q_table = cp.copy(table)
+                        Q.q_states = cp.copy(states)
 
 
 ##############################################################################
@@ -239,6 +225,13 @@ for e in range(0,Simulation.num_episodes):
     Simulation.episode_iter_num = 0
 
     print("beginning episode #" + str(e+1))
+
+    if(Simulation.target_random):
+        # For Training Only: Increase Search Space as episodes increase.
+        if (e != 0):
+            if (e%2000 == 0):
+                Simulation.arena_space = [[Simulation.arena_space[0][0] -10, Simulation.arena_space[0][1] + 10],[Simulation.arena_space[1][0] -10, Simulation.arena_space[1][1] +10]]
+                print(Simulation.arena_space)
 
     for t in range(0,Simulation.episode_length):
         
@@ -440,6 +433,41 @@ if(os.path.isfile(filename+'/TargetsReached.jpeg')):
     plt.savefig(os.path.join(filename, "TargetsReached"+timestr+".jpeg") , orientation='landscape', quality=95)
 else:
     plt.savefig(os.path.join(filename, "TargetsReached.jpeg") , orientation='landscape', quality=95)
+
+
+# Box Histograms
+f, axarr = plt.subplots(2, 2)
+axarr[0, 0].set_title('Target 1')
+axarr[0, 1].set_title('Target 2')
+axarr[1, 0].set_title('Target 3')
+axarr[1, 1].set_title('Target 4')
+# # Fine-tune figure; hide x ticks for top plots and y ticks for right plots
+# plt.setp([a.get_xticklabels() for a in axarr[0, :]], visible=False)
+# plt.setp([a.get_yticklabels() for a in axarr[:, 1]], visible=False)
+temp1 = []
+temp2 = []
+temp3 = []
+temp4 = []
+for i in range(0,len(Simulation.target_histogram_data)):
+    if Simulation.target_histogram_data[i][0] == 1:
+        temp1.append(Simulation.target_histogram_data[i][1])
+    if Simulation.target_histogram_data[i][0] == 2:
+        temp2.append(Simulation.target_histogram_data[i][1])
+    if Simulation.target_histogram_data[i][0] == 3:
+        temp3.append(Simulation.target_histogram_data[i][1])
+    if Simulation.target_histogram_data[i][0] == 4:
+        temp4.append(Simulation.target_histogram_data[i][1])
+
+num_bins = 100
+bin = Simulation.episode_length/num_bins
+bins = []
+for i in range(0,num_bins):
+    bins.append(i*bin)
+axarr[0,0].hist(temp1,bins)
+axarr[0,1].hist(temp2,bins)
+axarr[1,0].hist(temp3,bins)
+axarr[1,1].hist(temp4,bins)
+#hist(x, bins=None, range=None, density=None, weights=None, cumulative=False, bottom=None, histtype='bar', align='mid', orientation='vertical', rwidth=None, log=False, color=None, label=None, stacked=False, normed=None, *, data=None, **kwargs)[source]
 
 plt.show()
 
