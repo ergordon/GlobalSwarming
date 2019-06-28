@@ -84,7 +84,7 @@ class Module:
             if(curr_time - self.init_time < Simulation.exploitation_rise_time):
                 T = 1000.0 - (1000.0-1)*(curr_time - self.init_time)/Simulation.exploitation_rise_time
             else:
-                T = 1
+                T = 0.05
 
             # Calculate the weight for this action
             action_weights[i] = np.exp(Qval/T)
@@ -98,7 +98,8 @@ class Module:
         #     action_weights = action_weights / np.sum(action_weights)
         # else:
         #     action_weights = np.ones(len(Action))/len(Action)
-
+        # print('action_weights are')
+        # print(action_weights)
         return action_weights
 
 
@@ -176,21 +177,21 @@ class CohesionModule(Module):
         for i in range(0,len(self.state_prime[0])):
             dist_squared = dist_squared + self.state_prime[0,i]**2
         
-        # Tiered reward scheme
-        #  Loop through each range to give the appropriate reward
-        rewarded = False
-        for i in range(0,len(CohesionModule.ranges_squared)):
-            if dist_squared <= CohesionModule.ranges_squared[i]:
-                self.instant_reward[0] = CohesionModule.rewards[i]
-                rewarded = True    
-                break
+        # # Tiered reward scheme
+        # #  Loop through each range to give the appropriate reward
+        # rewarded = False
+        # for i in range(0,len(CohesionModule.ranges_squared)):
+        #     if dist_squared <= CohesionModule.ranges_squared[i]:
+        #         self.instant_reward[0] = CohesionModule.rewards[i]
+        #         rewarded = True    
+        #         break
         
-        # Not in range, apply last reward (punishment)
-        if rewarded == False:
-            self.instant_reward[0] = CohesionModule.rewards[-1]
+        # # Not in range, apply last reward (punishment)
+        # if rewarded == False:
+        #    self.instant_reward[0] = CohesionModule.rewards[-1]
 
-        #continuous reward scheme
-        # self.instant_reward[0] = 2 - .1*dist_squared
+        # continuous reward scheme
+        self.instant_reward[0] = 2 - .1*dist_squared
 
 
     # Visualization for this module. 
@@ -501,35 +502,39 @@ class TargetSeekModule(Module):
     def auxilariy_functions(self):
         super().auxilariy_functions() # Inherited class function
 
-        dist_squared = 0
-        for i in range(0,len(self.state_prime[0])):
-            dist_squared = dist_squared + self.state_prime[0,i]**2
+        # dist_squared = 0
+        # for i in range(0,len(self.state_prime[0])):
+        #     dist_squared = dist_squared + self.state_prime[0,i]**2
 
-        if (dist_squared <= self.ranges_squared[0]):
-            if (self.in_target == False):
-                Simulation.target_entries_count = Simulation.target_entries_count + 1
-                self.targets_entered = self.targets_entered + 1
-                self.in_target = True
+        # if (dist_squared <= self.ranges_squared[0]):
+        #     if (self.in_target == False):
+        #         Simulation.target_entries_count = Simulation.target_entries_count + 1
+        #         self.targets_entered = self.targets_entered + 1
+        #         self.in_target = True
 
-        if(Simulation.target_agents_remaining > 0):
-                    self.in_target = False
-                    Simulation.target_agents_remaining = Simulation.target_agents_remaining -1
+        # if(Simulation.target_agents_remaining > 0):
+        #             self.in_target = False
+        #             Simulation.target_agents_remaining = Simulation.target_agents_remaining -1
                     
-        if (Simulation.target_entries_count == Simulation.num_agents):
-            search_space = Simulation.search_space
+        # if (Simulation.target_entries_count == Simulation.num_agents):
+        #     search_space = Simulation.search_space
 
-            if(Simulation.target_random):
-                Simulation.targets = np.array([random.randint(search_space[0][0]+5, search_space[0][1]-5),
-                                random.randint(search_space[1][0]+5, search_space[1][1]-5)])
-            else:
-                if(self.targets_entered <= len(Simulation.target_array)):
-                    Simulation.targets = Simulation.target_array[self.targets_entered-1]
-                else:
-                    pass
-            #print(Simulation.targets)
+        #     if(Simulation.target_random):
+        #         Simulation.targets = np.array([random.randint(search_space[0][0]+5, search_space[0][1]-5),
+        #                         random.randint(search_space[1][0]+5, search_space[1][1]-5)])
+        #     else:
+        #         if(self.targets_entered <= len(Simulation.target_array)):
+        #             Simulation.targets = Simulation.target_array[self.targets_entered-1]
+        #         else:
+        #             pass
+        #     #print(Simulation.targets)
 
-            Simulation.target_entries_count = 0
-            Simulation.target_agents_remaining = Simulation.num_agents
+        #     Simulation.target_entries_count = 0
+        #     Simulation.target_agents_remaining = Simulation.num_agents
+
+        Simulation.target_entries_count = 0
+        Simulation.target_agents_remaining = Simulation.num_agents
+
 
     # Update the state that the agent is currently in
     #  For this module, it is the vector pointing from the agent to the target
@@ -554,6 +559,9 @@ class TargetSeekModule(Module):
         for i in range(0,len(self.state_prime[0])):
             dist_squared = dist_squared + self.state_prime[0,i]**2
 
+        # print('start over')
+        # print(self.state_prime)
+        # print(dist_squared)
         # Tiered reward scheme
         #  Loop through each range to give the appropriate reward
         rewarded = False
@@ -564,11 +572,16 @@ class TargetSeekModule(Module):
                 rewarded = True    
                 break
 
-        # Not in range, apply last reward (punishment)
+        # # Not in range, apply last reward (punishment)
         if rewarded == False:
             self.instant_reward[0] = TargetSeekModule.rewards[-1]
-            #self.instant_reward[0] = -2.5*(-math.log(math.sqrt(dist_squared) + 10) + 5)
+            #self.instant_reward[0] = -2.5*(math.log(math.sqrt(dist_squared) + 10) + 5)
             #self.instant_reward[0] = -math.log(dist_squared + 10) + 5
+        
+        # self.instant_reward[0] = 100 - dist_squared*0.015625 #0.015625 ~ 100/80^2
+        # self.instant_reward[0] = -math.log(dist_squared + 10) + 5
+        # print(self.instant_reward[0])
+
 
     def get_module_weight(self):
         
@@ -583,6 +596,7 @@ class TargetSeekModule(Module):
         
         # #now pass into a weighting function
         # return -2/(1+np.exp(dist_squared/4)) + 1
+
 
 
     # Reset the initialized variables at the end of an episode.

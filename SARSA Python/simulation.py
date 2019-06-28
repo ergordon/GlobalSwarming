@@ -11,29 +11,29 @@ class Simulation:
     # 0 = Custom
     # 1 = Urban Terrain
     # 2 = Open Terrain
-    Arena = 0 #NOTE this is a good place for an enumeration
+    Arena = 0
 
     if (Arena == 0): # Custom Terrain. Edit These Ones 
         
-        num_agents = 1                 # Number of agents to simulate
-        num_episodes = 50000            # Number of times to run the training scenario
-        episode_length = 100            # Number of time steps in each training scenario [iterations]
-        exploitation_rise_time = 10000   # The amount of time over which we transition from exploration to exploitation [seconds]
+        num_agents = 2                 # Number of agents to simulate
+        num_episodes = 5000            # Number of times to run the training scenario
+        episode_length = 400            # Number of time steps in each training scenario [iterations]
+        exploitation_rise_time = 400   # The amount of time over which we transition from exploration to exploitation [seconds]
         exploitation_rise_percent = 0  # The percentage of each episode over which we transition from exploration to exploitation
 
         # Bounds to initialize the agents inside of
-        init_space = [[-10,10],
+        init_space = [[-10,-10],
                     [-10,10]]
 
         # Bounds to simulate the agents within
         # Exiting these bounds will end the episode immediately
-        search_space = [[-80,80],
-                        [-80,80]]
+        search_space = [[-85,85],
+                        [-85,85]]
         
 
         visualize = False            # Whether to show a plot animation of the agent positions
         load_agents = False          # Whether to load the agents.pkl file (loads agents exactly as they upon completion of training)
-        load_training_data = False  # Whether to load the agent training data (loads q tables and states into the modules that exist in the agent initialization function)
+        load_training_data = True  # Whether to load the agent training data (loads q tables and states into the modules that exist in the agent initialization function)
         take_best_action = False      # Whether to select next actions based on highest Q table entry or use Q table values as probabilities for each action 
 
 
@@ -53,11 +53,11 @@ class Simulation:
         # 0 = Steve and Bucci
         # 1 = Importance Function
         # 2 = NeuralNetwork
-        ControllerType = 1  #NOTE this is a good place for an enumeration
+        ControllerType = 1
 
         target_random = False
-        #target_array = np.array([[-40,40],[20,-10],[50,50],[40,-50]]) # If target_random is False
-        target_array = np.array([[10,10],[-10,-10],[-10,10],[10,-10]]) # If target_random is False
+        target_array = np.array([[-21,20],[20,-10],[50,50],[40,-50]]) # If target_random is False
+        # target_array = np.array([[10,10],[-10,-10],[-10,10],[10,-10]]) # If target_random is False
         if(target_random):
             targets = np.array([random.randint(search_space[0][0]+5, search_space[0][1]-5),
                                 random.randint(search_space[1][0]+5, search_space[1][1]-5)])
@@ -69,7 +69,7 @@ class Simulation:
         # Obstacles to Avoid
         ## [x, y, width, height]
         #obstacles = np.array([[-30,-40,30,50], [10, -40, 20, 50], [-40, 10, 60, 10]])
-        num_obstacles = 7
+        num_obstacles = 6
         obstacles = np.array([random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), random.randint(1,10), random.randint(1,10)])
         for i in range(1,num_obstacles):
             temp_obstacles = np.array([random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), random.randint(1,10), random.randint(1,10)])

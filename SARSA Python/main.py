@@ -79,7 +79,7 @@ def ReinitializeAgents(agents,bounds):
         agents[i].total_reward = 0
         
     # Initialize module parameters
-    for i in range(0,Simulation.num_agents):
+    for i in range(0,len(Simulation.agents)):
         # Loop through each module
         for m in range(0,len(agents[i].modules)):
             agents[i].modules[m].action = Action.STAY
@@ -240,11 +240,15 @@ for e in range(0,Simulation.num_episodes):
         agent_out_of_bounds = False
         Simulation.episode_iter_num = t
 
+
+        # print('agents take actions')
         for agnt in Simulation.agents:
 
             # Take the action determined in the last step
             #  Update agent positions on plots
+            # print('state is', agnt.modules[0].state)
             agnt.take_action(agnt.modules[0].action)
+            # print('taking action ', agnt.modules[0].action)
 
             # Check if any agent went out of search space.
             #  Terminate episode if so
@@ -266,20 +270,25 @@ for e in range(0,Simulation.num_episodes):
             image  = image.reshape(fig.canvas.get_width_height()[::-1] + (3,))
             images.append(image)
 
+        # print('update state prime and select next action')
         for agnt in Simulation.agents:
             for mod in agnt.modules:
                 # Find what the state (state_prime) would be if that action were taken
                 mod.update_state_prime()
+                # print('state prime is ', mod.state_prime)
 
             # Select the next action (action_prime) for the agent to take 
             agnt.select_next_action()
+            # print('next action is ', agnt.modules[0].action_prime)
 
+        # print('instant and total reward, update q, action == action prime, state == state prime')
         for agnt in Simulation.agents:
             for mod in agnt.modules:
                 # Determine the reward for executing the action (not prime) in the state (not prime)
                 #  Action (not prime) brings agent from state (not prime) to state_prime, and reward is calulated based on state_prime
                 mod.update_instant_reward()
-                
+                # print('instant reward is ', mod.instant_reward[0])
+
                 # Add the reward for this action to the total reward earned by the agent 
                 mod.update_total_reward()
                 
@@ -305,8 +314,8 @@ for e in range(0,Simulation.num_episodes):
             break    
     
     # Store the total reward for each agent at the end of each episode for algorithm performance analysis
-    episode_rewards = np.zeros(Simulation.num_agents) 
-    for a in range(0,Simulation.num_agents):
+    episode_rewards = np.zeros(len(Simulation.agents)) 
+    for a in range(0,len(Simulation.agents)):
         episode_rewards[a] = cp.copy(Simulation.agents[a].total_reward)
 
     if agent_rewards.size == 0:

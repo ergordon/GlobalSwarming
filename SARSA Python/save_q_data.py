@@ -4,6 +4,9 @@ import agent as agent
 import pickle
 import argparse
 import os.path
+import time
+
+start = time.time()
 
 
 ##############################################################################
@@ -156,3 +159,9 @@ for i in range(0,len(module_names)):
     with open(os.path.join(path, save_data_filename),'wb') as f:
         pickle.dump([module_names[i], tables[i], states[i]],f)  
 
+end = time.time()
+
+duration = end - start
+
+print('operation took')
+print(duration)
