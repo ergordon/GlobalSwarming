@@ -15,20 +15,20 @@ class Simulation:
 
     if (Arena == 0): # Custom Terrain. Edit These Ones 
         
-        num_agents = 1                 # Number of agents to simulate
-        num_episodes = 500            # Number of times to run the training scenario
-        episode_length = 500            # Number of time steps in each training scenario [iterations]
-        exploitation_rise_time = 200   # The amount of time over which we transition from exploration to exploitation [seconds]
-        exploitation_rise_percent = 0  # The percentage of each episode over which we transition from exploration to exploitation
+        num_agents = 5                 # Number of agents to simulate
+        num_episodes = 100000            # Number of times to run the training scenario
+        episode_length =1000            # Number of time steps in each training scenario [iterations]
+        exploitation_rise_time = 0   # The amount of time over which we transition from exploration to exploitation [seconds]
+        exploitation_rise_percent = 25  # The percentage of each episode over which we transition from exploration to exploitation
 
         # Bounds to initialize the agents inside of
-        init_space = [[0,0],
-                    [0,0]]
+        init_space = [[-5,5],
+                    [-5,5]]
 
         # Bounds to simulate the agents within
         # Exiting these bounds will end the episode immediately
-        search_space = [[-180,180],
-                        [-180,180]]
+        search_space = [[-200,200],
+                        [-200,200]]
 
         # Bounds to intilize the targets and obstacles within
         arena_space = [[-10,10],
@@ -58,13 +58,19 @@ class Simulation:
         # 2 = NeuralNetwork
         ControllerType = 0  # NOTE: this is a good place for an enumeration
 
-        target_random = False
+        target_random = True
         #target_array = np.array([[-40,40],[20,-10],[50,50],[40,-50]]) # If target_random is False
         target_array = np.array([[-40,40]]) # If target_random is False
         #target_array = np.array([[10,10],[-10,-10],[-10,10],[10,-10]]) # If target_random is False
+
+        ## FOR TRAINING
+        r = 100
+        n = 10
+
         if(target_random):
-            targets = np.array([random.randint(arena_space[0][0]+5, arena_space[0][1]-5),
-                                random.randint(arena_space[1][0]+5, arena_space[1][1]-5)])
+            # targets = np.array([random.randint(arena_space[0][0]+5, arena_space[0][1]-5),
+            #                     random.randint(arena_space[1][0]+5, arena_space[1][1]-5)])
+            targets = np.array([r*np.cos(0), r*np.sin(0)])
         else:
             targets = target_array[0]
         

@@ -59,11 +59,12 @@ def ReinitializeAgents(agents,bounds):
     Simulation.target_episode_entries_count.append(Simulation.target_entries_count)
     Simulation.target_entries_count = 0
     
-    if(Simulation.target_random):
-        Simulation.targets = np.array([random.randint(arena_space[0][0], arena_space[0][1]),
-                                       random.randint(arena_space[1][0], arena_space[1][1])])
-    else:
-        Simulation.targets = Simulation.target_array[0]
+    # if(Simulation.target_random):
+    #     # Simulation.targets = np.array([random.randint(arena_space[0][0], arena_space[0][1]),
+    #     #                                random.randint(arena_space[1][0], arena_space[1][1])])
+    #     Simulation.targets = np.array([Simulation.r*np.cos(Simulation.n*2*np.pi*(Simulation.num_episodes)), Simulation.r*np.sin(0)])
+    # else:
+    #     Simulation.targets = Simulation.target_array[0]
 
     # Reinitialize Setting Parameters
     if (Simulation.Arena == 0):
@@ -235,12 +236,17 @@ for e in range(0,Simulation.num_episodes):
 
     print("beginning episode #" + str(e+1))
 
+    # if(Simulation.target_random):
+    #     # For Training Only: Increase Search Space as episodes increase.
+    #     if (e != 0):
+    #         if (e%2000 == 0):
+    #             Simulation.arena_space = [[Simulation.arena_space[0][0] -10, Simulation.arena_space[0][1] + 10],[Simulation.arena_space[1][0] -10, Simulation.arena_space[1][1] +10]]
+    #             print(Simulation.arena_space)
+
     if(Simulation.target_random):
-        # For Training Only: Increase Search Space as episodes increase.
-        if (e != 0):
-            if (e%2000 == 0):
-                Simulation.arena_space = [[Simulation.arena_space[0][0] -10, Simulation.arena_space[0][1] + 10],[Simulation.arena_space[1][0] -10, Simulation.arena_space[1][1] +10]]
-                print(Simulation.arena_space)
+        Simulation.targets = np.array([Simulation.r*np.cos(Simulation.n*2*np.pi*(e/Simulation.num_episodes)), Simulation.r*np.sin(Simulation.n*2*np.pi*(e/Simulation.num_episodes))])
+    else:
+        Simulation.targets = Simulation.target_array[0]
 
     for t in range(0,Simulation.episode_length):
         

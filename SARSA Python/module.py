@@ -78,11 +78,16 @@ class Module:
             # Exploitation vs exploration constant
             #  Big T encourages exploration
             #  Small T encourages exploitation
+            # T = 1
+            # # NOTE: Linearly change T to decrease exploration and increase exploitation over time
+            # curr_time = time.time()
+            # if(curr_time - self.init_time < Simulation.exploitation_rise_time):
+            #     T = 1000.0 - (1000.0-0.05)*(curr_time - self.init_time)/Simulation.exploitation_rise_time
+            # else:
+            #     T = 0.05
             T = 1
-            # NOTE: Linearly change T to decrease exploration and increase exploitation over time
-            curr_time = time.time()
-            if(curr_time - self.init_time < Simulation.exploitation_rise_time):
-                T = 1000.0 - (1000.0-1)*(curr_time - self.init_time)/Simulation.exploitation_rise_time
+            if Simulation.episode_iter_num/Simulation.num_episodes*100 <= Simulation.exploitation_rise_percent :
+                T = 1000.0 - (1000.0-0.05)*Simulation.episode_iter_num/Simulation.num_episodes
             else:
                 T = 0.05
 
@@ -502,48 +507,48 @@ class TargetSeekModule(Module):
     def auxilariy_functions(self):
         super().auxilariy_functions() # Inherited class function
 
-        # dist_squared = 0
-        # for i in range(0,len(self.state_prime[0])):
-        #     dist_squared = dist_squared + self.state_prime[0,i]**2
+        dist_squared = 0
+        for i in range(0,len(self.state_prime[0])):
+            dist_squared = dist_squared + self.state_prime[0,i]**2
 
         if (dist_squared <= self.ranges_squared[0]):
             if (self.in_target == False):
                 Simulation.target_entries_count = Simulation.target_entries_count + 1
-                #print("Agent in Target")
+                print("Agent in Target")
                 self.in_target = True
 
         if(Simulation.target_agents_remaining > 0):
             self.in_target = False
             Simulation.target_agents_remaining = Simulation.target_agents_remaining -1
             
-        if (Simulation.target_entries_count == Simulation.num_agents):
-            arena_space = Simulation.arena_space
-            if(Simulation.target_random):
-                print("New Target")
-                Simulation.targets = np.array([random.randint(arena_space[0][0]+5, arena_space[0][1]-5),
-                                random.randint(arena_space[1][0]+5, arena_space[1][1]-5)])
-                #print("Target Entered at "+str(time.time() - self.init_time)+" seconds")
-                #print("Target Entered at "+str(Simulation.episode_iter_num)+" iterations")
-            else:
-                #self.targets_entered = self.targets_entered + 1
-                if self.targets_entered <= len(Simulation.target_array)-1:
-                    self.targets_entered = self.targets_entered + 1
-                    if(self.targets_entered < len(Simulation.target_array)):
-                        #self.targets_entered = self.targets_entered + 1
-                        Simulation.targets = Simulation.target_array[self.targets_entered]
-                        print("New Target")
-                        # print("Target Entered at "+str(time.time() - self.init_time)+" seconds")
-                        # print("Target Entered at "+str(Simulation.episode_iter_num)+" iterations")
-                        Simulation.target_histogram_data.append([self.targets_entered, Simulation.episode_iter_num])
-                    else:
-                        #self.targets_entered = self.targets_entered + 1
-                        print("Final Target Reached")
-                        #if(self.targets_entered == len(Simulation.target_array)):
-                        Simulation.target_histogram_data.append([self.targets_entered, Simulation.episode_iter_num])
+        # if (Simulation.target_entries_count == Simulation.num_agents):
+        #     arena_space = Simulation.arena_space
+        #     if(Simulation.target_random):
+        #         print("New Target")
+        #         Simulation.targets = np.array([random.randint(arena_space[0][0]+5, arena_space[0][1]-5),
+        #                         random.randint(arena_space[1][0]+5, arena_space[1][1]-5)])
+        #         #print("Target Entered at "+str(time.time() - self.init_time)+" seconds")
+        #         #print("Target Entered at "+str(Simulation.episode_iter_num)+" iterations")
+        #     else:
+        #         #self.targets_entered = self.targets_entered + 1
+        #         if self.targets_entered <= len(Simulation.target_array)-1:
+        #             self.targets_entered = self.targets_entered + 1
+        #             if(self.targets_entered < len(Simulation.target_array)):
+        #                 #self.targets_entered = self.targets_entered + 1
+        #                 Simulation.targets = Simulation.target_array[self.targets_entered]
+        #                 print("New Target")
+        #                 # print("Target Entered at "+str(time.time() - self.init_time)+" seconds")
+        #                 # print("Target Entered at "+str(Simulation.episode_iter_num)+" iterations")
+        #                 Simulation.target_histogram_data.append([self.targets_entered, Simulation.episode_iter_num])
+        #             else:
+        #                 #self.targets_entered = self.targets_entered + 1
+        #                 print("Final Target Reached")
+        #                 #if(self.targets_entered == len(Simulation.target_array)):
+        #                 Simulation.target_histogram_data.append([self.targets_entered, Simulation.episode_iter_num])
                         
-                #print("Target Entered at "+str(time.time() - self.init_time)+" seconds")
-                #print("Target Entered at "+str(Simulation.episode_iter_num)+" iterations")
-                #Simulation.target_histogram_data.append([self.targets_entered, Simulation.episode_iter_num])
+        #         #print("Target Entered at "+str(time.time() - self.init_time)+" seconds")
+        #         #print("Target Entered at "+str(Simulation.episode_iter_num)+" iterations")
+        #         #Simulation.target_histogram_data.append([self.targets_entered, Simulation.episode_iter_num])
 
             Simulation.target_entries_count = 0
             Simulation.target_agents_remaining = Simulation.num_agents
