@@ -596,9 +596,9 @@ class TargetSeekModule(Module):
 
         # # Not in range, apply last reward (punishment)
         if rewarded == False:
-            #self.instant_reward[0] = TargetSeekModule.rewards[-1]
+            self.instant_reward[0] = TargetSeekModule.rewards[-1]
             #self.instant_reward[0] = -2.5*(-math.log(math.sqrt(dist_squared) + 10) + 5)
-            self.instant_reward[0] = -math.log(dist_squared + 10) + 5
+            #self.instant_reward[0] = -math.log(dist_squared + 10) + 5
             #self.instant_reward[0] = -dist_squared*0.02+10
 
     def get_module_weight(self):
