@@ -1,5 +1,6 @@
 from agent import Agent
 from simulation import Simulation
+from simulation import TargetPath
 import numpy as np
 from action import Action
 from module import Module
@@ -59,18 +60,11 @@ def ReinitializeAgents(agents,bounds):
     Simulation.target_episode_entries_count.append(Simulation.target_entries_count)
     Simulation.target_entries_count = 0
     
-    # if(Simulation.target_random):
-    #     # Simulation.targets = np.array([random.randint(arena_space[0][0], arena_space[0][1]),
-    #     #                                random.randint(arena_space[1][0], arena_space[1][1])])
-    #     Simulation.targets = np.array([Simulation.r*np.cos(Simulation.n*2*np.pi*(Simulation.num_episodes)), Simulation.r*np.sin(0)])
-    # else:
-    #     Simulation.targets = Simulation.target_array[0]
-
     # Reinitialize Setting Parameters
     if (Simulation.Arena == 0):
-        Simulation.obstacles = np.array([random.randint(arena_space[0][0], arena_space[0][1]),random.randint(arena_space[0][0], arena_space[0][1]), random.randint(1,10), random.randint(1,10)])
+        Simulation.obstacles = np.array([random.randint(arena_space[0][0], arena_space[0][1]),random.randint(arena_space[0][0], arena_space[0][1]), random.randint(1,Simulation.max_obstacle_size), random.randint(1,Simulation.max_obstacle_size)])
         for i in range(1,Simulation.num_obstacles):
-            temp_obstacles = np.array([random.randint(arena_space[0][0], arena_space[0][1]),random.randint(arena_space[0][0], arena_space[0][1]), random.randint(1,10), random.randint(1,10)])
+            temp_obstacles = np.array([random.randint(arena_space[0][0], arena_space[0][1]),random.randint(arena_space[0][0], arena_space[0][1]), random.randint(1,Simulation.max_obstacle_size), random.randint(1,Simulation.max_obstacle_size)])
             Simulation.obstacles = np.vstack((Simulation.obstacles, temp_obstacles))
 
     # Initialize agent parameters
@@ -107,7 +101,8 @@ except OSError:
 #   Save Simulation Configuration Settings
 ##############################################################################
 # Store the program start time so we can calculate how long it took for the code to execute
-start_time = time.time() 
+start_time = time.time()
+timestr = time.strftime("%m%d-%H%M")
 
 # Save Configuration to a test file
 if(not Simulation.visualize):
@@ -116,7 +111,7 @@ if(not Simulation.visualize):
     else:    
         file = open(os.path.join(path ,'Simulation_Configuration.txt'),'w') 
     file.write(" \n \n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ \n")
-    file.write(str(args["simName"])+" -- "+ str(start_time) +" \n")
+    file.write(str(args["simName"])+" -- "+ timestr +" \n")
     file.write("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ \n \n")
     file.write(str(args["description"]) + "\n \n")
     
@@ -130,9 +125,9 @@ if(not Simulation.visualize):
     file.write("~~~~ ARENA PARAMETERS ~~~~ \n")
     file.write("num_agents:    " + str(Simulation.num_agents)+"\n")
     file.write("num_episodes:  " + str(Simulation.num_episodes)+"\n")
-    file.write("Number of Obstacles: "+str(Simulation.num_obstacles)+"\n")
     file.write("episode_length:  " + str(Simulation.episode_length)+"\n")
     file.write("exploitation_rise_time:  " + str(Simulation.exploitation_rise_time )+"\n")
+    file.write("exploitation_rise_percent:  " + str(Simulation.exploitation_rise_percent )+"\n")
     file.write("init_space:  " + str(Simulation.init_space)+"\n")
     file.write("search_space:  " + str(Simulation.search_space)+"\n \n")
 
@@ -143,6 +138,32 @@ if(not Simulation.visualize):
     file.write("Target Seek Module ---- "+str(Simulation.TargetSeekingModule) + "\n")
     file.write("Obstacle Module ------- "+str(Simulation.ObstacleAvoidanceModule) + "\n \n")
     file.write("Module Weights: " + str(Simulation.module_weights) + "\n \n")
+
+    if (Simulation.TargetSeekingModule == True):
+        file.write("~~~~ TARGET PARAMETERS ~~~~ \n")
+        if (Simulation.TargetType == TargetPath.Planned):
+            file.write("Planned Target Location \n")
+            file.write("Change Target on Arrival = "+ str(Simulation.changeTargetOnArrival)+" \n")
+            file.write("Target Array:  \n")
+            file.write(str(Simulation.target_array)+"\n \n")
+
+        # Circular Target Trajectory
+        elif (Simulation.TargetType == TargetPath.Circle):
+            file.write("Circular Target Path \n")
+            file.write("Change Target on Arrival = "+ str(Simulation.changeTargetOnArrival)+" \n")
+            file.write("Target Path Radius:  " + str(Simulation.r)+"\n")
+            file.write("Number of Loops:  " + str(Simulation.n)+"\n \n")
+
+        # Random Target Trajectory
+        elif (Simulation.TargetType == TargetPath.Random):
+            file.write("Random Target Location \n")
+            file.write("Change Target on Arrival = "+ str(Simulation.changeTargetOnArrival)+" \n \n")
+
+    if (Simulation.ObstacleAvoidanceModule == True):
+        file.write("~~~~ OBSTACLE PARAMETERS ~~~~ \n")
+        file.write("Number of Obstacles: "+str(Simulation.num_obstacles)+"\n")
+        file.write("Max Obstacle Size: "+str(Simulation.max_obstacle_size)+"\n \n")
+
     file.close() 
 
 ##############################################################################
@@ -239,14 +260,27 @@ for e in range(0,Simulation.num_episodes):
     # if(Simulation.target_random):
     #     # For Training Only: Increase Search Space as episodes increase.
     #     if (e != 0):
-    #         if (e%2000 == 0):
-    #             Simulation.arena_space = [[Simulation.arena_space[0][0] -10, Simulation.arena_space[0][1] + 10],[Simulation.arena_space[1][0] -10, Simulation.arena_space[1][1] +10]]
-    #             print(Simulation.arena_space)
+    #         if (e%600 == 0):
+    #             Simulation.r = Simulation.r + 5
+    #             print(Simulation.r)
 
-    if(Simulation.target_random):
-        Simulation.targets = np.array([Simulation.r*np.cos(Simulation.n*2*np.pi*(e/Simulation.num_episodes)), Simulation.r*np.sin(Simulation.n*2*np.pi*(e/Simulation.num_episodes))])
-    else:
+    # At the start of a new episode, initilize the target to appropriate location.
+    TargetType = Simulation.TargetType
+
+    # Planned Target Trajectory
+    if (TargetType == TargetPath.Planned):
         Simulation.targets = Simulation.target_array[0]
+
+    # Circular Target Trajectory
+    elif (TargetType == TargetPath.Circle):
+        Simulation.targets = np.array([Simulation.r*np.cos(Simulation.n*2*np.pi*(e/Simulation.num_episodes)), Simulation.r*np.sin(Simulation.n*2*np.pi*(e/Simulation.num_episodes))])
+        Simulation.targets = np.round(Simulation.targets)
+
+    # Random Target Trajectory
+    elif (TargetType == TargetPath.Random):
+        Simulation.targets = np.array([random.randint(Simulation.arena_space[0][0], Simulation.arena_space[0][1]),
+                            random.randint(Simulation.arena_space[1][0], Simulation.arena_space[1][1])])
+
 
     for t in range(0,Simulation.episode_length):
         
@@ -278,10 +312,11 @@ for e in range(0,Simulation.num_episodes):
                 
                 for mod in agnt.modules:
                     mod.visualize()
-            # Convert the figure into an array and append it to images array        
-            image = np.frombuffer(fig.canvas.tostring_rgb(), dtype='uint8')
-            image  = image.reshape(fig.canvas.get_width_height()[::-1] + (3,))
-            images.append(image)
+            if (t%5 == 0):
+                # Convert the figure into an array and append it to images array        
+                image = np.frombuffer(fig.canvas.tostring_rgb(), dtype='uint8')
+                image  = image.reshape(fig.canvas.get_width_height()[::-1] + (3,))
+                images.append(image)
 
         # print('update state prime and select next action')
         for agnt in Simulation.agents:
@@ -372,54 +407,60 @@ print('Training complete')
 # Store the program end time so we can calculate how long it took for the code to execute
 end_time = time.time() 
 print('Program execution time:')
-print(end_time-start_time)
+print(str(end_time-start_time)+" seconds")
+print(str((end_time-start_time)/60)+" minutes")
+print(str((end_time-start_time)/3600)+" hours")
 
 ##############################################################################
 #   Data Storage
 ##############################################################################
-timestr = time.strftime("%m%d-%H%M")
 
 # Export the visualizer as a *.gif
 if(Simulation.visualize):
-    kwargs_write = {'fps':10, 'quantizer':'nq'}
-    imageio.mimsave(os.path.join(filename, "Animation"+timestr+".gif"), images, fps=10)
+    fps = 60
+    kwargs_write = {'fps':fps, 'quantizer':'nq'}
+    imageio.mimsave(os.path.join(filename, "Animation"+timestr+".gif"), images, fps=fps)
 
-# Store the iterations and total rewards for each agent for each episode
+
+
 iterations = np.arange(Simulation.num_episodes)
-if(os.path.isfile(filename+'/agent_rewards.pkl')):
-    agent_reward_filename = filename+'/agent_rewards'+timestr+'.pkl'
-else:
-    agent_reward_filename = filename+'/agent_rewards.pkl'
-
-# Store the iterations and total collisions for each episode 
 total_collisions = np.sum([Simulation.agent_episode_collision_count, Simulation.obstacle_episode_collision_count, Simulation.boundary_episode_collision_count], axis=0)
-if(os.path.isfile(filename+'/total_collisions.pkl')):
-    total_collisions_filename = filename+'/total_collisions'+timestr+'.pkl'
-else:
-    total_collisions_filename = filename+'/total_collisions.pkl'
 
-#NOTE: There are occasional permission errors, this block will keep retrying until the dump succeeds
-#TODO: Make this save every so often in case of errors so the history isn't lost
-max_dump_attempts = 5
-dump_attempts = 0
-pe = True
-while pe:
-    pe = False
-    try:
-        with open(agent_reward_filename,'wb') as f:
-            pickle.dump([iterations, agent_rewards],f)  
-        with open(total_collisions_filename,'wb') as g:
-            pickle.dump([iterations, total_collisions_filename],g) 
-    except Exception as e:
-        pe = True
-        dump_attempts = dump_attempts + 1
-    
-        print(e)
-        print('permission error while saving to disk, retrying...')
-        time.sleep(0.5)
+if (Simulation.getMetricPlots):
+    # Store the iterations and total rewards for each agent for each episode
+    if(os.path.isfile(filename+'/agent_rewards.pkl')):
+        agent_reward_filename = filename+'/agent_rewards'+timestr+'.pkl'
+    else:
+        agent_reward_filename = filename+'/agent_rewards.pkl'
 
-        if dump_attempts == max_dump_attempts:
-            print('******PERMISSION ERROR, COULD NOT DUMP AGENT REWARDS TO DISK********')
+    # Store the iterations and total collisions for each episode 
+    if(os.path.isfile(filename+'/total_collisions.pkl')):
+        total_collisions_filename = filename+'/total_collisions'+timestr+'.pkl'
+    else:
+        total_collisions_filename = filename+'/total_collisions.pkl'
+
+    #NOTE: There are occasional permission errors, this block will keep retrying until the dump succeeds
+    #TODO: Make this save every so often in case of errors so the history isn't lost
+    max_dump_attempts = 5
+    dump_attempts = 0
+    pe = True
+    while pe:
+        pe = False
+        try:
+            with open(agent_reward_filename,'wb') as f:
+                pickle.dump([iterations, agent_rewards],f)  
+            with open(total_collisions_filename,'wb') as g:
+                pickle.dump([iterations, total_collisions_filename],g) 
+        except Exception as e:
+            pe = True
+            dump_attempts = dump_attempts + 1
+        
+            print(e)
+            print('permission error while saving to disk, retrying...')
+            time.sleep(0.5)
+
+            if dump_attempts == max_dump_attempts:
+                print('******PERMISSION ERROR, COULD NOT DUMP AGENT REWARDS TO DISK********')
 
 # Iterations-Reward Plot
 plt.close()
@@ -434,66 +475,63 @@ if(os.path.isfile(filename+'/IterationsVReward.jpeg')):
 else:
     plt.savefig(os.path.join(filename, "IterationsVReward.jpeg") , orientation='landscape', quality=95)
 
+if (Simulation.getMetricPlots):
+    #Collision Box and Whisker Plot
+    fig1, ax1 = plt.subplots()
+    ax1.set_title('Collision Tracker')
+    ax1.boxplot([Simulation.agent_episode_collision_count, Simulation.obstacle_episode_collision_count, Simulation.boundary_episode_collision_count])
+    plt.xlabel("Collision Type")
+    plt.ylabel("Collisions")
+    ax1.set_xticklabels(['Agent Collisions', 'Obstacle Collisions', 'Boundary Collisions'])
 
-# Collision Box and Whisker Plot
-fig1, ax1 = plt.subplots()
-ax1.set_title('Collision Tracker')
-ax1.boxplot([Simulation.agent_episode_collision_count, Simulation.obstacle_episode_collision_count, Simulation.boundary_episode_collision_count])
-plt.xlabel("Collision Type")
-plt.ylabel("Collisions")
-ax1.set_xticklabels(['Agent Collisions', 'Obstacle Collisions', 'Boundary Collisions'])
+    if(os.path.isfile(filename+'/Collisions.jpeg')):
+        fig1.savefig(os.path.join(filename, "Collisions"+timestr+".jpeg") , orientation='landscape', quality=95)
+    else:
+        fig1.savefig(os.path.join(filename, "Collisions.jpeg") , orientation='landscape', quality=95)
 
-if(os.path.isfile(filename+'/Collisions.jpeg')):
-    fig1.savefig(os.path.join(filename, "Collisions"+timestr+".jpeg") , orientation='landscape', quality=95)
-else:
-    fig1.savefig(os.path.join(filename, "Collisions.jpeg") , orientation='landscape', quality=95)
+    # Iterations-Targets Entered Plot
+    fig2, ax2 = plt.subplots()
+    plt.plot(iterations,Simulation.target_reached_episode_end)
+    plt.xlabel("Iterations")
+    plt.ylabel("Targets Reached")
+    plt.title('Iterations V. Targets Reached')
 
-# Iterations-Targets Entered Plot
-fig2, ax2 = plt.subplots()
-plt.plot(iterations,Simulation.target_reached_episode_end)
-plt.xlabel("Iterations")
-plt.ylabel("Targets Reached")
-plt.title('Iterations V. Targets Reached')
-
-if(os.path.isfile(filename+'/TargetsReached.jpeg')):
-    plt.savefig(os.path.join(filename, "TargetsReached"+timestr+".jpeg") , orientation='landscape', quality=95)
-else:
-    plt.savefig(os.path.join(filename, "TargetsReached.jpeg") , orientation='landscape', quality=95)
+    if(os.path.isfile(filename+'/TargetsReached.jpeg')):
+        plt.savefig(os.path.join(filename, "TargetsReached"+timestr+".jpeg") , orientation='landscape', quality=95)
+    else:
+        plt.savefig(os.path.join(filename, "TargetsReached.jpeg") , orientation='landscape', quality=95)
 
 
-# Box Histograms
-f, axarr = plt.subplots(2, 2)
-axarr[0, 0].set_title('Target 1')
-axarr[0, 1].set_title('Target 2')
-axarr[1, 0].set_title('Target 3')
-axarr[1, 1].set_title('Target 4')
-# # Fine-tune figure; hide x ticks for top plots and y ticks for right plots
-# plt.setp([a.get_xticklabels() for a in axarr[0, :]], visible=False)
-# plt.setp([a.get_yticklabels() for a in axarr[:, 1]], visible=False)
-temp1 = []
-temp2 = []
-temp3 = []
-temp4 = []
-for i in range(0,len(Simulation.target_histogram_data)):
-    if Simulation.target_histogram_data[i][0] == 1:
-        temp1.append(Simulation.target_histogram_data[i][1])
-    if Simulation.target_histogram_data[i][0] == 2:
-        temp2.append(Simulation.target_histogram_data[i][1])
-    if Simulation.target_histogram_data[i][0] == 3:
-        temp3.append(Simulation.target_histogram_data[i][1])
-    if Simulation.target_histogram_data[i][0] == 4:
-        temp4.append(Simulation.target_histogram_data[i][1])
+    # Box Histograms
+    f, axarr = plt.subplots(2, 2)
+    axarr[0, 0].set_title('Target 1')
+    axarr[0, 1].set_title('Target 2')
+    axarr[1, 0].set_title('Target 3')
+    axarr[1, 1].set_title('Target 4')
+    temp1 = []
+    temp2 = []
+    temp3 = []
+    temp4 = []
+    for i in range(0,len(Simulation.target_histogram_data)):
+        if Simulation.target_histogram_data[i][0] == 1:
+            temp1.append(Simulation.target_histogram_data[i][1])
+        if Simulation.target_histogram_data[i][0] == 2:
+            temp2.append(Simulation.target_histogram_data[i][1])
+        if Simulation.target_histogram_data[i][0] == 3:
+            temp3.append(Simulation.target_histogram_data[i][1])
+        if Simulation.target_histogram_data[i][0] == 4:
+            temp4.append(Simulation.target_histogram_data[i][1])
 
-num_bins = 100
-bin = Simulation.episode_length/num_bins
-bins = []
-for i in range(0,num_bins):
-    bins.append(i*bin)
-axarr[0,0].hist(temp1,bins)
-axarr[0,1].hist(temp2,bins)
-axarr[1,0].hist(temp3,bins)
-axarr[1,1].hist(temp4,bins)
-#hist(x, bins=None, range=None, density=None, weights=None, cumulative=False, bottom=None, histtype='bar', align='mid', orientation='vertical', rwidth=None, log=False, color=None, label=None, stacked=False, normed=None, *, data=None, **kwargs)[source]
+    num_bins = 100
+    bin = Simulation.episode_length/num_bins
+    bins = []
+    for i in range(0,num_bins):
+        bins.append(i*bin)
+    axarr[0,0].hist(temp1,bins)
+    axarr[0,1].hist(temp2,bins)
+    axarr[1,0].hist(temp3,bins)
+    axarr[1,1].hist(temp4,bins)
+    #hist(x, bins=None, range=None, density=None, weights=None, cumulative=False, bottom=None, histtype='bar', align='mid', orientation='vertical', rwidth=None, log=False, color=None, label=None, stacked=False, normed=None, *, data=None, **kwargs)[source]
 
 plt.show()
 
@@ -505,5 +543,5 @@ if(not Simulation.visualize):
     file.write("Mean Episode Agent-Agent Collisions: "+str(np.mean(Simulation.agent_episode_collision_count))+"\n")
     file.write("Mean Episode Agent-Obstacle Collisions: "+str(np.mean(Simulation.obstacle_episode_collision_count))+"\n")
     file.write("Mean Episode Agent-Boundary Collisions: "+str(np.mean(Simulation.boundary_episode_collision_count))+"\n")
-    file.write("Mean Numver of Targets Reached: "+str(np.mean(Simulation.target_reached_episode_end))+"\n")
+    file.write("Mean Number of Targets Reached: "+str(np.mean(Simulation.target_reached_episode_end))+"\n")
     

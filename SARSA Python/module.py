@@ -1,5 +1,6 @@
 import numpy as np
 from simulation import Simulation
+from simulation import TargetPath
 from qlearning import Qlearning
 
 from action import Action
@@ -26,7 +27,7 @@ class Module:
         self.parent_agent = parent_agt  # The agent that created and is storing this module instance
         self.tracked_agents = []        # List of agents being tracked by this module 
         self.instant_reward = []        # List of instantaneous rewards earned by the agent. 
-        self.alpha = 0.1                # Learning rate. keep in range [0,1]. can be tuned to affect Q learning
+        self.alpha = 0.7                # Learning rate. keep in range [0,1]. can be tuned to affect Q learning
         self.gamma = 0                  # Discount factor
 
         self.state = np.array([])       # The vector from the agent to the centroid of it and the tracked agents 
@@ -87,9 +88,9 @@ class Module:
             #     T = 0.05
             T = 1
             if Simulation.episode_iter_num/Simulation.num_episodes*100 <= Simulation.exploitation_rise_percent :
-                T = 1000.0 - (1000.0-0.05)*Simulation.episode_iter_num/Simulation.num_episodes
+                T = 1000.0 - (1000.0-0.005)*Simulation.episode_iter_num/Simulation.num_episodes
             else:
-                T = 0.05
+                T = 0.005
 
             # Calculate the weight for this action
             action_weights[i] = np.exp(Qval/T)
@@ -476,7 +477,7 @@ class TargetSeekModule(Module):
     def __init__(self,parent_agt):
         super().__init__(parent_agt)    # Inherited class initialization
         
-        self.gamma = 0.99                # Discount factor. keep in range [0,1]. can be tuned to affect Q learning
+        self.gamma = 0.2               # Discount factor. keep in range [0,1]. can be tuned to affect Q learning
         
         self.Q = np.empty((1,), dtype=object)
         self.Q[0] = Qlearning()
@@ -520,35 +521,38 @@ class TargetSeekModule(Module):
         if(Simulation.target_agents_remaining > 0):
             self.in_target = False
             Simulation.target_agents_remaining = Simulation.target_agents_remaining -1
-            
-        # if (Simulation.target_entries_count == Simulation.num_agents):
-        #     arena_space = Simulation.arena_space
-        #     if(Simulation.target_random):
-        #         print("New Target")
-        #         Simulation.targets = np.array([random.randint(arena_space[0][0]+5, arena_space[0][1]-5),
-        #                         random.randint(arena_space[1][0]+5, arena_space[1][1]-5)])
-        #         #print("Target Entered at "+str(time.time() - self.init_time)+" seconds")
-        #         #print("Target Entered at "+str(Simulation.episode_iter_num)+" iterations")
-        #     else:
-        #         #self.targets_entered = self.targets_entered + 1
-        #         if self.targets_entered <= len(Simulation.target_array)-1:
-        #             self.targets_entered = self.targets_entered + 1
-        #             if(self.targets_entered < len(Simulation.target_array)):
-        #                 #self.targets_entered = self.targets_entered + 1
-        #                 Simulation.targets = Simulation.target_array[self.targets_entered]
-        #                 print("New Target")
-        #                 # print("Target Entered at "+str(time.time() - self.init_time)+" seconds")
-        #                 # print("Target Entered at "+str(Simulation.episode_iter_num)+" iterations")
-        #                 Simulation.target_histogram_data.append([self.targets_entered, Simulation.episode_iter_num])
-        #             else:
-        #                 #self.targets_entered = self.targets_entered + 1
-        #                 print("Final Target Reached")
-        #                 #if(self.targets_entered == len(Simulation.target_array)):
-        #                 Simulation.target_histogram_data.append([self.targets_entered, Simulation.episode_iter_num])
-                        
-        #         #print("Target Entered at "+str(time.time() - self.init_time)+" seconds")
-        #         #print("Target Entered at "+str(Simulation.episode_iter_num)+" iterations")
-        #         #Simulation.target_histogram_data.append([self.targets_entered, Simulation.episode_iter_num])
+
+        if (Simulation.changeTargetOnArrival == True):
+            if (Simulation.target_entries_count == Simulation.num_agents):
+                arena_space = Simulation.arena_space
+                if (Simulation.TargetType == TargetPath.Random):
+                    print("New Target (rand)")
+                    Simulation.targets = np.array([random.randint(arena_space[0][0]+5, arena_space[0][1]-5),
+                                    random.randint(arena_space[1][0]+5, arena_space[1][1]-5)])
+
+                    Simulation.target_histogram_data.append([self.targets_entered, Simulation.episode_iter_num])
+                    #print("Target Entered at "+str(time.time() - self.init_time)+" seconds")
+                    #print("Target Entered at "+str(Simulation.episode_iter_num)+" iterations")
+                elif (Simulation.TargetType == TargetPath.Planned):
+                    #self.targets_entered = self.targets_entered + 1
+                    if self.targets_entered <= len(Simulation.target_array)-1:
+                        self.targets_entered = self.targets_entered + 1
+                        if(self.targets_entered < len(Simulation.target_array)):
+                            #self.targets_entered = self.targets_entered + 1
+                            Simulation.targets = Simulation.target_array[self.targets_entered]
+                            print("New Target (plan)")
+                            # print("Target Entered at "+str(time.time() - self.init_time)+" seconds")
+                            # print("Target Entered at "+str(Simulation.episode_iter_num)+" iterations")
+                            Simulation.target_histogram_data.append([self.targets_entered, Simulation.episode_iter_num])
+                        else:
+                            #self.targets_entered = self.targets_entered + 1
+                            print("Final Target Reached")
+                            #if(self.targets_entered == len(Simulation.target_array)):
+                            Simulation.target_histogram_data.append([self.targets_entered, Simulation.episode_iter_num])
+                            
+                    #print("Target Entered at "+str(time.time() - self.init_time)+" seconds")
+                    #print("Target Entered at "+str(Simulation.episode_iter_num)+" iterations")
+                    #Simulation.target_histogram_data.append([self.targets_entered, Simulation.episode_iter_num])
 
             Simulation.target_entries_count = 0
             Simulation.target_agents_remaining = Simulation.num_agents

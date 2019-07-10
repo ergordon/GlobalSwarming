@@ -149,3 +149,5 @@ duration = end - start
 
 print('operation took')
 print(duration)
+
+print("Currently found "+str(len(states[0]))+" states")

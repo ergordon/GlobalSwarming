@@ -1,5 +1,12 @@
 import numpy as np
 import random
+import enum
+
+class TargetPath(enum.Enum): 
+    Circle = 1  # Plot Targets in Circular Path
+    Random = 2  # Plot Targets Randomly
+    Planned = 3 # Plot Targets in accordance to the defined targets array
+
 
 ##############################################################################
 #   Simulation class
@@ -7,32 +14,41 @@ import random
 
 #A class containing high level simulation variables
 class Simulation:
-    # Define Which Test Arena Being Used
+
+    ## Define Which Test Arena Being Used
     # 0 = Custom
     # 1 = Urban Terrain
     # 2 = Open Terrain
     Arena = 0
 
+    ## Multi-Module Action Selector (MMAS) to be activated.
+    # 0 = Steve and Bucci
+    # 1 = Importance Function
+    # 2 = NeuralNetwork
+    ControllerType = 0
+
+    getMetricPlots = False
+    
     if (Arena == 0): # Custom Terrain. Edit These Ones 
         
-        num_agents = 5                 # Number of agents to simulate
-        num_episodes = 100000            # Number of times to run the training scenario
-        episode_length =1000            # Number of time steps in each training scenario [iterations]
-        exploitation_rise_time = 0   # The amount of time over which we transition from exploration to exploitation [seconds]
-        exploitation_rise_percent = 25  # The percentage of each episode over which we transition from exploration to exploitation
+        num_agents = 10                 # Number of agents to simulate
+        num_episodes = 500              # Number of times to run the training scenario
+        episode_length = 200           # Number of time steps in each training scenario [iterations]
+        exploitation_rise_time = 1000      # The amount of time over which we transition from exploration to exploitation [seconds]
+        exploitation_rise_percent = 0  # The percentage of each episode over which we transition from exploration to exploitation
 
         # Bounds to initialize the agents inside of
-        init_space = [[-5,5],
-                    [-5,5]]
+        init_space = [[0,0],
+                    [0,0]]
 
         # Bounds to simulate the agents within
         # Exiting these bounds will end the episode immediately
-        search_space = [[-200,200],
-                        [-200,200]]
+        search_space = [[-100,100],
+                        [-100,100]]
 
         # Bounds to intilize the targets and obstacles within
-        arena_space = [[-10,10],
-                       [-10,10]]
+        arena_space = [[-30,30],
+                       [-30,30]]
 
         visualize = False            # Whether to show a plot animation of the agent positions
         load_agents = False          # Whether to load the agents.pkl file (loads agents exactly as they upon completion of training)
@@ -52,42 +68,51 @@ class Simulation:
         # Also, there should be a weight entry for each module
         module_weights = [1]  # TODO: only do sanity checks against this if using Steve and Bucci controller
 
-        ## Multi-Module Action Selector (MMAS) to be activated.
-        # 0 = Steve and Bucci
-        # 1 = Importance Function
-        # 2 = NeuralNetwork
-        ControllerType = 0  # NOTE: this is a good place for an enumeration
+        ## Target Parameters
+        TargetType = TargetPath.Random
 
-        target_random = True
-        #target_array = np.array([[-40,40],[20,-10],[50,50],[40,-50]]) # If target_random is False
-        target_array = np.array([[-40,40]]) # If target_random is False
-        #target_array = np.array([[10,10],[-10,-10],[-10,10],[10,-10]]) # If target_random is False
-
-        ## FOR TRAINING
-        r = 100
-        n = 10
-
-        if(target_random):
-            # targets = np.array([random.randint(arena_space[0][0]+5, arena_space[0][1]-5),
-            #                     random.randint(arena_space[1][0]+5, arena_space[1][1]-5)])
-            targets = np.array([r*np.cos(0), r*np.sin(0)])
-        else:
+        # Planned Target Trajectory
+        if (TargetType == TargetPath.Planned):
+            #target_array = np.array([[-40,40],[20,-10],[50,50],[40,-50]])
+            target_array = np.array([[-30,30]])
             targets = target_array[0]
+            changeTargetOnArrival = False
+            #target_array = np.array([[-20,20]])
+            #target_array = np.array([[10,10],[-10,-10],[-10,10],[10,-10]])
+
+        # Circular Target Trajectory
+        elif (TargetType == TargetPath.Circle):
+            r = 110 # Target Location Circle Radius
+            n = 5   # Number of loops to complete
+            targets = np.array([r*np.cos(0), r*np.sin(0)])
+            changeTargetOnArrival = False
+
+        # Random Target Trajectory
+        elif (TargetType == TargetPath.Random):
+            targets = np.array([random.randint(arena_space[0][0], arena_space[0][1]),
+                                random.randint(arena_space[1][0], arena_space[1][1])])
+            changeTargetOnArrival = False
+        
+        else:
+            print("You must pick a target type.")
         
         
 
         # Obstacles to Avoid
-        ## [x, y, width, height]
+        # [x, y, width, height]
         #obstacles = np.array([[-30,-40,30,50], [10, -40, 20, 50], [-40, 10, 60, 10]])
+
         num_obstacles = 3
-        obstacles = np.array([random.randint(arena_space[0][0], arena_space[0][1]),random.randint(arena_space[0][0], arena_space[0][1]), random.randint(1,10), random.randint(1,10)])
+        max_obstacle_size = 10
+
+        obstacles = np.array([random.randint(arena_space[0][0], arena_space[0][1]),random.randint(arena_space[0][0], arena_space[0][1]), random.randint(1,max_obstacle_size), random.randint(1,max_obstacle_size)])
         for i in range(1,num_obstacles):
-            temp_obstacles = np.array([random.randint(arena_space[0][0], arena_space[0][1]),random.randint(arena_space[0][0], arena_space[0][1]), random.randint(1,10), random.randint(1,10)])
+            temp_obstacles = np.array([random.randint(arena_space[0][0], arena_space[0][1]),random.randint(arena_space[0][0], arena_space[0][1]), random.randint(1,max_obstacle_size), random.randint(1,max_obstacle_size)])
             obstacles = np.vstack((obstacles, temp_obstacles))
 
     elif (Arena == 1): # Urban Terrain
 
-        num_agents = 9                 # number of agents to simulate
+        num_agents = 8                 # number of agents to simulate
         num_episodes = 5               # number of times to run the training scenario
         episode_length = 1000          # number of time steps in each training scenario [iterations]
         exploitation_rise_time = 0     # the amount of time over which we transition from exploration to exploitation [seconds]
@@ -120,14 +145,9 @@ class Simulation:
         # Also, there should be a weight entry for each module
         module_weights = [0.1, 0.2, 0.1, 0.8, 0.4]
 
-        ## Controller to be activated.
-        # 0 = Steve and Bucci Controller
-        # 1 = Importance Function
-        # 2 = NeuralNetwork
-        ControllerType = 0
-
-        #targets = np.array([-40,40],[20,-10],[50,50],[40,-50])
-        targets = np.array([40,-50])
+        TargetType = TargetPath.Planned
+        targets = np.array([-40,40],[20,-10],[50,50],[40,-50])
+        targets = target_array[0]
 
         # Obstacles to Avoid
         ## [x, y, width, height]
@@ -174,15 +194,9 @@ class Simulation:
         # Also, there should be a weight entry for each module
         module_weights = [0.1, 0.2, 0.1, 0.8, 0.4]
 
-        ## Controller to be activated.
-        # 0 = Steve and Bucci Controller
-        # 1 = Importance Function
-        # 2 = NeuralNetwork
-        ControllerType = 0
-
-        #targets = np.array([-40,40])
-        targets = np.array([random.randint(search_space[0][0], search_space[0][1]),
-                            random.randint(search_space[1][0], search_space[1][1])])
+        TargetType = TargetPath.Planned
+        targets = np.array([-40,40],[20,-10],[50,50],[40,-50])
+        targets = target_array[0]
 
         # Obstacles to Avoid
         ## [x, y, width, height]
@@ -213,7 +227,7 @@ class Simulation:
 
     episode_iter_num = 0   # Track the current interation of the episode. Used with exploration/exploitation
     agents = list()        # List of agents
+
 ##############################################################################
 #   Simulation Class
 ##############################################################################
-    
