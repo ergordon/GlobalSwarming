@@ -217,20 +217,19 @@ if not initialized:
             if os.path.isfile(training_filename):
                 print("Q learning data found, loading it now")        
                 with open(training_filename, 'rb') as f:
-                    [module_name, table, states] = pickle.load(f)
+                    [module_name, data, updates] = pickle.load(f)
 
                 if Simulation.agents[0].modules[i].collapsable_Q:
                     for agnt in Simulation.agents:
                         for Q in agnt.modules[i].Q:
-                            Q.q_table = cp.copy(table)
-                            Q.q_states = cp.copy(states)
+                            Q.q_data = cp.copy(data[0])
+                            Q.q_updates = cp.copy(updates[0])
                 else:
                     for agnt in Simulation.agents:
                         for q in range(0,len(agnt.modules[i].Q)):
-                            agnt.modules[i].Q[q].q_table = cp.copy(table[q])
-                            agnt.modules[i].Q[q].q_states = cp.copy(states[q])
-                    # for q in range(0,len(Simulation.agents[0].module[i].Q)):
-                    #     for agt in Simulation.agents:
+                            agnt.modules[i].Q[q].q_data = cp.copy(data[q])
+                            agnt.modules[i].Q[q].q_updates = cp.copy(updates[q])
+                    
 
 
 
@@ -286,7 +285,6 @@ for e in range(0,Simulation.num_episodes):
         
         agent_out_of_bounds = False
         Simulation.episode_iter_num = t
-
 
         # print('agents take actions')
         for agnt in Simulation.agents:
@@ -344,7 +342,7 @@ for e in range(0,Simulation.num_episodes):
                 mod.update_q()
 
                 # Run additional functions specific to each module
-                #  For example, the collision module uses this to track collisions with other agents 
+                # For example, the collision module uses this to track collisions with other agents 
                 mod.auxilariy_functions()
 
                 # Prepare for next time step

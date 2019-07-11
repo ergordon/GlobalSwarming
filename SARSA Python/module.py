@@ -62,11 +62,16 @@ class Module:
         # print('getting action weights')
         # Create a set of weights for each action
         action_weights = np.zeros(len(Action))
+        num_updates = 0
         # Sum the action tables for every tracked agent
         for i in range (0,len(self.Q)):
             # print('state_p is ' + str(self.state_prime[i]))
             action_weights = action_weights + self.Q[i].fetch_row_by_state(self.state_prime[i])
-        
+            
+            #TODO think of a better way to do this......
+            num_updates = num_updates + self.Q[i].fetch_updates_by_state(self.state_prime[i])
+
+        num_updates = num_updates / len(self.Q)
 
         # print('Q table entry is ' + str(action_weights))
         # For each possible agent action
@@ -74,6 +79,16 @@ class Module:
             # Get the appropiate Q value Q table row corresponding to the current state 
             #  and the action being iterated over
             Qval = action_weights[i]
+
+            max_updates = 50
+
+            T = 1 
+            if num_updates < max_updates:
+                T = 1000.0 - (1000.0-0.05)*num_updates/max_updates
+            else:
+                T = 0.05 
+
+            # print("T is: " + str(T))
 
             # Exploitation vs exploration constant
             #  Big T encourages exploration
@@ -85,11 +100,11 @@ class Module:
             #     T = 1000.0 - (1000.0-0.05)*(curr_time - self.init_time)/Simulation.exploitation_rise_time
             # else:
             #     T = 0.05
-            T = 1
-            if Simulation.episode_iter_num/Simulation.num_episodes*100 <= Simulation.exploitation_rise_percent :
-                T = 1000.0 - (1000.0-0.05)*Simulation.episode_iter_num/Simulation.num_episodes
-            else:
-                T = 0.05
+            # T = 1
+            # if Simulation.episode_iter_num/Simulation.num_episodes*100 <= Simulation.exploitation_rise_percent :
+            #     T = 1000.0 - (1000.0-0.05)*Simulation.episode_iter_num/Simulation.num_episodes
+            # else:
+            #     T = 0.05
 
             
             # Calculate the weight for this action

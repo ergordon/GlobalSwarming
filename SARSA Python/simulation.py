@@ -31,28 +31,28 @@ class Simulation:
     
     if (Arena == 0): # Custom Terrain. Edit These Ones 
         
-        num_agents = 10                 # Number of agents to simulate
+        num_agents = 50                 # Number of agents to simulate
         num_episodes = 2              # Number of times to run the training scenario
-        episode_length = 200           # Number of time steps in each training scenario [iterations]
+        episode_length = 100           # Number of time steps in each training scenario [iterations]
         exploitation_rise_time = 0      # The amount of time over which we transition from exploration to exploitation [seconds]
         exploitation_rise_percent = 0  # The percentage of each episode over which we transition from exploration to exploitation
 
         # Bounds to initialize the agents inside of
-        init_space = [[0,0],
-                    [0,0]]
+        init_space = [[-10,10],
+                    [-10,10]]
 
         # Bounds to simulate the agents within
         # Exiting these bounds will end the episode immediately
-        search_space = [[-80,80],
-                        [-80,80]]
+        search_space = [[-40,20],
+                        [-20,40]]
 
         # Bounds to intilize the targets and obstacles within
         arena_space = [[-30,30],
                        [-30,30]]
 
         visualize = True            # Whether to show a plot animation of the agent positions
-        load_agents = True          # Whether to load the agents.pkl file (loads agents exactly as they upon completion of training)
-        load_training_data = False  # Whether to load the agent training data (loads q tables and states into the modules that exist in the agent initialization function)
+        load_agents = False          # Whether to load the agents.pkl file (loads agents exactly as they upon completion of training)
+        load_training_data = True  # Whether to load the agent training data (loads q tables and states into the modules that exist in the agent initialization function)
         take_best_action = True     # Whether to select next actions based on highest Q table entry or use Q table values as probabilities for each action 
 
 
