@@ -116,7 +116,7 @@ for i in range(0,len(agents[0].modules)):
 
                     if working_state in q_data_dict:
                         q_data_dict[working_state] = q_data_dict[working_state] + working_q_row*working_updates
-                        q_updates_dict[working_state] = max(q_updates_ditc[working_state],working_updates) #TODO consider other ways of doing this
+                        q_updates_dict[working_state] = max(q_updates_dict[working_state],working_updates) #TODO consider other ways of doing this
                         q_updates_sum[working_state] = q_updates_sum[working_state] + working_updates 
                     else:
                         q_data_dict.update({working_state:working_q_row*working_updates})
@@ -129,7 +129,7 @@ for i in range(0,len(agents[0].modules)):
                     q_data_dict[working_state] = q_data_dict[working_state]/q_updates_sum[working_state]
             
             q_data[q] = q_data_dict
-            q_updates[Q] = q_updates_dict
+            q_updates[q] = q_updates_dict
 
     #store the results in lists
     module_names.append(agents[0].modules[i].__class__.__name__)

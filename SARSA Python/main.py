@@ -310,6 +310,7 @@ for e in range(0,Simulation.num_episodes):
                 
                 for mod in agnt.modules:
                     mod.visualize()
+            
             if (t%5 == 0):
                 # Convert the figure into an array and append it to images array        
                 image = np.frombuffer(fig.canvas.tostring_rgb(), dtype='uint8')

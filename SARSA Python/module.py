@@ -64,14 +64,16 @@ class Module:
         action_weights = np.zeros(len(Action))
         num_updates = 0
         # Sum the action tables for every tracked agent
+        # TODO think about if something like importance functions should be implemented here
         for i in range (0,len(self.Q)):
             # print('state_p is ' + str(self.state_prime[i]))
+            #TODO should i multiply by q_updates?
             action_weights = action_weights + self.Q[i].fetch_row_by_state(self.state_prime[i])
             
             #TODO think of a better way to do this......
             num_updates = num_updates + self.Q[i].fetch_updates_by_state(self.state_prime[i])
 
-        num_updates = num_updates / len(self.Q)
+        num_updates = num_updates / len(self.Q) #TODO would this work better as min(q_updates)?
 
         # print('Q table entry is ' + str(action_weights))
         # For each possible agent action
