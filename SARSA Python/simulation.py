@@ -7,7 +7,6 @@ class TargetPath(enum.Enum):
     Random = 2  # Plot Targets Randomly
     Planned = 3 # Plot Targets in accordance to the defined targets array
 
-
 ##############################################################################
 #   Simulation class
 ##############################################################################
@@ -27,28 +26,32 @@ class Simulation:
     # 2 = NeuralNetwork
     ControllerType = 0
 
+
+    agent_step_size = 1
+
+
     getMetricPlots = False
     
     if (Arena == 0): # Custom Terrain. Edit These Ones 
         
-        num_agents = 10                 # Number of agents to simulate
-        num_episodes = 5              # Number of times to run the training scenario
-        episode_length = 50           # Number of time steps in each training scenario [iterations]
+        num_agents = 2                 # Number of agents to simulate
+        num_episodes = 5000              # Number of times to run the training scenario
+        episode_length = 100           # Number of time steps in each training scenario [iterations]
         exploitation_rise_time = 0      # The amount of time over which we transition from exploration to exploitation [seconds]
         exploitation_rise_percent = 10  # The percentage of each episode over which we transition from exploration to exploitation
 
         # Bounds to initialize the agents inside of
-        init_space = [[0,5],
-                    [0,5]]
+        init_space = [[0,0],
+                    [0,0]]
 
         # Bounds to simulate the agents within
         # Exiting these bounds will end the episode immediately
-        search_space = [[-50,50],
-                        [-50,50]]
+        search_space = [[-300,300],
+                        [-300,300]]
 
         # Bounds to intilize the targets and obstacles within
-        arena_space = [[-30,30],
-                       [-30,30]]
+        arena_space = [[-120,120],
+                       [-120,120]]
 
         visualize = True            # Whether to show a plot animation of the agent positions
         load_agents = False          # Whether to load the agents.pkl file (loads agents exactly as they upon completion of training)
@@ -82,8 +85,8 @@ class Simulation:
 
         # Circular Target Trajectory
         elif (TargetType == TargetPath.Circle):
-            r = 110 # Target Location Circle Radius
-            n = 5   # Number of loops to complete
+            r = 30 # Target Location Circle Radius
+            n = 10   # Number of loops to complete
             targets = np.array([r*np.cos(0), r*np.sin(0)])
             changeTargetOnArrival = False
 

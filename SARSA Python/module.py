@@ -44,11 +44,7 @@ class Module:
         if agt not in self.tracked_agents:
             self.tracked_agents.append(agt)
 
-    # Update parent agents total reward based on the module's current instant reward
-    def update_total_reward(self):
-        reward = self.instant_reward
-        self.parent_agent.add_total_reward(reward)
-
+    
     # Method for implementing visualization of the module
     # Implement should be done in derived class
     def visualize(self):
@@ -63,13 +59,16 @@ class Module:
     # Get a set of action weights for this module to be used in conjuntion with those of other modules 
     #  with the purpose of selecting a single action for the agent to perform 
     def get_action_weights(self):
-
+        # print('getting action weights')
         # Create a set of weights for each action
         action_weights = np.zeros(len(Action))
         # Sum the action tables for every tracked agent
         for i in range (0,len(self.Q)):
+            # print('state_p is ' + str(self.state_prime[i]))
             action_weights = action_weights + self.Q[i].fetch_row_by_state(self.state_prime[i])
         
+
+        # print('Q table entry is ' + str(action_weights))
         # For each possible agent action
         for i in range (0,len(action_weights)):
             # Get the appropiate Q value Q table row corresponding to the current state 
@@ -88,10 +87,11 @@ class Module:
             #     T = 0.05
             T = 1
             if Simulation.episode_iter_num/Simulation.num_episodes*100 <= Simulation.exploitation_rise_percent :
-                T = 1000.0 - (1000.0-0.005)*Simulation.episode_iter_num/Simulation.num_episodes
+                T = 1000.0 - (1000.0-0.05)*Simulation.episode_iter_num/Simulation.num_episodes
             else:
-                T = 0.005
+                T = 0.05
 
+            
             # Calculate the weight for this action
             action_weights[i] = np.exp(Qval/T)
             
@@ -99,11 +99,6 @@ class Module:
             if(action_weights[i] == float('inf')):
                 action_weights[i] = 1.7976931348623157e+308
             
-        # Normalize the weights to create probabilities
-        # if(np.sum(action_weights) != 0):
-        #     action_weights = action_weights / np.sum(action_weights)
-        # else:
-        #     action_weights = np.ones(len(Action))/len(Action)
         # print('action_weights are')
         # print(action_weights)
         return action_weights
@@ -471,7 +466,7 @@ class BoundaryModule(Module):
 class TargetSeekModule(Module):
 
     rewards = [10, -1]       # Discrete rewards for a given range
-    ranges_squared = [100]    # The discrete ranges at which the agent can collect rewards
+    ranges_squared = [200]    # The discrete ranges at which the agent can collect rewards
 
     # Class constructor
     def __init__(self,parent_agt):
@@ -581,6 +576,13 @@ class TargetSeekModule(Module):
         for i in range(0,len(self.state_prime[0])):
             dist_squared = dist_squared + self.state_prime[0,i]**2
 
+        if dist_squared < 30**2:
+            Simulation.agent_step_size = 5
+        elif dist_squared < 15**2:
+            Simulation.agent_step_size = 1
+        else:
+            Simulation.agent_step_size = 10
+
         # print('start over')
         # print(self.state_prime)
         # print(dist_squared)
@@ -596,10 +598,13 @@ class TargetSeekModule(Module):
 
         # # Not in range, apply last reward (punishment)
         if rewarded == False:
-            self.instant_reward[0] = TargetSeekModule.rewards[-1]
+            #self.instant_reward[0] = TargetSeekModule.rewards[-1]
             #self.instant_reward[0] = -2.5*(-math.log(math.sqrt(dist_squared) + 10) + 5)
             #self.instant_reward[0] = -math.log(dist_squared + 10) + 5
+            self.instant_reward[0] = -math.log(dist_squared + 10)
             #self.instant_reward[0] = -dist_squared*0.02+10
+
+        # print("instant reward is: " + str(self.instant_reward[0]))
 
     def get_module_weight(self):
         

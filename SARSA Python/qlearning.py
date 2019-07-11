@@ -13,6 +13,7 @@ class Qlearning:
         self.q_table = np.array([])
         # Store state -> Q table association
         self.q_states = np.array([])
+         
 
     # Update the Q table and state array
     def update_q(self, state, state_prime, action, action_prime, alpha, gamma, reward):

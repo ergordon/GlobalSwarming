@@ -54,7 +54,7 @@ class Agent:
 
     # Change the agent's position based on the action passed in
     def take_action(self,act):
-        step_size = 1
+        step_size = Simulation.agent_step_size
         if act == Action.MOVE_PLUS_X :
             self.position = self.position + [step_size,0]
         elif  act == Action.MOVE_MINUS_X :
@@ -109,14 +109,16 @@ class Agent:
             action_weights = np.ones(len(Action))/len(Action)
         elif sum_action_weights != 1:
             action_weights = action_weights/sum_action_weights
-            action_weights = action_weights/np.sum(action_weights)
-        else:
-            action_weights = action_weights / sum_action_weights
+            sum_action_weights = np.sum(action_weights)
+            if sum_action_weights != 1:
+                action_weights = action_weights/sum_action_weights
+        # else:
+        #     action_weights = action_weights / sum_action_weights
 
         # Use a discrete random variable distribution to select the next action
-        x=list(map(int,Action))
-        px=action_weights
-        sample=rv_discrete(values=(x,px)).rvs(size=1)
+        # x=list(map(int,Action))
+        # px=action_weights
+        # sample=rv_discrete(values=(x,px)).rvs(size=1)
 
         # Set state_prime to be the selected next action
         if(Simulation.take_best_action):
@@ -135,6 +137,8 @@ class Agent:
             sample=rv_discrete(values=(x,px)).rvs(size=1)
             action_prime = Action(sample)
 
+
+        # print('action weights: ' + str(action_weights))
         for mod in self.modules:
             mod.action_prime = action_prime 
 
