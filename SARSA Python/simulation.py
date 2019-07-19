@@ -32,23 +32,23 @@ class Simulation:
     if (Arena == 0): # Custom Terrain. Edit These Ones 
         
         num_agents = 4                 # Number of agents to simulate
-        num_episodes = 500              # Number of times to run the training scenario
-        episode_length = 200           # Number of time steps in each training scenario [iterations]
+        num_episodes = 500             # Number of times to run the training scenario
+        episode_length = 500          # Number of time steps in each training scenario [iterations]
         exploitation_rise_time = 0      # The amount of time over which we transition from exploration to exploitation [seconds]
         exploitation_rise_percent = 0  # The percentage of each episode over which we transition from exploration to exploitation
 
         # Bounds to initialize the agents inside of
-        init_space = [[-20,20],
-                    [-20,20]]
+        init_space = [[-60,60],
+                    [-60,60]]
 
         # Bounds to simulate the agents within
         # Exiting these bounds will end the episode immediately
-        search_space = [[-30,30],
-                        [-30,30]] 
+        search_space = [[-200,200],
+                        [-200,200]] 
 
         # Bounds to intilize the targets and obstacles within
-        arena_space = [[-20,20],
-                       [-20,20]]
+        arena_space = [[-30,30],
+                       [-30,30]]
 
         visualize = False            # Whether to show a plot animation of the agent positions
         load_agents = False          # Whether to load the agents.pkl file (loads agents exactly as they upon completion of training)
@@ -57,11 +57,11 @@ class Simulation:
 
 
         # Activate Modules
-        CohesionModule = False            # Cohesion module makes the agents stay together as a swarm
+        CohesionModule = True            # Cohesion module makes the agents stay together as a swarm
         CollisionAvoidanceModule = False  # Collision module prevents the agents from hitting each other
         OutOfBoundsModule = False         # Boundary module prevents the agents from leaving the search space
         TargetSeekingModule = False       # Target module encourages agents to travel to waypoint
-        ObstacleAvoidanceModule = True  # Obstacle module prevents the agents from hitting obstacles
+        ObstacleAvoidanceModule = False  # Obstacle module prevents the agents from hitting obstacles
 
         # These are the weights for each module. they should sum to 1. 
         # If they don't, they will be scaled accordingly during initialization
@@ -69,7 +69,7 @@ class Simulation:
         module_weights = [1]  # TODO: only do sanity checks against this if using Steve and Bucci controller
 
         ## Target Parameters
-        TargetType = TargetPath.Planned
+        TargetType = TargetPath.Random
 
         # Planned Target Trajectory
         if (TargetType == TargetPath.Planned):
@@ -102,7 +102,7 @@ class Simulation:
         # [x, y, width, height]
         #obstacles = np.array([[-30,-40,30,50], [10, -40, 20, 50], [-40, 10, 60, 10]])
 
-        num_obstacles = 4
+        num_obstacles = 20
         max_obstacle_size = 10
 
         obstacles = np.array([random.randint(arena_space[0][0], arena_space[0][1]),random.randint(arena_space[0][0], arena_space[0][1]), random.randint(1,max_obstacle_size), random.randint(1,max_obstacle_size)])

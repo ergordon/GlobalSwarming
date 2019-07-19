@@ -56,24 +56,45 @@ class Module:
     def auxilariy_functions(self):
         pass
 
+    def get_T(self):
+        num_updates = 0
+        # Sum the action tables for every tracked agent
+        # TODO think about if something like importance functions should be implemented here
+        for i in range (0,len(self.Q)):
+            #TODO think of a better way to do this......
+            num_updates = num_updates + self.Q[i].fetch_updates_by_state(self.state_prime[i])
+
+        num_updates = num_updates / len(self.Q) #TODO would this work better as min(q_updates)?
+
+        max_updates = 50
+
+        T = 1 
+        if num_updates < max_updates:
+            T = 1000.0 - (1000.0-0.05)*num_updates/max_updates
+        else:
+            T = 0.005
+
+        return T
+
+
     # Get a set of action weights for this module to be used in conjuntion with those of other modules 
     #  with the purpose of selecting a single action for the agent to perform 
     def get_action_weights(self):
         # print('getting action weights')
         # Create a set of weights for each action
         action_weights = np.zeros(len(Action))
-        num_updates = 0
-        # Sum the action tables for every tracked agent
-        # TODO think about if something like importance functions should be implemented here
+        # num_updates = 0
+        # # Sum the action tables for every tracked agent
+        # # TODO think about if something like importance functions should be implemented here
         for i in range (0,len(self.Q)):
             # print('state_p is ' + str(self.state_prime[i]))
             #TODO should i multiply by q_updates?
             action_weights = action_weights + self.Q[i].fetch_row_by_state(self.state_prime[i])
             
-            #TODO think of a better way to do this......
-            num_updates = num_updates + self.Q[i].fetch_updates_by_state(self.state_prime[i])
+        #     #TODO think of a better way to do this......
+        #     num_updates = num_updates + self.Q[i].fetch_updates_by_state(self.state_prime[i])
 
-        num_updates = num_updates / len(self.Q) #TODO would this work better as min(q_updates)?
+        # num_updates = num_updates / len(self.Q) #TODO would this work better as min(q_updates)?
 
         # print('Q table entry is ' + str(action_weights))
         # For each possible agent action
@@ -82,13 +103,13 @@ class Module:
             #  and the action being iterated over
             Qval = action_weights[i]
 
-            max_updates = 50
+            # max_updates = 50
 
-            T = 1 
-            if num_updates < max_updates:
-                T = 1000.0 - (1000.0-0.05)*num_updates/max_updates
-            else:
-                T = 0.05 
+            # T = 1 
+            # if num_updates < max_updates:
+            #     T = 1000.0 - (1000.0-0.05)*num_updates/max_updates
+            # else:
+            #     T = 0.05 
 
             # print("T is: " + str(T))
 
@@ -103,19 +124,25 @@ class Module:
             # else:
             #     T = 0.05
             # T = 1
-            # if Simulation.episode_iter_num/Simulation.num_episodes*100 <= Simulation.exploitation_rise_percent :
-            #     T = 1000.0 - (1000.0-0.05)*Simulation.episode_iter_num/Simulation.num_episodes
+            # if Simulation.episode_iter_num/Simulation.episode_length*100 <= Simulation.exploitation_rise_percent :
+            #     T = 1000.0 - (1000.0-0.05)*Simulation.episode_iter_num/(Simulation.episode_length*Simulation.exploitation_rise_percent)
             # else:
             #     T = 0.05
 
             
             # Calculate the weight for this action
-            action_weights[i] = np.exp(Qval/T)
-            
+            # action_weights[i] = np.exp(Qval/T)
+            # action_weights[i] = Qval/T
+
+
             # Set the weight to the max float size in case it is beyond pythons max float size
             if(action_weights[i] == float('inf')):
                 action_weights[i] = 1.7976931348623157e+308
+            if(action_weights[i] == float('-inf')):
+                action_weights[i] = -1.7976931348623157e+308
             
+
+
         # print('action_weights are')
         # print(action_weights)
         return action_weights
@@ -209,7 +236,7 @@ class CohesionModule(Module):
         #    self.instant_reward[0] = CohesionModule.rewards[-1]
 
         # continuous reward scheme
-        self.instant_reward[0] = 2 - .1*dist_squared
+        self.instant_reward[0] = 2 - .1*np.sqrt(dist_squared)
 
 
     # Visualization for this module. 
@@ -599,20 +626,19 @@ class TargetSeekModule(Module):
         # Tiered reward scheme
         #  Loop through each range to give the appropriate reward
         rewarded = False
-        # for i in range(0,len(TargetSeekModule.ranges_squared)):
-        #     if dist_squared <= TargetSeekModule.ranges_squared[i]:
-        #         self.instant_reward[0] = TargetSeekModule.rewards[i]
+        for i in range(0,len(TargetSeekModule.ranges_squared)):
+            if dist_squared <= TargetSeekModule.ranges_squared[i]:
+                self.instant_reward[0] = TargetSeekModule.rewards[i]
                 
-        #         rewarded = True    
-        #         break
+                rewarded = True    
+                break
 
         # # Not in range, apply last reward (punishment)
         if rewarded == False:
             #self.instant_reward[0] = TargetSeekModule.rewards[-1]
             #self.instant_reward[0] = -2.5*(-math.log(math.sqrt(dist_squared) + 10) + 5)
             # self.instant_reward[0] = -math.log(dist_squared + 10) + 5
-            self.instant_reward[0] = -math.log(dist_squared + 10)
-            #self.instant_reward[0] = -dist_squared*0.02+10
+            self.instant_reward[0] = -dist_squared**(0.5)/10
 
         # print("instant reward is: " + str(self.instant_reward[0]))
 

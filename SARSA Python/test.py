@@ -329,16 +329,94 @@ import time
 
 
 # load the saved data and see whats inside...
-training_filename = 'test/CohesionModule_training_data.pkl'
-with open(training_filename, 'rb') as f:
-    [module_name, table, states] = pickle.load(f)
+# training_filename = 'test/CohesionModule_training_data.pkl'
+# with open(training_filename, 'rb') as f:
+#     [module_name, table, states] = pickle.load(f)
 
-print(module_name)
-print(table)
-print(states)
+# print(module_name)
+# print(table)
+# print(states)
 
 # myDict = {}
 # myDict.update({'A':1})
 # print(myDict['A'])
 # myDict['A'] = myDict['A'] + 1
 # print(myDict['A'])
+
+
+# T = 0.05
+# table = np.array([0.4, 0.1, 0.1, 0.2, 0])
+
+# for i in range(0, len(table)):
+#     table[i] = np.exp(table[i]/T)
+
+# sum = np.sum(table)
+
+# for i in range(0, len(table)):
+#     table[i] = table[i]/sum
+
+# print(table)
+
+
+# state = np.array([1, 1])
+# state_prime = np.array([1,2])
+
+# print(np.array_equal(state,state_prime))
+T = 0.05
+
+aw1 = np.array([-5.14983891, -5.15513717, -5.12367102, -5.18197367, -5.81814747])
+aw2 = np.array([-3.50455409e-30, 0, -6.78003540e-36, 0, 0, -1.95114352e-36])
+
+
+awc = np.array([0.0, 0.0, 0.0, 0.0, 0.0])
+exp1 = np.array([0.0, 0.0, 0.0, 0.0, 0.0])
+exp2 = np.array([0.0, 0.0, 0.0, 0.0, 0.0])
+exp_sum = np.array([0.0, 0.0, 0.0, 0.0, 0.0])
+expc = np.array([0.0, 0.0, 0.0, 0.0, 0.0])
+for i in range(0,5):
+    exp1[i] = np.exp(aw1[i]/T)
+    exp2[i] = np.exp(aw2[i]/T)
+    exp_sum[i] = exp1[i] + exp2[i]
+
+    awc[i] = aw1[i] + aw2[i]
+    expc[i] = np.exp(awc[i]/T)
+
+print('without weights')
+print('exp1: ')
+print(exp1)
+print('exp2: ')
+print(exp2)
+
+print('exp_sum: ')
+print(exp_sum)
+
+print('expc: ')
+print(expc)
+
+
+weight1 = 0.2
+weight2 = 0.8
+awc = np.array([0.0, 0.0, 0.0, 0.0, 0.0])
+exp1 = np.array([0.0, 0.0, 0.0, 0.0, 0.0])
+exp2 = np.array([0.0, 0.0, 0.0, 0.0, 0.0])
+exp_sum = np.array([0.0, 0.0, 0.0, 0.0, 0.0])
+expc = np.array([0.0, 0.0, 0.0, 0.0, 0.0])
+for i in range(0,5):
+    exp1[i] = np.exp(aw1[i]/T)
+    exp2[i] = np.exp(aw2[i]/T)
+    exp_sum[i] = exp1[i]*weight1 + exp2[i]*weight2
+
+    awc[i] = aw1[i]*weight1 + aw2[i]*weight2
+    expc[i] = np.exp(awc[i]/T)
+
+print('with weights')
+print('exp1: ')
+print(exp1)
+print('exp2: ')
+print(exp2)
+
+print('exp_sum: ')
+print(exp_sum)
+
+print('expc: ')
+print(expc)

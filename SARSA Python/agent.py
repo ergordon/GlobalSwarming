@@ -72,10 +72,12 @@ class Agent:
         
     # Select the next action to preform based on a softmax of each module
     def select_next_action(self):
-
+        
+        T = 0
         action_weights = np.zeros(len(Action))
         for i in range(0,len(self.modules)):
             mod_action_weights = self.modules[i].get_action_weights()
+            T = T + self.modules[i].get_T()
 
             if (Simulation.ControllerType == 0): # Steve+Bucci Approach
                 action_weights = action_weights + Agent.module_weights[i]*mod_action_weights 
@@ -86,6 +88,8 @@ class Agent:
                     # If only using one module, just use its action weights as is
                     action_weights = mod_action_weights
                 else:
+                    #NOTE this could be a problem if there are positive and negative numbers that sum to zero
+                    #TODO figure out what to to to solve the issue (use np.exp() for always positive ???)
                     # Normalize the weights to put them all on the same order of magnitude
                     if(np.sum(mod_action_weights) != 0):
                         mod_action_weights = mod_action_weights / np.sum(mod_action_weights)
@@ -96,6 +100,12 @@ class Agent:
             else:
                 print("Level Not Yet Unlocked")
                 pass            
+
+
+        T = T/len(self.modules)
+
+        for i in range(0,len(action_weights)):
+            action_weights[i] = np.exp(action_weights[i]/T)
 
         sum_action_weights = 0        
         # Normalize the weights to create probabilities
