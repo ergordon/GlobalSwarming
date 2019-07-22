@@ -27,7 +27,7 @@ class Simulation:
     ControllerType = 0
 
 
-    agent_step_size = 1
+    #agent_step_size = 1
 
 
     getMetricPlots = False
@@ -35,28 +35,28 @@ class Simulation:
     if (Arena == 0): # Custom Terrain. Edit These Ones 
         
         num_agents = 2                 # Number of agents to simulate
-        num_episodes = 5000              # Number of times to run the training scenario
-        episode_length = 100           # Number of time steps in each training scenario [iterations]
+        num_episodes = 1 #360*10             # Number of times to run the training scenario
+        episode_length = 5           # Number of time steps in each training scenario [iterations]
         exploitation_rise_time = 0      # The amount of time over which we transition from exploration to exploitation [seconds]
-        exploitation_rise_percent = 10  # The percentage of each episode over which we transition from exploration to exploitation
+        exploitation_rise_percent = 0  # The percentage of each episode over which we transition from exploration to exploitation
 
         # Bounds to initialize the agents inside of
-        init_space = [[0,0],
-                    [0,0]]
+        init_space = [[-60,-40],
+                    [-60,-40]]
 
         # Bounds to simulate the agents within
         # Exiting these bounds will end the episode immediately
-        search_space = [[-300,300],
-                        [-300,300]]
+        search_space = [[-100,100],
+                        [-100,100]] 
 
         # Bounds to intilize the targets and obstacles within
-        arena_space = [[-120,120],
-                       [-120,120]]
+        arena_space = [[-80,80],
+                       [-80,80]]
 
-        visualize = True            # Whether to show a plot animation of the agent positions
+        visualize = True           # Whether to show a plot animation of the agent positions
         load_agents = False          # Whether to load the agents.pkl file (loads agents exactly as they upon completion of training)
-        load_training_data = True  # Whether to load the agent training data (loads q tables and states into the modules that exist in the agent initialization function)
-        take_best_action = True     # Whether to select next actions based on highest Q table entry or use Q table values as probabilities for each action 
+        load_training_data = True   # Whether to load the agent training data (loads q tables and states into the modules that exist in the agent initialization function)
+        take_best_action = True   # Whether to select next actions based on highest Q table entry or use Q table values as probabilities for each action 
 
 
         # Activate Modules
@@ -64,20 +64,20 @@ class Simulation:
         CollisionAvoidanceModule = False  # Collision module prevents the agents from hitting each other
         OutOfBoundsModule = False         # Boundary module prevents the agents from leaving the search space
         TargetSeekingModule = True       # Target module encourages agents to travel to waypoint
-        ObstacleAvoidanceModule = False  # Obstacle module prevents the agents from hitting obstacles
+        ObstacleAvoidanceModule = True  # Obstacle module prevents the agents from hitting obstacles
 
         # These are the weights for each module. they should sum to 1. 
         # If they don't, they will be scaled accordingly during initialization
         # Also, there should be a weight entry for each module
-        module_weights = [1]  # TODO: only do sanity checks against this if using Steve and Bucci controller
+        module_weights = [1, 1]  # TODO: only do sanity checks against this if using Steve and Bucci controller
 
         ## Target Parameters
-        TargetType = TargetPath.Random
+        TargetType = TargetPath.Planned
 
         # Planned Target Trajectory
         if (TargetType == TargetPath.Planned):
-            #target_array = np.array([[-40,40],[20,-10],[50,50],[40,-50]])
-            target_array = np.array([[-30,30]])
+            target_array = np.array([[-40,40],[20,-10],[50,50],[40,-50]])
+            #target_array = np.array([[20,0]])
             targets = target_array[0]
             changeTargetOnArrival = False
             #target_array = np.array([[-20,20]])
@@ -85,8 +85,8 @@ class Simulation:
 
         # Circular Target Trajectory
         elif (TargetType == TargetPath.Circle):
-            r = 30 # Target Location Circle Radius
-            n = 10   # Number of loops to complete
+            r = 25 # Target Location Circle Radius
+            n = 1#360   # Number of loops to complete
             targets = np.array([r*np.cos(0), r*np.sin(0)])
             changeTargetOnArrival = False
 
@@ -105,10 +105,16 @@ class Simulation:
         # [x, y, width, height]
         #obstacles = np.array([[-30,-40,30,50], [10, -40, 20, 50], [-40, 10, 60, 10]])
 
-        num_obstacles = 3
-        max_obstacle_size = 10
+        num_obstacles = 10
+        max_obstacle_size = 1
+        # Obstacles to Avoid
+        ## [x, y, width, height]
+        obstacles = np.array([[-10,-60,30,15], 
+                              [-45, -15, 30, 20],
+                              [45, -10, 10, 30],
+                              [-5, 25, 20, 30]])
 
-        obstacles = np.array([random.randint(arena_space[0][0], arena_space[0][1]),random.randint(arena_space[0][0], arena_space[0][1]), random.randint(1,max_obstacle_size), random.randint(1,max_obstacle_size)])
+        #obstacles = np.array([random.randint(arena_space[0][0], arena_space[0][1]),random.randint(arena_space[0][0], arena_space[0][1]), random.randint(1,max_obstacle_size), random.randint(1,max_obstacle_size)])
         for i in range(1,num_obstacles):
             temp_obstacles = np.array([random.randint(arena_space[0][0], arena_space[0][1]),random.randint(arena_space[0][0], arena_space[0][1]), random.randint(1,max_obstacle_size), random.randint(1,max_obstacle_size)])
             obstacles = np.vstack((obstacles, temp_obstacles))

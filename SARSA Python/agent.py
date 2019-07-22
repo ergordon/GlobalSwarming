@@ -54,7 +54,7 @@ class Agent:
 
     # Change the agent's position based on the action passed in
     def take_action(self,act):
-        step_size = Simulation.agent_step_size
+        step_size = 1#Simulation.agent_step_size
         if act == Action.MOVE_PLUS_X :
             self.position = self.position + [step_size,0]
         elif  act == Action.MOVE_MINUS_X :

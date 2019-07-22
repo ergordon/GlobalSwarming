@@ -62,18 +62,36 @@ class Module:
         # print('getting action weights')
         # Create a set of weights for each action
         action_weights = np.zeros(len(Action))
+        num_updates = 0
         # Sum the action tables for every tracked agent
+        # TODO think about if something like importance functions should be implemented here
         for i in range (0,len(self.Q)):
             # print('state_p is ' + str(self.state_prime[i]))
+            #TODO should i multiply by q_updates?
             action_weights = action_weights + self.Q[i].fetch_row_by_state(self.state_prime[i])
-        
+            
+            #TODO think of a better way to do this......
+            num_updates = num_updates + self.Q[i].fetch_updates_by_state(self.state_prime[i])
 
+        num_updates = num_updates / len(self.Q) #TODO would this work better as min(q_updates)?
+
+        print(action_weights)
         # print('Q table entry is ' + str(action_weights))
         # For each possible agent action
         for i in range (0,len(action_weights)):
             # Get the appropiate Q value Q table row corresponding to the current state 
             #  and the action being iterated over
             Qval = action_weights[i]
+
+            max_updates = 4
+
+            T = 1 
+            if num_updates < max_updates:
+                T = 1000.0 - (1000.0-.01)*num_updates/max_updates
+            else:
+                T = 0.01
+
+            # print("T is: " + str(T))
 
             # Exploitation vs exploration constant
             #  Big T encourages exploration
@@ -85,11 +103,11 @@ class Module:
             #     T = 1000.0 - (1000.0-0.05)*(curr_time - self.init_time)/Simulation.exploitation_rise_time
             # else:
             #     T = 0.05
-            T = 1
-            if Simulation.episode_iter_num/Simulation.num_episodes*100 <= Simulation.exploitation_rise_percent :
-                T = 1000.0 - (1000.0-0.05)*Simulation.episode_iter_num/Simulation.num_episodes
-            else:
-                T = 0.05
+            # T = 1
+            # if Simulation.episode_iter_num/Simulation.num_episodes*100 <= Simulation.exploitation_rise_percent :
+            #     T = 1000.0 - (1000.0-0.05)*Simulation.episode_iter_num/Simulation.num_episodes
+            # else:
+            #     T = 0.05
 
             
             # Calculate the weight for this action
@@ -466,13 +484,13 @@ class BoundaryModule(Module):
 class TargetSeekModule(Module):
 
     rewards = [10, -1]       # Discrete rewards for a given range
-    ranges_squared = [200]    # The discrete ranges at which the agent can collect rewards
+    ranges_squared = [100]    # The discrete ranges at which the agent can collect rewards
 
     # Class constructor
     def __init__(self,parent_agt):
         super().__init__(parent_agt)    # Inherited class initialization
         
-        self.gamma = 0.2               # Discount factor. keep in range [0,1]. can be tuned to affect Q learning
+        self.gamma = 0.99              # Discount factor. keep in range [0,1]. can be tuned to affect Q learning
         
         self.Q = np.empty((1,), dtype=object)
         self.Q[0] = Qlearning()
@@ -549,8 +567,8 @@ class TargetSeekModule(Module):
                     #print("Target Entered at "+str(Simulation.episode_iter_num)+" iterations")
                     #Simulation.target_histogram_data.append([self.targets_entered, Simulation.episode_iter_num])
 
-            Simulation.target_entries_count = 0
-            Simulation.target_agents_remaining = Simulation.num_agents
+                Simulation.target_entries_count = 0
+                Simulation.target_agents_remaining = Simulation.num_agents
         
     
     # Update the state that the agent is currently in
@@ -576,15 +594,6 @@ class TargetSeekModule(Module):
         for i in range(0,len(self.state_prime[0])):
             dist_squared = dist_squared + self.state_prime[0,i]**2
 
-        if dist_squared < 30**2:
-            Simulation.agent_step_size = 5
-        elif dist_squared < 15**2:
-            Simulation.agent_step_size = 1
-        else:
-            Simulation.agent_step_size = 10
-
-        # print('start over')
-        # print(self.state_prime)
         # print(dist_squared)
         # Tiered reward scheme
         #  Loop through each range to give the appropriate reward
@@ -598,10 +607,11 @@ class TargetSeekModule(Module):
 
         # # Not in range, apply last reward (punishment)
         if rewarded == False:
-            #self.instant_reward[0] = TargetSeekModule.rewards[-1]
+            self.instant_reward[0] = TargetSeekModule.rewards[-1]
             #self.instant_reward[0] = -2.5*(-math.log(math.sqrt(dist_squared) + 10) + 5)
             #self.instant_reward[0] = -math.log(dist_squared + 10) + 5
-            self.instant_reward[0] = -math.log(dist_squared + 10)
+            #self.instant_reward[0] = -dist_squared
+            #print(self.instant_reward[0])
             #self.instant_reward[0] = -dist_squared*0.02+10
 
         # print("instant reward is: " + str(self.instant_reward[0]))
