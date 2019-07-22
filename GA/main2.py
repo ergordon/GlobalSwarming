@@ -168,17 +168,17 @@ def mainSARSA():
     ##############################################################################
 
     # Plotting for visualization
-    if(Simulation.visualize):
-        fig, ax = plt.subplots()
-        images = []
-        frame_rate = 10
-        axis_bounds = [Simulation.search_space[0][0], Simulation.search_space[0][1], Simulation.search_space[1][0], Simulation.search_space[1][1]]
-        plt.axis(axis_bounds)
-        plt.draw()
-        plt.pause(1/frame_rate)
-        plt.clf()
-        plt.cla()
-        plt.axis('equal')
+    # if(Simulation.visualize):
+    #     fig, ax = plt.subplots()
+    #     images = []
+    #     frame_rate = 10
+    #     axis_bounds = [Simulation.search_space[0][0], Simulation.search_space[0][1], Simulation.search_space[1][0], Simulation.search_space[1][1]]
+    #     plt.axis(axis_bounds)
+    #     plt.draw()
+    #     plt.pause(1/frame_rate)
+    #     plt.clf()
+    #     plt.cla()
+    #     plt.axis('equal')
 
     #print('beginning training')
     for e in range(0,Simulation.num_episodes):
@@ -222,20 +222,20 @@ def mainSARSA():
                     Simulation.boundary_collision_count = Simulation.boundary_collision_count + 1
                     agent_out_of_bounds = True
 
-            if(Simulation.visualize):
-                plt.grid(linestyle='--', linewidth='0.5', color='grey')
-                for agnt in Simulation.agents:
-                    plt.plot(agnt.position[0],agnt.position[1],'ro')
-                    plt.axis(axis_bounds)
+            # if(Simulation.visualize):
+            #     plt.grid(linestyle='--', linewidth='0.5', color='grey')
+            #     for agnt in Simulation.agents:
+            #         plt.plot(agnt.position[0],agnt.position[1],'ro')
+            #         plt.axis(axis_bounds)
                     
-                    for mod in agnt.modules:
-                        mod.visualize()
+            #         for mod in agnt.modules:
+            #             mod.visualize()
                 
-                if (t%5 == 0):
-                    # Convert the figure into an array and append it to images array        
-                    image = np.frombuffer(fig.canvas.tostring_rgb(), dtype='uint8')
-                    image  = image.reshape(fig.canvas.get_width_height()[::-1] + (3,))
-                    images.append(image)
+            #     if (t%5 == 0):
+            #         # Convert the figure into an array and append it to images array        
+            #         image = np.frombuffer(fig.canvas.tostring_rgb(), dtype='uint8')
+            #         image  = image.reshape(fig.canvas.get_width_height()[::-1] + (3,))
+            #         images.append(image)
 
             # print('update state prime and select next action')
             for agnt in Simulation.agents:
@@ -260,7 +260,7 @@ def mainSARSA():
                     mod.update_total_reward()
                     
                     # Update the Q table
-                    mod.update_q()
+                    #mod.update_q()
 
                     # Run additional functions specific to each module
                     # For example, the collision module uses this to track collisions with other agents 
@@ -413,9 +413,9 @@ pop_size = (sol_per_pop,num_weights) # The population will have sol_per_pop chro
 
 #Creating the initial population.
 new_population = np.random.uniform(low=0, high=1e10, size=pop_size)
+new_population[0] = [0, 0, 0, 1, 0]
 
 for generation in range(num_generations):
-
     fitness = []
 
     print("\nGeneration : " + str(generation))
@@ -431,6 +431,7 @@ for generation in range(num_generations):
     for pop in range(sol_per_pop):
         Simulation.module_weights = new_population[pop]
         fitness[pop] = mainSARSA()
+        print("Individual ", pop, " Tested")
         resetInits()
 
     print("Fitness     : ", fitness)
@@ -456,7 +457,6 @@ for generation in range(num_generations):
     # Create the new population based on the parents and offspring.
     new_population[0:parents.shape[0], :] = parents
     new_population[parents.shape[0]:, :] = offspring_mutation
-    
     # Get the best solution after a complete generation. Finish for all generations.
 
 print("\nFinal Generation")

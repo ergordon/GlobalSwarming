@@ -117,7 +117,7 @@ class Simulation:
 
         num_agents = 2                # number of agents to simulate
         num_episodes = 2               # number of times to run the training scenario
-        episode_length = 1          # number of time steps in each training scenario [iterations]
+        episode_length = 500          # number of time steps in each training scenario [iterations]
         exploitation_rise_time = 0     # the amount of time over which we transition from exploration to exploitation [seconds]
         exploitation_rise_percent = 0  # the percentage of each episode over which we transition from exploration to exploitation
 
@@ -180,13 +180,17 @@ class Simulation:
         exploitation_rise_percent = 0  # the percentage of each episode over which we transition from exploration to exploitation
 
         #bounds to initialize the agents inside of
-        init_space = [[-40,-30],
-                    [-40,-30]]
+        init_space = [[-60,-40],
+                    [-60,-40]]
 
         #bounds to simulate the agents within
         #exiting these bounds will end the episode immediately
-        search_space = [[-60,60],
-                        [-60,60]]
+        search_space = [[-100,100],
+                        [-100,100]]
+
+        # Bounds to intilize the targets and obstacles within
+        arena_space = [[-80,80],
+                       [-80,80]]
 
         visualize = True            # whether to show a plot animation of the agent positions
         load_agents = True          # whether to load the agents.pkl file (loads agents exactly as they upon completion of training)
@@ -204,19 +208,20 @@ class Simulation:
         # These are the weights for each module. they should sum to 1. 
         # If they don't, they will be scaled accordingly during initialization
         # Also, there should be a weight entry for each module
-        module_weights = [0.1, 0.2, 0.1, 0.8, 0.4]
+        module_weights = [0, 0, 0, 1, 0]
 
         TargetType = TargetPath.Planned
-        targets = np.array([-40,40],[20,-10],[50,50],[40,-50])
+        target_array = np.array([[-40,40],[20,-10],[50,50],[40,-50]])
         targets = target_array[0]
+        changeTargetOnArrival = True
 
-        # Obstacles to Avoid
-        ## [x, y, width, height]
-        obstacles = np.array([random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), 1, 1])
-        for i in range(0,25):
-            temp_obstacles = np.array([random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), 1, 1])
+        num_obstacles = 25
+        max_obstacle_size = 1
+
+        obstacles = np.array([random.randint(arena_space[0][0], arena_space[0][1]),random.randint(arena_space[0][0], arena_space[0][1]), random.randint(1,max_obstacle_size), random.randint(1,max_obstacle_size)])
+        for i in range(1,num_obstacles):
+            temp_obstacles = np.array([random.randint(arena_space[0][0], arena_space[0][1]),random.randint(arena_space[0][0], arena_space[0][1]), random.randint(1,max_obstacle_size), random.randint(1,max_obstacle_size)])
             obstacles = np.vstack((obstacles, temp_obstacles))
-
 
     ##########################################
     ## STORED VARIABLES - (DO NOT EDIT)

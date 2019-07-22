@@ -27,18 +27,18 @@ class Simulation:
     ControllerType = 0
 
 
-    agent_step_size = 1
+    #agent_step_size = 1
 
 
     getMetricPlots = False
     
     if (Arena == 0): # Custom Terrain. Edit These Ones 
         
-        num_agents = 2                 # Number of agents to simulate
-        num_episodes = 5000              # Number of times to run the training scenario
-        episode_length = 100           # Number of time steps in each training scenario [iterations]
+        num_agents = 1                 # Number of agents to simulate
+        num_episodes = 1              # Number of times to run the training scenario
+        episode_length = 3000           # Number of time steps in each training scenario [iterations]
         exploitation_rise_time = 0      # The amount of time over which we transition from exploration to exploitation [seconds]
-        exploitation_rise_percent = 10  # The percentage of each episode over which we transition from exploration to exploitation
+        exploitation_rise_percent = 0  # The percentage of each episode over which we transition from exploration to exploitation
 
         # Bounds to initialize the agents inside of
         init_space = [[0,0],
@@ -46,17 +46,17 @@ class Simulation:
 
         # Bounds to simulate the agents within
         # Exiting these bounds will end the episode immediately
-        search_space = [[-300,300],
-                        [-300,300]]
+        search_space = [[-100,100],
+                        [-100,100]] 
 
         # Bounds to intilize the targets and obstacles within
-        arena_space = [[-120,120],
-                       [-120,120]]
+        arena_space = [[-20,20],
+                       [-20,20]]
 
-        visualize = True            # Whether to show a plot animation of the agent positions
+        visualize = True          # Whether to show a plot animation of the agent positions
         load_agents = False          # Whether to load the agents.pkl file (loads agents exactly as they upon completion of training)
-        load_training_data = True  # Whether to load the agent training data (loads q tables and states into the modules that exist in the agent initialization function)
-        take_best_action = True     # Whether to select next actions based on highest Q table entry or use Q table values as probabilities for each action 
+        load_training_data = True   # Whether to load the agent training data (loads q tables and states into the modules that exist in the agent initialization function)
+        take_best_action = True   # Whether to select next actions based on highest Q table entry or use Q table values as probabilities for each action 
 
 
         # Activate Modules
@@ -72,21 +72,21 @@ class Simulation:
         module_weights = [1]  # TODO: only do sanity checks against this if using Steve and Bucci controller
 
         ## Target Parameters
-        TargetType = TargetPath.Random
+        TargetType = TargetPath.Planned
 
         # Planned Target Trajectory
         if (TargetType == TargetPath.Planned):
-            #target_array = np.array([[-40,40],[20,-10],[50,50],[40,-50]])
-            target_array = np.array([[-30,30]])
+            target_array = np.array([[-40,40],[20,-10],[50,50],[40,-50]])
+            #target_array = np.array([[100,0]])
             targets = target_array[0]
-            changeTargetOnArrival = False
+            changeTargetOnArrival = True
             #target_array = np.array([[-20,20]])
             #target_array = np.array([[10,10],[-10,-10],[-10,10],[10,-10]])
 
         # Circular Target Trajectory
         elif (TargetType == TargetPath.Circle):
-            r = 30 # Target Location Circle Radius
-            n = 10   # Number of loops to complete
+            r = 50 # Target Location Circle Radius
+            n = 360   # Number of loops to complete
             targets = np.array([r*np.cos(0), r*np.sin(0)])
             changeTargetOnArrival = False
 
@@ -105,7 +105,7 @@ class Simulation:
         # [x, y, width, height]
         #obstacles = np.array([[-30,-40,30,50], [10, -40, 20, 50], [-40, 10, 60, 10]])
 
-        num_obstacles = 3
+        num_obstacles = 4
         max_obstacle_size = 10
 
         obstacles = np.array([random.randint(arena_space[0][0], arena_space[0][1]),random.randint(arena_space[0][0], arena_space[0][1]), random.randint(1,max_obstacle_size), random.randint(1,max_obstacle_size)])
@@ -115,9 +115,9 @@ class Simulation:
 
     elif (Arena == 1): # Urban Terrain
 
-        num_agents = 8                 # number of agents to simulate
-        num_episodes = 5               # number of times to run the training scenario
-        episode_length = 1000          # number of time steps in each training scenario [iterations]
+        num_agents = 2                # number of agents to simulate
+        num_episodes = 2               # number of times to run the training scenario
+        episode_length = 1          # number of time steps in each training scenario [iterations]
         exploitation_rise_time = 0     # the amount of time over which we transition from exploration to exploitation [seconds]
         exploitation_rise_percent = 0  # the percentage of each episode over which we transition from exploration to exploitation
 
@@ -130,9 +130,13 @@ class Simulation:
         search_space = [[-80,80],
                         [-80,80]]
 
-        visualize = True            # whether to show a plot animation of the agent positions
-        load_agents = True          # whether to load the agents.pkl file (loads agents exactly as they upon completion of training)
-        load_training_data = False  # whether to load the agent training data (loads q tables and states into the modules that exist in the agent initialization function)
+        # Bounds to intilize the targets and obstacles within
+        arena_space = [[-80,80],
+                       [-80,80]]
+
+        visualize = False            # whether to show a plot animation of the agent positions
+        load_agents = False         # whether to load the agents.pkl file (loads agents exactly as they upon completion of training)
+        load_training_data = True  # whether to load the agent training data (loads q tables and states into the modules that exist in the agent initialization function)
         take_best_action = True     # whether to select next actions based on highest Q table entry or use Q table values as probabilities for each action 
 
 
@@ -148,17 +152,25 @@ class Simulation:
         # Also, there should be a weight entry for each module
         module_weights = [0.1, 0.2, 0.1, 0.8, 0.4]
 
+        ## Target Parameters
         TargetType = TargetPath.Planned
-        targets = np.array([-40,40],[20,-10],[50,50],[40,-50])
-        targets = target_array[0]
+
+        # Planned Target Trajectory
+        if (TargetType == TargetPath.Planned):
+            target_array = np.array([[-40,40],[20,-10],[50,50],[40,-50]])
+            targets = target_array[0]
+            changeTargetOnArrival = True
 
         # Obstacles to Avoid
         ## [x, y, width, height]
+        num_obstacles = 10
+        max_obstacle_size = 1
+
         obstacles = np.array([[-10,-60,30,15], 
                               [-45, -15, 30, 20],
                               [45, -10, 10, 30],
                               [-5, 25, 20, 30]])
-        for i in range(0,10):
+        for i in range(0,num_obstacles):
             temp_obstacles = np.array([random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), 1, 1])
             obstacles = np.vstack((obstacles, temp_obstacles))
 
@@ -171,17 +183,21 @@ class Simulation:
         exploitation_rise_percent = 0  # the percentage of each episode over which we transition from exploration to exploitation
 
         #bounds to initialize the agents inside of
-        init_space = [[-40,-30],
-                    [-40,-30]]
+        init_space = [[-60,-40],
+                    [-60,-40]]
 
         #bounds to simulate the agents within
         #exiting these bounds will end the episode immediately
-        search_space = [[-60,60],
-                        [-60,60]]
+        search_space = [[-100,100],
+                        [-100,100]]
+
+        # Bounds to intilize the targets and obstacles within
+        arena_space = [[-80,80],
+                       [-80,80]]
 
         visualize = True            # whether to show a plot animation of the agent positions
-        load_agents = True          # whether to load the agents.pkl file (loads agents exactly as they upon completion of training)
-        load_training_data = False  # whether to load the agent training data (loads q tables and states into the modules that exist in the agent initialization function)
+        load_agents = False          # whether to load the agents.pkl file (loads agents exactly as they upon completion of training)
+        load_training_data = True  # whether to load the agent training data (loads q tables and states into the modules that exist in the agent initialization function)
         take_best_action = True     # whether to select next actions based on highest Q table entry or use Q table values as probabilities for each action 
 
 
@@ -195,19 +211,20 @@ class Simulation:
         # These are the weights for each module. they should sum to 1. 
         # If they don't, they will be scaled accordingly during initialization
         # Also, there should be a weight entry for each module
-        module_weights = [0.1, 0.2, 0.1, 0.8, 0.4]
+        module_weights = [0, 0, 0, 1, 0]
 
         TargetType = TargetPath.Planned
-        targets = np.array([-40,40],[20,-10],[50,50],[40,-50])
+        target_array = np.array([[-40,40],[20,-10],[50,50],[40,-50]])
         targets = target_array[0]
+        changeTargetOnArrival = True
 
-        # Obstacles to Avoid
-        ## [x, y, width, height]
-        obstacles = np.array([random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), 1, 1])
-        for i in range(0,25):
-            temp_obstacles = np.array([random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), 1, 1])
+        num_obstacles = 25
+        max_obstacle_size = 1
+
+        obstacles = np.array([random.randint(arena_space[0][0], arena_space[0][1]),random.randint(arena_space[0][0], arena_space[0][1]), random.randint(1,max_obstacle_size), random.randint(1,max_obstacle_size)])
+        for i in range(1,num_obstacles):
+            temp_obstacles = np.array([random.randint(arena_space[0][0], arena_space[0][1]),random.randint(arena_space[0][0], arena_space[0][1]), random.randint(1,max_obstacle_size), random.randint(1,max_obstacle_size)])
             obstacles = np.vstack((obstacles, temp_obstacles))
-
 
     ##########################################
     ## STORED VARIABLES - (DO NOT EDIT)
