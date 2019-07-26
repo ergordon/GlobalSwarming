@@ -35,7 +35,7 @@ class Qlearning:
         self.q_table[s_index, a_index]  = Q_s[a_index] + alpha*(reward + gamma*Q_s_p[a_p_index] - Q_s[a_index])
         
     # Getch the index of the row in the Q table that corresponds
-    #  to a given state. If now row exist for the state, make one
+    #  to a given state.gi If now row exist for the state, make one
     def fetch_row_index_by_state(self, state):
         index = -1
         if self.q_states.shape[0] != 0: # Check for empty matrix

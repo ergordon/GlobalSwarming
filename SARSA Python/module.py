@@ -67,6 +67,8 @@ class Module:
             # print('state_p is ' + str(self.state_prime[i]))
             action_weights = action_weights + self.Q[i].fetch_row_by_state(self.state_prime[i])
         
+        
+
 
         # print('Q table entry is ' + str(action_weights))
         # For each possible agent action

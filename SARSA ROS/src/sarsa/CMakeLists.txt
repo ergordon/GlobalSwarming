@@ -124,11 +124,11 @@ catkin_package(
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
-include_directories(
+#include_directories(
 # include
-  ${catkin_INCLUDE_DIRS}
-  ${JSONCPP_INCLUDE_DIRS}
-)
+#  ${catkin_INCLUDE_DIRS}
+#  ${JSONCPP_INCLUDE_DIRS}
+#)
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
@@ -209,7 +209,38 @@ include_directories(
 # catkin_add_nosetests(test)
 
 
-add_executable(target_seek_example src/target_seek_example.cpp)
-target_link_libraries(target_seek_example ${catkin_LIBRARIES} ${JSONCPP_LIBRARIES})
-add_dependencies(target_seek_example jsoncpp)
-#add_dependencies(target_seek_example beginner_tutorials_generate_messages_cpp)
+
+set(SARSA_DIR
+  "src"
+  "src/modules"
+  "src/mmas")
+set(SARSA_HEADER
+  "src/modules/Module.h"
+  "src/modules/TargetSeekModule.h"
+  "src/modules/BoundaryModule.h"
+  "src/QLearning.h"
+  "src/main.h"
+  "src/SARSAControlPolicy.h"
+  "src/mmas/MMAS.h"
+  "src/mmas/SpeckBucciMMAS.h")
+set(SARSA_SRC
+  "src/modules/Module.cpp"
+  "src/modules/TargetSeekModule.cpp"
+  "src/modules/BoundaryModule.cpp"
+  "src/QLearning.cpp"
+  "src/main.cpp"
+  #"src/target_seek_example.cpp"
+  "src/SARSAControlPolicy.cpp"
+  "src/mmas/MMAS.cpp"
+  "src/mmas/SpeckBucciMMAS.cpp")
+
+add_executable(${PROJECT_NAME}_node ${SARSA_SRC} ${SARSA_HEADER})
+#target_include_directories(${PROJECT_NAME}_node PRIVATE ${SARSA_DIR})
+include_directories(
+  ${catkin_INCLUDE_DIRS}
+  ${JSONCPP_INCLUDE_DIRS}
+  ${SARSA_DIR}
+)
+
+target_link_libraries(${PROJECT_NAME}_node ${catkin_LIBRARIES} ${JSONCPP_LIBRARIES})
+add_dependencies(${PROJECT_NAME}_node jsoncpp)

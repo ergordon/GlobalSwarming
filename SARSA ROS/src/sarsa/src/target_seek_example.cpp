@@ -26,7 +26,6 @@
 #include <list>
 #include <vector>
 
-// #include <json/value.h>
 #include <json/json.h>
 #include <fstream>
 
@@ -73,18 +72,14 @@ int main(int argc, char **argv)
 
 
     // target positions of desired waypoints.
-    std::vector<double> target_position = {4.0, 0.0};
+    std::vector<double> target_position = {20.0, -20.0};
     std::vector<double> target_state = {0.0, 0.0};
     std::list<std::map<std::vector<double>, std::vector<double>>> Q;
-    // std::array<double,2> target_position = {4.0, 4.0};
-    // std::array<double,2> target_state = {0.0, 0.0};
-    // std::list<std::map<std::array<double,2>, std::array<double,5>>> Q;
     
-    std::cout << "loading json from disk" << std::endl;
     
     //load the Q data
-
-    std::string file_path = "/mnt/c/ibqr_ws/src/sarsa/src/TargetSeekModule_training_data.json";
+    std::cout << "loading json from disk" << std::endl;
+    std::string file_path = "/media/kwanchangnim/LinuxDrive/GlobalSwarming/SARSA ROS/src/sarsa/src/TargetSeekModule_training_data.json";
 
     Json::Value training_json;
     Json::Reader reader;
@@ -103,7 +98,7 @@ int main(int argc, char **argv)
     buffer << json_file.rdbuf();
     std::string json_string = buffer.str();
     
-    // std::cout << json_string << std::endl;
+    //parse the json
 
     if(!reader.parse(json_string, training_json)) {
         std::cout << reader.getFormattedErrorMessages() << std::endl;
@@ -117,16 +112,6 @@ int main(int argc, char **argv)
         // } else {
             
         // } //probably dont even need to do this? can infer collapsability training_json["data"].size()
-
-
-        
-        //get my current state
-        // std::array<double,2> temp_state = {0.0, 0.0};
-        // std::array<double,5> temp_Q_row = {(double)i, (double)i, (double)i, (double)i, 0.0};
-        // temp_state[0] = round(target_position[0] - (double)i);
-        // temp_state[1] = round(target_position[1] - (double)i);
-
-        // Q_data.insert({temp_state,temp_Q_row});
 
 
 
@@ -175,9 +160,9 @@ int main(int argc, char **argv)
 
 
 
+    
+    //connect to the flight computer
     std::cout << "connecting to the FCU" << std::endl;
-
-
 
     // wait for FCU connection
     while(ros::ok() && !current_state.connected){
@@ -185,10 +170,7 @@ int main(int argc, char **argv)
         rate.sleep();
     }
 
-
-    std::cout << "just after FCU connection" << std::endl;
-
-    //TODO i'm not sure why we are doing this.
+    //NOTE i'm not sure why we are doing this.
     //send a few setpoints before starting
     for(int i = 100; ros::ok() && i > 0; --i){
         local_pos_pub.publish(pose);
@@ -203,34 +185,6 @@ int main(int argc, char **argv)
     arm_cmd.request.value = true;
 
     ros::Time last_request = ros::Time::now();
-
-
-    // // target positions of desired waypoints.
-    // std::array<double,2> target_position = {4.0, 4.0};
-    // std::array<double,2> target_state = {0.0, 0.0};
-    // std::map<std::array<double,2>, std::array<double,5>> Q_data;
-
-    // //load the Q data
-
-    // std::string file_path = "TargetSeekModule_training_data.json";
-
-    // Json::Value training_json;
-    // Json::Reader reader;
-    
-    // std::ifstream json_file(file_path, std::ifstream::binary);
-    // std::stringstream buffer;
-    // buffer << json_file.rdbuf();
-    // std::string json_string = buffer.str();
-
-    // std::cout << json_string << std::endl;
-
-    //     // if(!reader.parse(json_string, training_json)) {
-    //     //     // std::cout << reader.getFormattedErrorMessages() << std::endl;
-    //     // }else{
-    //     //     // std::cout << "json successfully pased, working with it" << std::endl;
-    //     // }
-
-
 
 
     
@@ -269,12 +223,12 @@ int main(int argc, char **argv)
             if(Q_data.count(target_state) == 1){
                 Q_row = Q_data[target_state];
 
-                std::cout << "state found, Q row is: ";
-                for (int i=0; i<5; i++){
-                    std::cout << Q_row[i];
-                    std::cout << ", ";
-                }
-                std::cout << std::endl;    
+                // std::cout << "state found, Q row is: ";
+                // for (int i=0; i<5; i++){
+                //     std::cout << Q_row[i];
+                //     std::cout << ", ";
+                // }
+                // std::cout << std::endl;    
                 // std::cout << "state found" << std::endl;    
 
 
@@ -282,7 +236,7 @@ int main(int argc, char **argv)
                 //TODO: how will we handle states that arent in the dictionary?
                 //initially, I think I will look for the state closest to what we have
                 //...how do I to that?
-                std::cout << "state not found, figure it out" << std::endl;
+                // std::cout << "state not found, figure it out" << std::endl;
 
                 Q_row = {0.0, 0.0, 0.0, 0.0, 0.0};
             }
@@ -298,7 +252,6 @@ int main(int argc, char **argv)
         }
 
 
-        // Q_row = {0.0, 0.0, 0.0, 0.0, 0.0};
 
         //chose an action
         //first get largest number
