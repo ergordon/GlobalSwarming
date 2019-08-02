@@ -23,12 +23,13 @@ class Qlearning:
         # TODO: Think about if i really want to do it this way...        
         # Get the row of the Q table corresponding to the state
         
-        if np.array_equal(state,state_prime):
-            if  action != action.STAY:
-                return
-        else:
-            if action == action.STAY:
-                return
+        # doing this messes up things like the boundary module
+        # if np.array_equal(state,state_prime):
+        #     if  action != action.STAY:
+        #         return
+        # else:
+        #     if action == action.STAY:
+        #         return
         
 
         Q_s = self.fetch_row_by_state(state)

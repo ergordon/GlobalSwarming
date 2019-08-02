@@ -77,75 +77,96 @@ class Module:
         return T
 
 
+    # # Get a set of action weights for this module to be used in conjuntion with those of other modules 
+    # #  with the purpose of selecting a single action for the agent to perform 
+    # def get_action_weights(self):
+    #     # print('getting action weights')
+    #     # Create a set of weights for each action
+    #     action_weights = np.zeros(len(Action))
+    #     # num_updates = 0
+    #     # # Sum the action tables for every tracked agent
+    #     # # TODO think about if something like importance functions should be implemented here
+    #     for i in range (0,len(self.Q)):
+    #         # print('state_p is ' + str(self.state_prime[i]))
+    #         #TODO should i multiply by q_updates?
+    #         action_weights = action_weights + self.Q[i].fetch_row_by_state(self.state_prime[i])
+            
+    #     #     #TODO think of a better way to do this......
+    #     #     num_updates = num_updates + self.Q[i].fetch_updates_by_state(self.state_prime[i])
+
+    #     # num_updates = num_updates / len(self.Q) #TODO would this work better as min(q_updates)?
+
+    #     # print('Q table entry is ' + str(action_weights))
+    #     # For each possible agent action
+    #     for i in range (0,len(action_weights)):
+    #         # Get the appropiate Q value Q table row corresponding to the current state 
+    #         #  and the action being iterated over
+    #         Qval = action_weights[i]
+
+    #         # max_updates = 50
+
+    #         # T = 1 
+    #         # if num_updates < max_updates:
+    #         #     T = 1000.0 - (1000.0-0.05)*num_updates/max_updates
+    #         # else:
+    #         #     T = 0.05 
+
+    #         # print("T is: " + str(T))
+
+    #         # Exploitation vs exploration constant
+    #         #  Big T encourages exploration
+    #         #  Small T encourages exploitation
+    #         # T = 1
+    #         # # NOTE: Linearly change T to decrease exploration and increase exploitation over time
+    #         # curr_time = time.time()
+    #         # if(curr_time - self.init_time < Simulation.exploitation_rise_time):
+    #         #     T = 1000.0 - (1000.0-0.05)*(curr_time - self.init_time)/Simulation.exploitation_rise_time
+    #         # else:
+    #         #     T = 0.05
+    #         # T = 1
+    #         # if Simulation.episode_iter_num/Simulation.episode_length*100 <= Simulation.exploitation_rise_percent :
+    #         #     T = 1000.0 - (1000.0-0.05)*Simulation.episode_iter_num/(Simulation.episode_length*Simulation.exploitation_rise_percent)
+    #         # else:
+    #         #     T = 0.05
+
+            
+    #         # Calculate the weight for this action
+    #         # action_weights[i] = np.exp(Qval/T)
+    #         # action_weights[i] = Qval/T
+
+
+    #         # Set the weight to the max float size in case it is beyond pythons max float size
+    #         if(action_weights[i] == float('inf')):
+    #             action_weights[i] = 1.7976931348623157e+308
+    #         if(action_weights[i] == float('-inf')):
+    #             action_weights[i] = -1.7976931348623157e+308
+            
+
+
+    #     # print('action_weights are')
+    #     # print(action_weights)
+    #     return action_weights
     # Get a set of action weights for this module to be used in conjuntion with those of other modules 
     #  with the purpose of selecting a single action for the agent to perform 
     def get_action_weights(self):
         # print('getting action weights')
         # Create a set of weights for each action
-        action_weights = np.zeros(len(Action))
-        # num_updates = 0
+        action_weights = np.zeros((len(self.Q),len(Action)))
+        
         # # Sum the action tables for every tracked agent
         # # TODO think about if something like importance functions should be implemented here
         for i in range (0,len(self.Q)):
-            # print('state_p is ' + str(self.state_prime[i]))
-            #TODO should i multiply by q_updates?
-            action_weights = action_weights + self.Q[i].fetch_row_by_state(self.state_prime[i])
-            
-        #     #TODO think of a better way to do this......
-        #     num_updates = num_updates + self.Q[i].fetch_updates_by_state(self.state_prime[i])
+            action_weights[i] = self.Q[i].fetch_row_by_state(self.state_prime[i])
+            for j in range(0,len(action_weights[i])):
+                if(action_weights[i,j] == float('inf')):
+                    action_weights[i,j] = 1.7976931348623157e+308
+                if(action_weights[i,j] == float('-inf')):
+                    action_weights[i,j] = -1.7976931348623157e+308
 
-        # num_updates = num_updates / len(self.Q) #TODO would this work better as min(q_updates)?
-
-        # print('Q table entry is ' + str(action_weights))
-        # For each possible agent action
-        for i in range (0,len(action_weights)):
-            # Get the appropiate Q value Q table row corresponding to the current state 
-            #  and the action being iterated over
-            Qval = action_weights[i]
-
-            # max_updates = 50
-
-            # T = 1 
-            # if num_updates < max_updates:
-            #     T = 1000.0 - (1000.0-0.05)*num_updates/max_updates
-            # else:
-            #     T = 0.05 
-
-            # print("T is: " + str(T))
-
-            # Exploitation vs exploration constant
-            #  Big T encourages exploration
-            #  Small T encourages exploitation
-            # T = 1
-            # # NOTE: Linearly change T to decrease exploration and increase exploitation over time
-            # curr_time = time.time()
-            # if(curr_time - self.init_time < Simulation.exploitation_rise_time):
-            #     T = 1000.0 - (1000.0-0.05)*(curr_time - self.init_time)/Simulation.exploitation_rise_time
-            # else:
-            #     T = 0.05
-            # T = 1
-            # if Simulation.episode_iter_num/Simulation.episode_length*100 <= Simulation.exploitation_rise_percent :
-            #     T = 1000.0 - (1000.0-0.05)*Simulation.episode_iter_num/(Simulation.episode_length*Simulation.exploitation_rise_percent)
-            # else:
-            #     T = 0.05
-
-            
-            # Calculate the weight for this action
-            # action_weights[i] = np.exp(Qval/T)
-            # action_weights[i] = Qval/T
-
-
-            # Set the weight to the max float size in case it is beyond pythons max float size
-            if(action_weights[i] == float('inf')):
-                action_weights[i] = 1.7976931348623157e+308
-            if(action_weights[i] == float('-inf')):
-                action_weights[i] = -1.7976931348623157e+308
-            
-
-
-        # print('action_weights are')
-        # print(action_weights)
         return action_weights
+
+
+
 
 
     # Update the Q table for this module
@@ -258,20 +279,38 @@ class CohesionModule(Module):
         ax.set_aspect('equal')
         ax.add_artist(circle)
 
-    def get_module_weight(self):
+    # def get_module_weights(self):
+        
+    #     # First find the squared distance from the centroid
+    #     dist_squared = 0
+    #     for i in range(0,len(self.state_prime[0])):
+    #         dist_squared = dist_squared + self.state_prime[0,i]**2
+
+    #     # Now pass into a weighting function
+    #     # return -2/(1+np.exp(dist_squared/120)) + 1
+
+    #     if dist_squared >= CohesionModule.ranges_squared[0]:
+    #         return 1
+    #     else:
+    #         return 0
+
+
+    def get_module_weights(self):
+        
+        module_weights = np.zeros((1,len(self.Q)))
         
         # First find the squared distance from the centroid
         dist_squared = 0
-        for i in range(0,len(self.state_prime[0])):
-            dist_squared = dist_squared + self.state_prime[0,i]**2
-
-        # Now pass into a weighting function
-        # return -2/(1+np.exp(dist_squared/120)) + 1
+        for j in range(0,len(self.state_prime[0])):
+            dist_squared = dist_squared + self.state_prime[0,j]**2
 
         if dist_squared >= CohesionModule.ranges_squared[0]:
-            return 1
+            module_weights[0] = 1
         else:
-            return 0
+            module_weights[0] = 0
+
+        return module_weights
+
 
 ##############################################################################
 #   Begin Collision Module Class
@@ -380,32 +419,51 @@ class CollisionModule(Module):
             # # the function is always negative but is asymtotic to 0 as dist_squared approaches infinity
             # self.instant_reward[i] = 10.0*(dist_squared/(10.0+dist_squared)-1.0)
 
-    def get_module_weight(self):
+    # def get_module_weights(self):
         
-        min_dist_squared = 1.7976931348623157e+308
+    #     min_dist_squared = 1.7976931348623157e+308
 
-        # Iterate over each state, finding the shortest distance squared
-        for i in range (0,len(self.tracked_agents)):
+    #     # Iterate over each state, finding the shortest distance squared
+    #     for i in range (0,len(self.tracked_agents)):
+    #         dist_squared = 0
+    #         for j in range(0,len(self.state_prime[i])):
+    #             dist_squared = dist_squared + self.state_prime[i,j]**2
+
+    #         # print(dist_squared)
+
+    #         if dist_squared < min_dist_squared:
+    #             min_dist_squared = dist_squared
+
+    #     #TODO consider adding some padding. maybe the agent step size?
+    #     if min_dist_squared <= CollisionModule.ranges_squared[-1]:
+    #         return 1
+    #     else:
+    #          return 0
+        
+    #     # #now pass into a weighting function
+    #     # if min_dist_squared == 0:
+    #     #     return 1
+    #     # else:
+    #     #     return -1*(min_dist_squared/(1+min_dist_squared)-1)
+
+
+    def get_module_weights(self):
+        
+        module_weights = np.zeros((len(self.Q),1))
+        
+        for i in range (0,len(self.Q)):
+            # First find the squared distance from the centroid
             dist_squared = 0
-            for j in range(0,len(self.state_prime[i])):
+            for j in range(0,len(self.state_prime[0])):
                 dist_squared = dist_squared + self.state_prime[i,j]**2
 
-            # print(dist_squared)
 
-            if dist_squared < min_dist_squared:
-                min_dist_squared = dist_squared
-
-        #TODO consider adding some padding. maybe the agent step size?
-        if min_dist_squared <= CollisionModule.ranges_squared[-1]:
-            return 1
-        else:
-             return 0
-        
-        # #now pass into a weighting function
-        # if min_dist_squared == 0:
-        #     return 1
-        # else:
-        #     return -1*(min_dist_squared/(1+min_dist_squared)-1)
+            if dist_squared <= CollisionModule.ranges_squared[-1]*1.1:
+                module_weights[i] = 1
+            else:
+                module_weights[i] = 0
+                
+        return module_weights
 
     def reset_init(self,e):
         pass
@@ -422,7 +480,9 @@ class BoundaryModule(Module):
     def __init__(self,parent_agt):
         super().__init__(parent_agt) # Inherited class initialization
         
-        self.gamma = 0                     # Discount factor. keep in range [0,1]. can be tuned to affect Q learning
+        #gamma should be greater than zero when using discrete rewards or else the
+        #agent will not know how to get away from the boundry once it is too close to it.
+        self.gamma = 0.1                     # Discount factor. keep in range [0,1]. can be tuned to affect Q learning
         self.collision_count = 0           # Number of times this module has recorded a collision (with another agent) for this agent
     
         self.Q = np.empty((len(Simulation.search_space)*2,), dtype=object)
@@ -468,21 +528,40 @@ class BoundaryModule(Module):
             self.state_prime[i*2] = np.round(Simulation.search_space[i][1] - self.parent_agent.position[i]) 
             self.state_prime[i*2+1] = np.round(Simulation.search_space[i][0] - self.parent_agent.position[i])  
 
-    # Each module 
-    def get_module_weight(self):
+    # # Each module 
+    # def get_module_weights(self):
         
-        min_dist = 1.7976931348623157e+308
+    #     min_dist = 1.7976931348623157e+308
 
-        for i in range(0,len(Simulation.search_space)):  
-            if np.abs(self.state_prime[i*2]) < min_dist:
-                min_dist = np.abs(self.state_prime[i*2])
-            if np.abs(self.state_prime[i*2+1]) < min_dist:
-                min_dist = np.abs(self.state_prime[i*2+1])
+    #     for i in range(0,len(Simulation.search_space)):  
+    #         if np.abs(self.state_prime[i*2]) < min_dist:
+    #             min_dist = np.abs(self.state_prime[i*2])
+    #         if np.abs(self.state_prime[i*2+1]) < min_dist:
+    #             min_dist = np.abs(self.state_prime[i*2+1])
 
-        if min_dist <= BoundaryModule.ranges[-1]:
-            return 1
-        else:
-            return 0
+    #     if min_dist <= BoundaryModule.ranges[-1]:
+    #         return 1
+    #     else:
+    #         return 0
+
+
+    def get_module_weights(self):
+        
+        module_weights = np.zeros((len(self.Q),1))
+
+        for i in range(0,len(Simulation.search_space)):    
+            if(self.state_prime[i*2] < BoundaryModule.ranges[-1]*1.1):
+                module_weights[i*2] = 1
+            else:
+                module_weights[i*2] = 0
+
+            if(self.state_prime[i*2+1] > -BoundaryModule.ranges[-1]*1.1):
+                module_weights[i*2+1] = 1
+            else:
+                module_weights[i*2+1] = 0
+
+        return module_weights
+
 
     # Determine the reward for executing the action (not prime) in the state (not prime)
     #  Action (not prime) brings agent from state (not prime) to state_prime, and reward is calulated based on state_prime
@@ -642,20 +721,35 @@ class TargetSeekModule(Module):
 
         # print("instant reward is: " + str(self.instant_reward[0]))
 
-    def get_module_weight(self):
+    # def get_module_weights(self):
         
+    #     dist_squared = 0
+    #     for i in range(0,len(self.state_prime[0])):
+    #         dist_squared = dist_squared + self.state_prime[0,i]**2
+
+    #     if dist_squared < TargetSeekModule.ranges_squared[-1]:
+    #         return 0
+    #     else:
+    #         return 0.25
+        
+    #     # #now pass into a weighting function
+    #     # return -2/(1+np.exp(dist_squared/4)) + 1
+
+
+    def get_module_weights(self):
+        
+        module_weights = np.zeros((1,len(self.Q)))
+    
         dist_squared = 0
         for i in range(0,len(self.state_prime[0])):
             dist_squared = dist_squared + self.state_prime[0,i]**2
 
-        if dist_squared < TargetSeekModule.ranges_squared[-1]:
-            return 0
+        if dist_squared < TargetSeekModule.ranges_squared[-1]*0.9:
+            module_weights[0] = 0
         else:
-            return 0.25
-        
-        # #now pass into a weighting function
-        # return -2/(1+np.exp(dist_squared/4)) + 1
+            module_weights[0] = 0.25
 
+        return module_weights
 
 
     # Reset the initialized variables at the end of an episode.
@@ -692,7 +786,7 @@ class ObstacleAvoidanceModule(Module):
         self.instant_reward = np.zeros(len(Simulation.obstacles))
 
     # Visualization for this module. 
-    #  Draw a transparent circle for each tracked agent for each reward range 
+    # Draw a transparent circle for each tracked agent for each reward range 
     def visualize(self):
         super().visualize() # Inherited class function
         
@@ -839,7 +933,32 @@ class ObstacleAvoidanceModule(Module):
             else:
                 self.instant_reward[i] = ObstacleAvoidanceModule.rewards[-1]
 
-    def get_module_weight(self):
+    # def get_module_weights(self):
+
+    #     #find if within the largest range of any obstacle
+    #     in_range = False
+    #     for i in range(0,len(Simulation.obstacles)):
+    #         obs_x = Simulation.obstacles[i][0]
+    #         obs_y = Simulation.obstacles[i][1]
+    #         agnt_x = self.parent_agent.position[0]
+    #         agnt_y = self.parent_agent.position[1]
+    #         width = Simulation.obstacles[i][2]
+    #         height = Simulation.obstacles[i][3]
+
+    #         padding = ObstacleAvoidanceModule.ranges[-1]
+
+    #         if (obs_x - padding <= agnt_x and agnt_x <= obs_x + width + padding and
+    #             obs_y - padding <= agnt_y and agnt_y <= obs_y + height + padding):
+    #             in_range = True
+
+    #     if in_range:
+    #         return 1
+    #     else:
+    #         return 0
+
+    def get_module_weights(self):
+
+        module_weights = np.zeros((len(self.Q),1))
 
         #find if within the largest range of any obstacle
         in_range = False
@@ -851,13 +970,12 @@ class ObstacleAvoidanceModule(Module):
             width = Simulation.obstacles[i][2]
             height = Simulation.obstacles[i][3]
 
-            padding = ObstacleAvoidanceModule.ranges[-1]
+            padding = ObstacleAvoidanceModule.ranges[-1]*1.1
 
             if (obs_x - padding <= agnt_x and agnt_x <= obs_x + width + padding and
                 obs_y - padding <= agnt_y and agnt_y <= obs_y + height + padding):
-                in_range = True
+                module_weights[i] = 1
+            else:
+                module_weights[i] = 0
 
-        if in_range:
-            return 1
-        else:
-            return 0
+        return module_weights

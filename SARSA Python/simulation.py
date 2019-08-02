@@ -25,13 +25,13 @@ class Simulation:
     # 0 = Steve and Bucci
     # 1 = Importance Function
     # 2 = NeuralNetwork
-    ControllerType = 0
+    ControllerType = 1
 
     getMetricPlots = False
     
     if (Arena == 0): # Custom Terrain. Edit These Ones 
         
-        num_agents = 20                 # Number of agents to simulate
+        num_agents = 5                 # Number of agents to simulate
         num_episodes = 2             # Number of times to run the training scenario
         episode_length = 100          # Number of time steps in each training scenario [iterations]
         exploitation_rise_time = 0      # The amount of time over which we transition from exploration to exploitation [seconds]
@@ -43,8 +43,8 @@ class Simulation:
 
         # Bounds to simulate the agents within
         # Exiting these bounds will end the episode immediately
-        search_space = [[-200,200],
-                        [-200,200]] 
+        search_space = [[-30,30],
+                        [-30,30]] 
 
         # Bounds to intilize the targets and obstacles within
         arena_space = [[-30,30],
@@ -57,16 +57,19 @@ class Simulation:
 
 
         # Activate Modules
-        CohesionModule = True            # Cohesion module makes the agents stay together as a swarm
-        CollisionAvoidanceModule = False  # Collision module prevents the agents from hitting each other
-        OutOfBoundsModule = False         # Boundary module prevents the agents from leaving the search space
-        TargetSeekingModule = False       # Target module encourages agents to travel to waypoint
-        ObstacleAvoidanceModule = False  # Obstacle module prevents the agents from hitting obstacles
+        CohesionModule = False            # Cohesion module makes the agents stay together as a swarm
+        CollisionAvoidanceModule = True  # Collision module prevents the agents from hitting each other
+        OutOfBoundsModule = True         # Boundary module prevents the agents from leaving the search space
+        TargetSeekingModule = True       # Target module encourages agents to travel to waypoint
+        ObstacleAvoidanceModule = True  # Obstacle module prevents the agents from hitting obstacles
 
         # These are the weights for each module. they should sum to 1. 
         # If they don't, they will be scaled accordingly during initialization
         # Also, there should be a weight entry for each module
-        module_weights = [1]  # TODO: only do sanity checks against this if using Steve and Bucci controller
+        module_weights = [1,1,1,1]  # TODO: only do sanity checks against this if using Steve and Bucci controller
+        
+        #TODO work this out, its kinda a quick hack at the moment
+        module_priorities = [1,0,0,1]
 
         ## Target Parameters
         TargetType = TargetPath.Random
@@ -102,7 +105,7 @@ class Simulation:
         # [x, y, width, height]
         #obstacles = np.array([[-30,-40,30,50], [10, -40, 20, 50], [-40, 10, 60, 10]])
 
-        num_obstacles = 20
+        num_obstacles = 4
         max_obstacle_size = 10
 
         obstacles = np.array([random.randint(arena_space[0][0], arena_space[0][1]),random.randint(arena_space[0][0], arena_space[0][1]), random.randint(1,max_obstacle_size), random.randint(1,max_obstacle_size)])

@@ -72,48 +72,62 @@ class Agent:
         
     # Select the next action to preform based on a softmax of each module
     def select_next_action(self):
-        
+        # print('selecting next action')
         T = 0
         action_weights = np.zeros(len(Action))
+        
         for i in range(0,len(self.modules)):
             mod_action_weights = self.modules[i].get_action_weights()
+            # print('mod action weights')
+            # print(mod_action_weights)
             T = T + self.modules[i].get_T()
 
             if (Simulation.ControllerType == 0): # Steve+Bucci Approach
-                action_weights = action_weights + Agent.module_weights[i]*mod_action_weights 
+                action_weights = action_weights + Agent.module_weights[i]*mod_action_weights[0] 
 
             elif (Simulation.ControllerType == 1): # Importance Function Approach
                 
-                if(len(self.modules) == 1):
+                if(len(self.modules) == 1 and len(self.modules[0].Q) == 1):
                     # If only using one module, just use its action weights as is
                     action_weights = mod_action_weights
                 else:
-                    #NOTE this could be a problem if there are positive and negative numbers that sum to zero
-                    #TODO figure out what to to to solve the issue (use np.exp() for always positive ???)
-                    # Normalize the weights to put them all on the same order of magnitude
-                    if(np.sum(mod_action_weights) != 0):
-                        mod_action_weights = mod_action_weights / np.sum(mod_action_weights)
-                    else:
-                        mod_action_weights = np.ones(len(Action))/len(Action)
+                    mod_weights = self.modules[i].get_module_weights()
+                    # print('mod weights')
+                    # print(mod_weights)
+                    for j in range(0,len(mod_action_weights)):  
+                        # Normalize the weights to put them all on the same order of magnitude
+                        asum = np.sum(np.absolute(mod_action_weights[j])) #TODO fix infinity again
+                        #TODO divide by the sum of the absolute values? 
+                        if(asum != 0):
+                            mod_action_weights[j] = mod_action_weights[j] / asum
+                        # else: #NOTE may or may not want this else statement
+                                #should a row of zeros have any contribution????
+                        #     # print('... action weight sum is zero')
+                        #     # print(mod_action_weights[j])
+                        #     mod_action_weights[j] = np.ones(len(Action))/len(Action)
                     
-                    action_weights = action_weights + self.modules[i].get_module_weight()*mod_action_weights
+                        #NOTE *(1+module_priorities) is a quick hack
+                        action_weights = action_weights + mod_weights[j]*mod_action_weights[j]*(1+Simulation.module_priorities[i])
             else:
                 print("Level Not Yet Unlocked")
                 pass            
 
 
+        # print('combined action weights are')
+        # print(action_weights)
+
         T = T/len(self.modules)
+
+    
 
         for i in range(0,len(action_weights)):
             action_weights[i] = np.exp(action_weights[i]/T)
 
-        sum_action_weights = 0        
+        sum_action_weights = np.sum(action_weights)        
         # Normalize the weights to create probabilities
-        if(np.sum(action_weights) == float('inf')):
+        if(sum_action_weights == float('inf')):
             sum_action_weights = 1.7976931348623157e+308
-        else:
-            sum_action_weights = np.sum(action_weights)
-
+        
         #TODO remember that double norm might be needed for 'inf' case.... investigate!
         if sum_action_weights == 0:
             action_weights = np.ones(len(Action))/len(Action)
@@ -125,10 +139,8 @@ class Agent:
         # else:
         #     action_weights = action_weights / sum_action_weights
 
-        # Use a discrete random variable distribution to select the next action
-        # x=list(map(int,Action))
-        # px=action_weights
-        # sample=rv_discrete(values=(x,px)).rvs(size=1)
+        # print('action weights after T and norm')
+        # print(action_weights)
 
         # Set state_prime to be the selected next action
         if(Simulation.take_best_action):
