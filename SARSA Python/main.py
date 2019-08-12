@@ -353,6 +353,7 @@ def mainSARSA(simName,desc,trainingPath):
 
             if(Simulation.visualize):
                 plt.grid(linestyle='--', linewidth='0.5', color='grey')
+                plt.text(Simulation.search_space[0][0], Simulation.search_space[1][1]+1, ('Episode '+str(e)+' Iteration '+str(t)), dict(size=8))
                 for agnt in Simulation.agents:
                     plt.plot(agnt.position[0],agnt.position[1],'ro')
                     plt.axis(axis_bounds)
