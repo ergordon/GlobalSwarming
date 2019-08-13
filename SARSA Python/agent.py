@@ -88,13 +88,20 @@ class Agent:
             T = T + self.modules[i].get_T()
 
             if (Simulation.ControllerType == Controller.GreatestMass or Simulation.ControllerType == Controller.GenAlg): # Steve+Bucci Approach
-                action_weights = action_weights + self.module_weights[i]*mod_action_weights[0] 
+                
+                if(len(self.modules) == 1 and len(self.modules[0].Q) == 1):
+                    # If only using one module with one q table, just use its action weights as is
+                    action_weights = mod_action_weights[0]
+                else:
+                    for j in range(0,len(mod_action_weights)):
+                        action_weights = action_weights + self.module_weights[i]*mod_action_weights[j]
+                    action_weights = action_weights/len(mod_action_weights)
 
             elif (Simulation.ControllerType == Controller.Importance): # Importance Function Approach
                 
                 if(len(self.modules) == 1 and len(self.modules[0].Q) == 1):
-                    # If only using one module, just use its action weights as is
-                    action_weights = mod_action_weights
+                    # If only using one module with one q table, just use its action weights as is
+                    action_weights = mod_action_weights[0]
                 else:
                     mod_weights = self.modules[i].get_module_weights()
                     # print('mod weights')
