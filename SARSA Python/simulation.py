@@ -26,7 +26,7 @@ class Controller(enum.Enum):
 class Simulation:
 
     ## Define Which Test Arena Being Used
-    Arena = Arena.playground
+    Arena = Arena.Playground
 
     ## Multi-Module Action Selector (MMAS) to be activated.
     ControllerType = Controller.GreatestMass
