@@ -127,6 +127,19 @@ class Agent:
 
         # print('combined action weights are')
         # print(action_weights)
+        
+        aw_min = min(action_weights)
+        aw_max = max(action_weights)
+        if(aw_min == aw_max):
+            action_weights = np.zeros(len(Action))
+        else:
+            for i in range(0,len(action_weights)):   
+                action_weights[i] = (action_weights[i]-aw_min)/(aw_max-aw_min)
+
+        # print('pre T action weights are')
+        # print(action_weights)
+            
+    
 
         T = T/len(self.modules)
 

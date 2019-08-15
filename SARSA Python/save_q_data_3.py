@@ -37,6 +37,8 @@ updates = [] #list of combined q updates
 
 num_agents = len(agents)
 
+max_updates = 50 #assuming that the agent is fully trained for a given state after updating it this many times
+
 #iterate over each module, combining the q tables and q states form each agent
 #into a single q table and q states array
 for i in range(0,len(agents[0].modules)):
@@ -56,30 +58,22 @@ for i in range(0,len(agents[0].modules)):
                 Q = agents[a].modules[i].Q[q]
 
                 for working_state, working_q_row in Q.q_data.items():
-                    working_updates = Q.q_updates[working_state]
-                    # if(updates == float('inf')):
-                    #     updates = 1.7976931348623157e+308
-
-                    if a == 0 and q == 0:
-                        #TODO just assign whole dictionary form source instead
+                    working_updates = min(Q.q_updates[working_state],max_updates)
+                    
+                    if working_state in q_data_dict:
+                        q_data_dict[working_state] = q_data_dict[working_state] + working_q_row*working_updates
+                        #it'd be nice to increment/decrement the updates count based on the relative sizes
+                        q_updates_dict[working_state] = max(q_updates_dict[working_state],working_updates) #TODO consider other ways of doing this
+                        q_updates_sum[working_state] = q_updates_sum[working_state] + working_updates 
+                    else:
                         q_data_dict.update({working_state:working_q_row*working_updates})
                         q_updates_dict.update({working_state:working_updates})
                         q_updates_sum.update({working_state:working_updates})
-                    else:
-                        if working_state in q_data_dict:
-                            q_data_dict[working_state] = q_data_dict[working_state] + working_q_row*working_updates
-                            q_updates_dict[working_state] = max(q_updates_dict[working_state],working_updates) #TODO consider other ways of doing this
-                            q_updates_sum[working_state] = q_updates_sum[working_state] + working_updates 
-                        else:
-                            q_data_dict.update({working_state:working_q_row*working_updates})
-                            q_updates_dict.update({working_state:working_updates})
-                            q_updates_sum.update({working_state:working_updates})
         
         #average the q rows based on the number of times they were updated
         for working_state in q_data_dict:
             if q_updates_sum[working_state] != 0:
                 q_data_dict[working_state] = q_data_dict[working_state]/q_updates_sum[working_state]
-            
             
         q_data[0] = q_data_dict
         q_updates[0] = q_updates_dict
@@ -99,8 +93,8 @@ for i in range(0,len(agents[0].modules)):
             #handle 1st agent
             Q = agents[0].modules[i].Q[q]
             # for j in range(0, Q.q_states.shape[0]):
-            for working_state, working_q_row in Q.q_data.items():    
-                working_updates = Q.q_updates[working_state]
+            for working_state, working_q_row in Q.q_data.items():
+                working_updates = min(Q.q_updates[working_state],max_updates)
                 q_data_dict.update({working_state:working_q_row*working_updates})
                 q_updates_dict.update({working_state:working_updates})
                 q_updates_sum.update({working_state:working_updates})
@@ -109,10 +103,10 @@ for i in range(0,len(agents[0].modules)):
             #then handle the rest
             for agnt in agents[1:]:
                 Q = agnt.modules[i].Q[q]
-                # print(Q.q_table)
+                
                 for working_state, working_q_row in Q.q_data.items():
                     
-                    working_updates = Q.q_updates[working_state]
+                    working_updates = min(Q.q_updates[working_state],max_updates)
 
                     if working_state in q_data_dict:
                         q_data_dict[working_state] = q_data_dict[working_state] + working_q_row*working_updates

@@ -265,7 +265,7 @@ def mainSARSA(simName,desc,trainingPath):
         if Simulation.load_training_data:
             for i in range(0,len(Simulation.agents[0].modules)):
                 training_filename = trainingPath +'/'+ Simulation.agents[0].modules[i].__class__.__name__ + '_training_data.pkl'
-                
+
                 if os.path.isfile(training_filename):
                     if (Simulation.ControllerType != Controller.GenAlg):
                         print("Q learning data found, loading it now")  
@@ -276,7 +276,7 @@ def mainSARSA(simName,desc,trainingPath):
                     if Simulation.agents[0].modules[i].collapsable_Q:
                         for agnt in Simulation.agents:
                             for Q in agnt.modules[i].Q:
-                                Q.q_data = cp.copy(data[0])
+                                Q.q_data = cp.copy(data[0]) #check here!
                                 Q.q_updates = cp.copy(updates[0])
                     else:
                         for agnt in Simulation.agents:

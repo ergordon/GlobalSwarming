@@ -66,13 +66,13 @@ class Module:
 
         num_updates = num_updates / len(self.Q) #TODO would this work better as min(q_updates)?
 
-        max_updates = 5
+        max_updates = 10
 
         T = 1 
         if num_updates < max_updates:
-            T = 1000.0 - (1000.0-0.05)*num_updates/max_updates
+            T = 100.0 - (100.0-0.5)*num_updates/max_updates
         else:
-            T = 0.005
+            T = 0.5
 
         return T
 
@@ -83,7 +83,7 @@ class Module:
         # Create a set of weights for each action
         action_weights = np.zeros((len(self.Q),len(Action)))
         
-        # # Sum the action tables for every tracked agent
+        # # get the action tables for every tracked agent
         # # TODO think about if something like importance functions should be implemented here
         for i in range (0,len(self.Q)):
             action_weights[i] = self.Q[i].fetch_row_by_state(self.state_prime[i])
@@ -126,7 +126,7 @@ class CohesionModule(Module):
     def __init__(self,parent_agt):
         super().__init__(parent_agt) #Inherited class initialization
         
-        self.gamma = 0.01                      # Discount factor. keep in range [0,1]. can be tuned to affect Q learning
+        self.gamma = 0.0                      # Discount factor. keep in range [0,1]. can be tuned to affect Q learning
         self.Q = np.empty((1,), dtype=object)
         self.Q[0] = Qlearning()
         self.collapsable_Q = True              # Whether or now the Q table array can be collapsed/combined into a single Q table
@@ -194,7 +194,7 @@ class CohesionModule(Module):
            self.instant_reward[0] = CohesionModule.rewards[-1]
 
         # continuous reward scheme
-        #self.instant_reward[0] = 2 - .1*np.sqrt(dist_squared)
+        self.instant_reward[0] = 2 - np.sqrt(dist_squared)
 
 
     # Visualization for this module. 
@@ -337,17 +337,22 @@ class CollisionModule(Module):
 
             # Tiered reward scheme
             # Loop through each range to give the appropriate reward
-            rewarded = False
-            for k in range(0,len(CollisionModule.ranges_squared)):
-                if dist_squared <= CollisionModule.ranges_squared[k]:
-                    self.instant_reward[i] = CollisionModule.rewards[k]
-                    rewarded = True    
-                    break
+            # rewarded = False
+            # for k in range(0,len(CollisionModule.ranges_squared)):
+            #     if dist_squared <= CollisionModule.ranges_squared[k]:
+            #         self.instant_reward[i] = CollisionModule.rewards[k]
+            #         rewarded = True    
+            #         break
             
-            # Not in range, apply last reward (punishment)
-            if rewarded == False:
-                self.instant_reward[i] = CollisionModule.rewards[-1]
+            # # Not in range, apply last reward (punishment)
+            # if rewarded == False:
+            #     self.instant_reward[i] = CollisionModule.rewards[-1]
 
+
+            if dist_squared <= CollisionModule.ranges_squared[-1]:
+                self.instant_reward[i] = (np.sqrt(dist_squared) - 0.75)**2 - 169.0/16.0
+            else:
+                self.instant_reward[i] = CollisionModule.rewards[-1]
 
             # # continuous reward scheme that offeres severe punishements for being very close to other agents
             # # the function is always negative but is asymtotic to 0 as dist_squared approaches infinity
@@ -386,7 +391,7 @@ class BoundaryModule(Module):
     def __init__(self,parent_agt):
         super().__init__(parent_agt) # Inherited class initialization
         
-        self.gamma = 0.1                     # Discount factor. keep in range [0,1]. can be tuned to affect Q learning
+        self.gamma = 0.2                     # Discount factor. keep in range [0,1]. can be tuned to affect Q learning
         self.collision_count = 0           # Number of times this module has recorded a collision (with another agent) for this agent
     
         self.Q = np.empty((len(Simulation.search_space)*2,), dtype=object)
@@ -469,7 +474,7 @@ class BoundaryModule(Module):
 class TargetSeekModule(Module):
 
     rewards = [10, -1]       # Discrete rewards for a given range
-    ranges_squared = [25]    # The discrete ranges at which the agent can collect rewards
+    ranges_squared = [100]    # The discrete ranges at which the agent can collect rewards
 
     targets_entered = 0
 
@@ -477,7 +482,7 @@ class TargetSeekModule(Module):
     def __init__(self,parent_agt):
         super().__init__(parent_agt)    # Inherited class initialization
         
-        self.gamma = 0.99               # Discount factor. keep in range [0,1]. can be tuned to affect Q learning
+        self.gamma = 0.00               # Discount factor. keep in range [0,1]. can be tuned to affect Q learning
         # Gamma = 0.2 for continuos. 0.99 for tiered only
         self.Q = np.empty((1,), dtype=object)
         self.Q[0] = Qlearning()
@@ -596,15 +601,19 @@ class TargetSeekModule(Module):
 
         # # Not in range, apply last reward (punishment)
         if rewarded == False:
-            self.instant_reward[0] = TargetSeekModule.rewards[-1]
+            # self.instant_reward[0] = TargetSeekModule.rewards[-1]
             #self.instant_reward[0] = -2.5*(-math.log(math.sqrt(dist_squared) + 10) + 5)
             #self.instant_reward[0] = -math.log(dist_squared + 10) + 5
             #self.instant_reward[0] = -dist_squared
             #print(self.instant_reward[0])
             #self.instant_reward[0] = -dist_squared*0.02+10
             #self.instant_reward[0] = -dist_squared**(0.5)/10
+            self.instant_reward[0] = -2.0/39.0*np.sqrt(dist_squared) + 410.0/39.0
 
-        # print("instant reward is: " + str(self.instant_reward[0]))
+        # self.instant_reward[0] = -2.0/39.0*np.sqrt(dist_squared) + 410.0/39.0
+        # self.instant_reward[0] = -0.5*np.sqrt(dist_squared)
+
+        # print('reward: ', self.instant_reward[0])
 
     def get_module_weights(self):
         
