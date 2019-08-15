@@ -647,21 +647,23 @@ class ObstacleAvoidanceModule(Module):
     #  the last entry is the reward (punishment) for being out of range
     rewards = [-100,-10,0] 
     # The discrete ranges at which the agent can collect rewards
-    ranges = [1,2]
+    ranges = [2,4]
 
     # Class constructor
     def __init__(self,parent_agt):
         super().__init__(parent_agt) # Inherited class initialization
         
-        self.gamma = 0.1             # Discount factor. keep in range [0,1]. can be tuned to affect Q learning
+        self.gamma = 0.6             # Discount factor. keep in range [0,1]. can be tuned to affect Q learning
         self.collapsable_Q = True    # Whether or not the Q table array can be collapsed/combined into a single Q table
 
         self.Q = np.empty((len(Simulation.obstacles),), dtype=object)
         for i in range(0,len(Simulation.obstacles)):
             self.Q[i] = Qlearning()
 
-        self.state = np.zeros((len(Simulation.obstacles),len(Simulation.search_space)+2))
-        self.state_prime = np.zeros((len(Simulation.obstacles),len(Simulation.search_space)+2))
+        # self.state = np.zeros((len(Simulation.obstacles),len(Simulation.search_space)+2))
+        # self.state_prime = np.zeros((len(Simulation.obstacles),len(Simulation.search_space)+2))
+        self.state = np.zeros((len(Simulation.obstacles),len(Simulation.search_space)+1))
+        self.state_prime = np.zeros((len(Simulation.obstacles),len(Simulation.search_space)+1))
         self.instant_reward = np.zeros(len(Simulation.obstacles))
 
     # Visualization for this module. 
@@ -728,23 +730,34 @@ class ObstacleAvoidanceModule(Module):
             sdmy = np.sign(d_mid_y)
             padding = ObstacleAvoidanceModule.ranges[-1]
 
-            state = np.empty([len(Simulation.search_space)+2,])
+            state = np.empty([len(Simulation.search_space)+1,])
             
             state[0] = np.round(d_mid_x - sdmx*0.5*width)
             state[1] = np.round(d_mid_y - sdmy*0.5*height)
             
             # QUESTION: Can these be combined into a single state?
-            state[2] = (obs_x - padding <= agnt_x and agnt_x <= obs_x + width + padding and 
-                       obs_y - padding <= agnt_y and agnt_y <= obs_y + height + padding)
+            # state[2] = (obs_x - padding <= agnt_x and agnt_x <= obs_x + width + padding and 
+            #            obs_y - padding <= agnt_y and agnt_y <= obs_y + height + padding)
             
+            # if agnt_x >= obs_ctr_x and agnt_y >= obs_ctr_y:
+            #     state[3] = 1
+            # elif agnt_x <= obs_ctr_x and agnt_y >= obs_ctr_y:
+            #     state[3] = 2
+            # elif agnt_x <= obs_ctr_x and agnt_y <= obs_ctr_y:
+            #     state[3] = 3
+            # elif agnt_x >= obs_ctr_x and agnt_y <= obs_ctr_y:
+            #     state[3] = 4
+
             if agnt_x >= obs_ctr_x and agnt_y >= obs_ctr_y:
-                state[3] = 1
+                state[2] = 1
             elif agnt_x <= obs_ctr_x and agnt_y >= obs_ctr_y:
-                state[3] = 2
+                state[2] = 2
             elif agnt_x <= obs_ctr_x and agnt_y <= obs_ctr_y:
-                state[3] = 3
+                state[2] = 3
             elif agnt_x >= obs_ctr_x and agnt_y <= obs_ctr_y:
-                state[3] = 4
+                state[2] = 4
+
+
 
             self.state[i] = state
 
@@ -770,22 +783,31 @@ class ObstacleAvoidanceModule(Module):
             sdmy = np.sign(d_mid_y)
             padding = ObstacleAvoidanceModule.ranges[-1]
 
-            state = np.empty([len(Simulation.search_space)+2,])
+            state = np.empty([len(Simulation.search_space)+1,])
             
             state[0] = np.round(d_mid_x - sdmx*0.5*width)
             state[1] = np.round(d_mid_y - sdmy*0.5*height)
             
-            state[2] = (obs_x - padding <= agnt_x and agnt_x <= obs_x + width + padding and
-                       obs_y - padding <= agnt_y and agnt_y <= obs_y + height + padding)
+            # state[2] = (obs_x - padding <= agnt_x and agnt_x <= obs_x + width + padding and
+            #            obs_y - padding <= agnt_y and agnt_y <= obs_y + height + padding)
             
+            # if agnt_x >= obs_ctr_x and agnt_y >= obs_ctr_y:
+            #     state[3] = 1
+            # elif agnt_x <= obs_ctr_x and agnt_y >= obs_ctr_y:
+            #     state[3] = 2
+            # elif agnt_x <= obs_ctr_x and agnt_y <= obs_ctr_y:
+            #     state[3] = 3
+            # elif agnt_x >= obs_ctr_x and agnt_y <= obs_ctr_y:
+            #     state[3] = 4
+
             if agnt_x >= obs_ctr_x and agnt_y >= obs_ctr_y:
-                state[3] = 1
+                state[2] = 1
             elif agnt_x <= obs_ctr_x and agnt_y >= obs_ctr_y:
-                state[3] = 2
+                state[2] = 2
             elif agnt_x <= obs_ctr_x and agnt_y <= obs_ctr_y:
-                state[3] = 3
+                state[2] = 3
             elif agnt_x >= obs_ctr_x and agnt_y <= obs_ctr_y:
-                state[3] = 4
+                state[2] = 4
 
             self.state_prime[i] = state
 
@@ -800,17 +822,31 @@ class ObstacleAvoidanceModule(Module):
             width = Simulation.obstacles[i][2]
             height = Simulation.obstacles[i][3]
             
-            if self.state_prime[i,2]:
-
-                for j in range(0,len(ObstacleAvoidanceModule.ranges)):
-                    padding = ObstacleAvoidanceModule.ranges[j]
-                    if (obs_x - padding <= agnt_x and agnt_x <= obs_x + width + padding and 
+            rewarded = False
+            for j in range(0,len(ObstacleAvoidanceModule.ranges)):
+                padding = ObstacleAvoidanceModule.ranges[j]
+                if (obs_x - padding <= agnt_x and agnt_x <= obs_x + width + padding and 
                     obs_y - padding <= agnt_y and agnt_y <= obs_y + height + padding):
-
-                        self.instant_reward[i] = ObstacleAvoidanceModule.rewards[j]
-                        break
-            else:
+                   
+                    self.instant_reward[i] = ObstacleAvoidanceModule.rewards[j]
+                    rewarded = True
+                    break
+            
+            if not rewarded:
                 self.instant_reward[i] = ObstacleAvoidanceModule.rewards[-1]
+
+
+            # if self.state_prime[i,2]:
+
+            #     for j in range(0,len(ObstacleAvoidanceModule.ranges)):
+            #         padding = ObstacleAvoidanceModule.ranges[j]
+            #         if (obs_x - padding <= agnt_x and agnt_x <= obs_x + width + padding and 
+            #         obs_y - padding <= agnt_y and agnt_y <= obs_y + height + padding):
+
+            #             self.instant_reward[i] = ObstacleAvoidanceModule.rewards[j]
+            #             break
+            # else:
+            #     self.instant_reward[i] = ObstacleAvoidanceModule.rewards[-1]
 
     def get_module_weights(self):
 
