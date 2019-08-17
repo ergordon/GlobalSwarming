@@ -1,6 +1,8 @@
 import numpy as np
 from simulation import Simulation
 from simulation import TargetPath
+from simulation import Controller
+from simulation import Reward
 from qlearning import Qlearning
 
 from action import Action
@@ -27,7 +29,10 @@ class Module:
         self.parent_agent = parent_agt  # The agent that created and is storing this module instance
         self.tracked_agents = []        # List of agents being tracked by this module 
         self.instant_reward = []        # List of instantaneous rewards earned by the agent. 
-        self.alpha = 0.7                # Learning rate. keep in range [0,1]. can be tuned to affect Q learning
+        if (Simulation.ControllerType != Controller.GenAlg or Simulation.testing == False):
+            self.alpha = 0.7                # Learning rate. keep in range [0,1]. can be tuned to affect Q learning
+        else:
+            self.alpha = 0
         self.gamma = 0                  # Discount factor
 
         self.state = np.array([])       # The vector from the agent to the centroid of it and the tracked agents 
@@ -120,7 +125,7 @@ class CohesionModule(Module):
     # the last entry is the reward (punishment) for being out of range
     rewards = [1,-1] 
     # The discrete ranges at which the agent can collect rewards
-    ranges_squared = [25]
+    ranges_squared = [100]
 
     # Class constructor
     def __init__(self,parent_agt):
@@ -180,22 +185,31 @@ class CohesionModule(Module):
         for i in range(0,len(self.state_prime[0])):
             dist_squared = dist_squared + self.state_prime[0,i]**2
         
-        # # Tiered reward scheme
-        # #  Loop through each range to give the appropriate reward
-        rewarded = False
-        for i in range(0,len(CohesionModule.ranges_squared)):
-            if dist_squared <= CohesionModule.ranges_squared[i]:
-                self.instant_reward[0] = CohesionModule.rewards[i]
-                rewarded = True    
-                break
-        
-        # Not in range, apply last reward (punishment)
-        if rewarded == False:
-           self.instant_reward[0] = CohesionModule.rewards[-1]
+        # Tiered reward scheme
+        #  Loop through each range to give the appropriate reward
+        if (Simulation.RewardType == Reward.Tiered):
+            rewarded = False
+            for i in range(0,len(CohesionModule.ranges_squared)):
+                if dist_squared <= CohesionModule.ranges_squared[i]:
+                    self.instant_reward[0] = CohesionModule.rewards[i]
+                    rewarded = True    
+                    break
+            # Not in range, apply last reward (punishment)
+            if rewarded == False:
+                self.instant_reward[0] = CohesionModule.rewards[-1]
 
-        # continuous reward scheme
-        self.instant_reward[0] = 2 - np.sqrt(dist_squared)
+        elif (Simulation.RewardType == Reward.Continuous):
+            self.instant_reward[0] = 2 - np.sqrt(dist_squared)
 
+        elif (Simulation.RewardType == Reward.Hybrid):
+            rewarded = False
+            for i in range(0,len(CohesionModule.ranges_squared)):
+                if dist_squared <= CohesionModule.ranges_squared[i]:
+                    self.instant_reward[0] = CohesionModule.rewards[i]
+                    rewarded = True    
+                    break
+            if rewarded == False:
+                self.instant_reward[0] = 2 - np.sqrt(dist_squared)
 
     # Visualization for this module. 
     # Draw a transparent circle around the centroid 
@@ -335,28 +349,25 @@ class CollisionModule(Module):
             for j in range(0,self.state_prime[i].shape[0]):
                 dist_squared = dist_squared + self.state_prime[i,j]**2
 
-            # Tiered reward scheme
-            # Loop through each range to give the appropriate reward
-            # rewarded = False
-            # for k in range(0,len(CollisionModule.ranges_squared)):
-            #     if dist_squared <= CollisionModule.ranges_squared[k]:
-            #         self.instant_reward[i] = CollisionModule.rewards[k]
-            #         rewarded = True    
-            #         break
-            
-            # # Not in range, apply last reward (punishment)
-            # if rewarded == False:
-            #     self.instant_reward[i] = CollisionModule.rewards[-1]
+            if (Simulation.RewardType == Reward.Tiered):
+                rewarded = False
+                for k in range(0,len(CollisionModule.ranges_squared)):
+                    if dist_squared <= CollisionModule.ranges_squared[k]:
+                        self.instant_reward[i] = CollisionModule.rewards[k]
+                        rewarded = True    
+                        break
+                if rewarded == False:
+                    self.instant_reward[i] = CollisionModule.rewards[-1]
 
+            if (Simulation.RewardType == Reward.Continuous):
+                # self.instant_reward[i] = 10.0*(dist_squared/(10.0+dist_squared)-1.0)
+                self.instant_reward[i] = 10.0*(dist_squared/(10.0+dist_squared)-1.0)
 
-            if dist_squared <= CollisionModule.ranges_squared[-1]:
-                self.instant_reward[i] = (np.sqrt(dist_squared) - 0.75)**2 - 169.0/16.0
-            else:
-                self.instant_reward[i] = CollisionModule.rewards[-1]
-
-            # # continuous reward scheme that offeres severe punishements for being very close to other agents
-            # # the function is always negative but is asymtotic to 0 as dist_squared approaches infinity
-            # self.instant_reward[i] = 10.0*(dist_squared/(10.0+dist_squared)-1.0)
+            if (Simulation.RewardType == Reward.Hybrid):
+                if dist_squared <= CollisionModule.ranges_squared[-1]:
+                    self.instant_reward[i] = (np.sqrt(dist_squared) - 0.75)**2 - 169.0/16.0
+                else:
+                    self.instant_reward[i] = CollisionModule.rewards[-1]
 
     def get_module_weights(self):
         
@@ -454,19 +465,23 @@ class BoundaryModule(Module):
     #  Action (not prime) brings agent from state (not prime) to state_prime, and reward is calulated based on state_prime
     def update_instant_reward(self):
         for i in range(0,len(Simulation.search_space)):  
+            if (Simulation.RewardType == Reward.Tiered):
+                # Handle upper bounds
+                if(self.state_prime[i*2] >= BoundaryModule.ranges[0]):
+                    self.instant_reward[i*2] = BoundaryModule.rewards[-1]
+                else:
+                    self.instant_reward[i*2] = BoundaryModule.rewards[0]
 
-            # Handle upper bounds
-            if(self.state_prime[i*2] >= BoundaryModule.ranges[0]):
-                self.instant_reward[i*2] = BoundaryModule.rewards[-1]
-            else:
-                self.instant_reward[i*2] = BoundaryModule.rewards[0]
+                # Handle lower bounds
+                if(self.state_prime[i*2+1] <= -BoundaryModule.ranges[0]):
+                    self.instant_reward[i*2+1] = BoundaryModule.rewards[-1]
+                else:
+                    self.instant_reward[i*2+1] = BoundaryModule.rewards[0]
 
-            # Handle lower bounds
-            if(self.state_prime[i*2+1] <= -BoundaryModule.ranges[0]):
-                self.instant_reward[i*2+1] = BoundaryModule.rewards[-1]
-            else:
-                self.instant_reward[i*2+1] = BoundaryModule.rewards[0]
-
+            elif (Simulation.RewardType == Reward.Continuous):
+                print('DAVID FILL OUT')
+            elif (Simulation.RewardType == Reward.Hybrid):
+                print('DAVID FILL OUT')
 
 ##############################################################################
 #   Begin Target Seek Module Class
@@ -482,7 +497,7 @@ class TargetSeekModule(Module):
     def __init__(self,parent_agt):
         super().__init__(parent_agt)    # Inherited class initialization
         
-        self.gamma = 0.00               # Discount factor. keep in range [0,1]. can be tuned to affect Q learning
+        self.gamma = 0.99               # Discount factor. keep in range [0,1]. can be tuned to affect Q learning
         # Gamma = 0.2 for continuos. 0.99 for tiered only
         self.Q = np.empty((1,), dtype=object)
         self.Q[0] = Qlearning()
@@ -591,27 +606,34 @@ class TargetSeekModule(Module):
         # print(dist_squared)
         # Tiered reward scheme
         #  Loop through each range to give the appropriate reward
-        rewarded = False
-        for i in range(0,len(TargetSeekModule.ranges_squared)):
-            if dist_squared <= TargetSeekModule.ranges_squared[i]:
-                self.instant_reward[0] = TargetSeekModule.rewards[i]
-                
-                rewarded = True    
-                break
 
-        # # Not in range, apply last reward (punishment)
-        if rewarded == False:
-            # self.instant_reward[0] = TargetSeekModule.rewards[-1]
+        if (Simulation.RewardType == Reward.Tiered):
+            rewarded = False
+            for i in range(0,len(TargetSeekModule.ranges_squared)):
+                if dist_squared <= TargetSeekModule.ranges_squared[i]:
+                    self.instant_reward[0] = TargetSeekModule.rewards[i]
+                    rewarded = True    
+                    break
+            if rewarded == False:
+                self.instant_reward[0] = TargetSeekModule.rewards[-1]
+
+        elif (Simulation.RewardType == Reward.Continuous):
             #self.instant_reward[0] = -2.5*(-math.log(math.sqrt(dist_squared) + 10) + 5)
             #self.instant_reward[0] = -math.log(dist_squared + 10) + 5
             #self.instant_reward[0] = -dist_squared
-            #print(self.instant_reward[0])
             #self.instant_reward[0] = -dist_squared*0.02+10
             #self.instant_reward[0] = -dist_squared**(0.5)/10
             self.instant_reward[0] = -2.0/39.0*np.sqrt(dist_squared) + 410.0/39.0
 
-        # self.instant_reward[0] = -2.0/39.0*np.sqrt(dist_squared) + 410.0/39.0
-        # self.instant_reward[0] = -0.5*np.sqrt(dist_squared)
+        elif (Simulation.RewardType == Reward.Hybrid):
+            rewarded = False
+            for i in range(0,len(TargetSeekModule.ranges_squared)):
+                if dist_squared <= TargetSeekModule.ranges_squared[i]:
+                    self.instant_reward[0] = TargetSeekModule.rewards[i]
+                    rewarded = True    
+                    break
+            if rewarded == False:
+                self.instant_reward[0] = -2.0/39.0*np.sqrt(dist_squared) + 410.0/39.0
 
         # print('reward: ', self.instant_reward[0])
 
@@ -822,31 +844,24 @@ class ObstacleAvoidanceModule(Module):
             width = Simulation.obstacles[i][2]
             height = Simulation.obstacles[i][3]
             
-            rewarded = False
-            for j in range(0,len(ObstacleAvoidanceModule.ranges)):
-                padding = ObstacleAvoidanceModule.ranges[j]
-                if (obs_x - padding <= agnt_x and agnt_x <= obs_x + width + padding and 
-                    obs_y - padding <= agnt_y and agnt_y <= obs_y + height + padding):
-                   
-                    self.instant_reward[i] = ObstacleAvoidanceModule.rewards[j]
-                    rewarded = True
-                    break
-            
-            if not rewarded:
-                self.instant_reward[i] = ObstacleAvoidanceModule.rewards[-1]
+            if (Simulation.RewardType == Reward.Tiered):
+                rewarded = False
+                for j in range(0,len(ObstacleAvoidanceModule.ranges)):
+                    padding = ObstacleAvoidanceModule.ranges[j]
+                    if (obs_x - padding <= agnt_x and agnt_x <= obs_x + width + padding and 
+                        obs_y - padding <= agnt_y and agnt_y <= obs_y + height + padding):
+                    
+                        self.instant_reward[i] = ObstacleAvoidanceModule.rewards[j]
+                        rewarded = True
+                        break
+                if not rewarded:
+                    self.instant_reward[i] = ObstacleAvoidanceModule.rewards[-1]
 
+            elif (Simulation.RewardType == Reward.Continuous):
+                print('DAVID FILL OUT')
 
-            # if self.state_prime[i,2]:
-
-            #     for j in range(0,len(ObstacleAvoidanceModule.ranges)):
-            #         padding = ObstacleAvoidanceModule.ranges[j]
-            #         if (obs_x - padding <= agnt_x and agnt_x <= obs_x + width + padding and 
-            #         obs_y - padding <= agnt_y and agnt_y <= obs_y + height + padding):
-
-            #             self.instant_reward[i] = ObstacleAvoidanceModule.rewards[j]
-            #             break
-            # else:
-            #     self.instant_reward[i] = ObstacleAvoidanceModule.rewards[-1]
+            elif (Simulation.RewardType == Reward.Hybrid):
+                print('DAVID FILL OUT')
 
     def get_module_weights(self):
 
