@@ -29,10 +29,12 @@ class Module:
         self.parent_agent = parent_agt  # The agent that created and is storing this module instance
         self.tracked_agents = []        # List of agents being tracked by this module 
         self.instant_reward = []        # List of instantaneous rewards earned by the agent. 
+
         if (Simulation.ControllerType != Controller.GenAlg or Simulation.testing == False):
             self.alpha = 0.7                # Learning rate. keep in range [0,1]. can be tuned to affect Q learning
         else:
             self.alpha = 0
+
         self.gamma = 0                  # Discount factor
 
         self.state = np.array([])       # The vector from the agent to the centroid of it and the tracked agents 
@@ -131,7 +133,12 @@ class CohesionModule(Module):
     def __init__(self,parent_agt):
         super().__init__(parent_agt) #Inherited class initialization
         
-        self.gamma = 0.0                      # Discount factor. keep in range [0,1]. can be tuned to affect Q learning
+        # Discount factor. keep in range [0,1]. can be tuned to affect Q learning
+        if (Simulation.RewardType == Reward.Tiered):
+            self.gamma = 0.99
+        elif (Simulation.RewardType == Reward.Continuous or Simulation.RewardType == Reward.Hybrid):
+            self.gamma = 0.0
+            
         self.Q = np.empty((1,), dtype=object)
         self.Q[0] = Qlearning()
         self.collapsable_Q = True              # Whether or now the Q table array can be collapsed/combined into a single Q table
@@ -266,7 +273,12 @@ class CollisionModule(Module):
     def __init__(self,parent_agt):
         super().__init__(parent_agt)     # Inherited class initialization
         
-        self.gamma = 0                   # Discount factor. keep in range [0,1]. can be tuned to affect Q learning
+        # Discount factor. keep in range [0,1]. can be tuned to affect Q learning
+        if (Simulation.RewardType == Reward.Tiered):
+            self.gamma = 0.0
+        elif (Simulation.RewardType == Reward.Continuous or Simulation.RewardType == Reward.Hybrid):
+            self.gamma = 0.0
+
         #self.collision_count = 0        # Number of times this module has recorded a collision (with another agent) for this agent
         self.collapsable_Q = True        # Whether or now the Q table array can be collapsed/combined into a single Q table
         self.collided = False
@@ -402,7 +414,12 @@ class BoundaryModule(Module):
     def __init__(self,parent_agt):
         super().__init__(parent_agt) # Inherited class initialization
         
-        self.gamma = 0.2                     # Discount factor. keep in range [0,1]. can be tuned to affect Q learning
+        # Discount factor. keep in range [0,1]. can be tuned to affect Q learning
+        if (Simulation.RewardType == Reward.Tiered):
+            self.gamma = 0.2
+        elif (Simulation.RewardType == Reward.Continuous or Simulation.RewardType == Reward.Hybrid):
+            self.gamma = 0.0
+
         self.collision_count = 0           # Number of times this module has recorded a collision (with another agent) for this agent
     
         self.Q = np.empty((len(Simulation.search_space)*2,), dtype=object)
@@ -489,7 +506,7 @@ class BoundaryModule(Module):
 class TargetSeekModule(Module):
 
     rewards = [10, -1]       # Discrete rewards for a given range
-    ranges_squared = [100]    # The discrete ranges at which the agent can collect rewards
+    ranges_squared = [25]    # The discrete ranges at which the agent can collect rewards
 
     targets_entered = 0
 
@@ -497,8 +514,12 @@ class TargetSeekModule(Module):
     def __init__(self,parent_agt):
         super().__init__(parent_agt)    # Inherited class initialization
         
-        self.gamma = 0.99               # Discount factor. keep in range [0,1]. can be tuned to affect Q learning
-        # Gamma = 0.2 for continuos. 0.99 for tiered only
+        # Discount factor. keep in range [0,1]. can be tuned to affect Q learning
+        if (Simulation.RewardType == Reward.Tiered):
+            self.gamma = 0.99
+        elif (Simulation.RewardType == Reward.Continuous or Simulation.RewardType == Reward.Hybrid):
+            self.gamma = 0.0
+
         self.Q = np.empty((1,), dtype=object)
         self.Q[0] = Qlearning()
         self.collapsable_Q = True       # Whether or now the Q table array can be collapsed/combined into a single Q table
@@ -675,7 +696,12 @@ class ObstacleAvoidanceModule(Module):
     def __init__(self,parent_agt):
         super().__init__(parent_agt) # Inherited class initialization
         
-        self.gamma = 0.6             # Discount factor. keep in range [0,1]. can be tuned to affect Q learning
+        # Discount factor. keep in range [0,1]. can be tuned to affect Q learning
+        if (Simulation.RewardType == Reward.Tiered):
+            self.gamma = 0.6
+        elif (Simulation.RewardType == Reward.Continuous or Simulation.RewardType == Reward.Hybrid):
+            self.gamma = 0.0
+
         self.collapsable_Q = True    # Whether or not the Q table array can be collapsed/combined into a single Q table
 
         self.Q = np.empty((len(Simulation.obstacles),), dtype=object)

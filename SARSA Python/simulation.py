@@ -42,7 +42,7 @@ class Simulation:
     ## Reward Scheme
     RewardType = Reward.Tiered
 
-    testing = False
+    testing = True
 
     getMetricPlots = False
 
