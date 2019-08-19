@@ -73,7 +73,7 @@ class Module:
 
         num_updates = num_updates / len(self.Q) #TODO would this work better as min(q_updates)?
 
-        max_updates = 10
+        max_updates = 25
 
         T = 1 
         if num_updates < max_updates:
@@ -206,17 +206,13 @@ class CohesionModule(Module):
                 self.instant_reward[0] = CohesionModule.rewards[-1]
 
         elif (Simulation.RewardType == Reward.Continuous):
-            self.instant_reward[0] = 2 - np.sqrt(dist_squared)
+            self.instant_reward[0] = 20 - np.sqrt(dist_squared)
 
         elif (Simulation.RewardType == Reward.Hybrid):
-            rewarded = False
-            for i in range(0,len(CohesionModule.ranges_squared)):
-                if dist_squared <= CohesionModule.ranges_squared[i]:
-                    self.instant_reward[0] = CohesionModule.rewards[i]
-                    rewarded = True    
-                    break
-            if rewarded == False:
-                self.instant_reward[0] = 2 - np.sqrt(dist_squared)
+            if dist_squared <= 100:
+                self.instant_reward[0] = 10
+            else:
+                self.instant_reward[0] = 20 - np.sqrt(dist_squared)
 
     # Visualization for this module. 
     # Draw a transparent circle around the centroid 
@@ -372,14 +368,13 @@ class CollisionModule(Module):
                     self.instant_reward[i] = CollisionModule.rewards[-1]
 
             if (Simulation.RewardType == Reward.Continuous):
-                # self.instant_reward[i] = 10.0*(dist_squared/(10.0+dist_squared)-1.0)
-                self.instant_reward[i] = 10.0*(dist_squared/(10.0+dist_squared)-1.0)
+                self.instant_reward[i] = np.sqrt(dist_squared) - 4.0
 
             if (Simulation.RewardType == Reward.Hybrid):
-                if dist_squared <= CollisionModule.ranges_squared[-1]:
-                    self.instant_reward[i] = (np.sqrt(dist_squared) - 0.75)**2 - 169.0/16.0
+                if dist_squared <= 16:
+                    self.instant_reward[i] = np.sqrt(dist_squared) - 4.0
                 else:
-                    self.instant_reward[i] = CollisionModule.rewards[-1]
+                    self.instant_reward[i] = 0
 
     def get_module_weights(self):
         
@@ -496,9 +491,23 @@ class BoundaryModule(Module):
                     self.instant_reward[i*2+1] = BoundaryModule.rewards[0]
 
             elif (Simulation.RewardType == Reward.Continuous):
-                print('DAVID FILL OUT')
+                # Handle upper bounds
+                self.instant_reward[i*2] = self.state_prime[i*2] - 4.0
+                # Handle lower bounds
+                self.instant_reward[i*2+1] = -self.state_prime[i*2+1] - 4.0
+
             elif (Simulation.RewardType == Reward.Hybrid):
-                print('DAVID FILL OUT')
+                # Handle upper bounds
+                if(self.state_prime[i*2] >= 4):
+                    self.instant_reward[i*2] = 0
+                else:
+                    self.instant_reward[i*2] = self.state_prime[i*2] - 4.0
+
+                # Handle lower bounds
+                if(self.state_prime[i*2+1] <= -4):
+                    self.instant_reward[i*2+1] = 0
+                else:
+                    self.instant_reward[i*2+1] = -self.state_prime[i*2+1] - 4.0
 
 ##############################################################################
 #   Begin Target Seek Module Class
@@ -622,9 +631,6 @@ class TargetSeekModule(Module):
         for i in range(0,len(self.state_prime[0])):
             dist_squared = dist_squared + self.state_prime[0,i]**2
 
-        # print('start over')
-        # print(self.state_prime)
-        # print(dist_squared)
         # Tiered reward scheme
         #  Loop through each range to give the appropriate reward
 
@@ -647,17 +653,12 @@ class TargetSeekModule(Module):
             self.instant_reward[0] = -2.0/39.0*np.sqrt(dist_squared) + 410.0/39.0
 
         elif (Simulation.RewardType == Reward.Hybrid):
-            rewarded = False
-            for i in range(0,len(TargetSeekModule.ranges_squared)):
-                if dist_squared <= TargetSeekModule.ranges_squared[i]:
-                    self.instant_reward[0] = TargetSeekModule.rewards[i]
-                    rewarded = True    
-                    break
-            if rewarded == False:
+            if dist_squared <= 25:
+                self.instant_reward[0] = -2.0/39.0*5.0 + 410.0/39.0
+            else:
                 self.instant_reward[0] = -2.0/39.0*np.sqrt(dist_squared) + 410.0/39.0
 
-        # print('reward: ', self.instant_reward[0])
-
+        
     def get_module_weights(self):
         
         module_weights = np.zeros((1,len(self.Q)))
@@ -776,25 +777,16 @@ class ObstacleAvoidanceModule(Module):
             d_mid_y = obs_y + 0.5*height - agnt_y
             sdmx = np.sign(d_mid_x)
             sdmy = np.sign(d_mid_y)
+            if sdmx == 0:
+                sdmx = 1
+            if sdmy == 0:
+                sdmy = 1
             padding = ObstacleAvoidanceModule.ranges[-1]
 
             state = np.empty([len(Simulation.search_space)+1,])
             
             state[0] = np.round(d_mid_x - sdmx*0.5*width)
             state[1] = np.round(d_mid_y - sdmy*0.5*height)
-            
-            # QUESTION: Can these be combined into a single state?
-            # state[2] = (obs_x - padding <= agnt_x and agnt_x <= obs_x + width + padding and 
-            #            obs_y - padding <= agnt_y and agnt_y <= obs_y + height + padding)
-            
-            # if agnt_x >= obs_ctr_x and agnt_y >= obs_ctr_y:
-            #     state[3] = 1
-            # elif agnt_x <= obs_ctr_x and agnt_y >= obs_ctr_y:
-            #     state[3] = 2
-            # elif agnt_x <= obs_ctr_x and agnt_y <= obs_ctr_y:
-            #     state[3] = 3
-            # elif agnt_x >= obs_ctr_x and agnt_y <= obs_ctr_y:
-            #     state[3] = 4
 
             if agnt_x >= obs_ctr_x and agnt_y >= obs_ctr_y:
                 state[2] = 1
@@ -829,24 +821,17 @@ class ObstacleAvoidanceModule(Module):
             d_mid_y = obs_y + 0.5*height - agnt_y
             sdmx = np.sign(d_mid_x)
             sdmy = np.sign(d_mid_y)
+            if sdmx == 0:
+                sdmx = 1
+            if sdmy == 0:
+                sdmy = 1
+
             padding = ObstacleAvoidanceModule.ranges[-1]
 
             state = np.empty([len(Simulation.search_space)+1,])
             
             state[0] = np.round(d_mid_x - sdmx*0.5*width)
             state[1] = np.round(d_mid_y - sdmy*0.5*height)
-            
-            # state[2] = (obs_x - padding <= agnt_x and agnt_x <= obs_x + width + padding and
-            #            obs_y - padding <= agnt_y and agnt_y <= obs_y + height + padding)
-            
-            # if agnt_x >= obs_ctr_x and agnt_y >= obs_ctr_y:
-            #     state[3] = 1
-            # elif agnt_x <= obs_ctr_x and agnt_y >= obs_ctr_y:
-            #     state[3] = 2
-            # elif agnt_x <= obs_ctr_x and agnt_y <= obs_ctr_y:
-            #     state[3] = 3
-            # elif agnt_x >= obs_ctr_x and agnt_y <= obs_ctr_y:
-            #     state[3] = 4
 
             if agnt_x >= obs_ctr_x and agnt_y >= obs_ctr_y:
                 state[2] = 1
@@ -870,6 +855,19 @@ class ObstacleAvoidanceModule(Module):
             width = Simulation.obstacles[i][2]
             height = Simulation.obstacles[i][3]
             
+            obs_ctr_x = obs_x + width/2
+            obs_ctr_y = obs_y + width/2
+
+            d_mid_x = obs_x + 0.5*width - agnt_x
+            d_mid_y = obs_y + 0.5*height - agnt_y
+            sdmx = np.sign(d_mid_x)
+            sdmy = np.sign(d_mid_y)
+
+            if sdmx == 0:
+                sdmx = 1
+            if sdmy == 0:
+                sdmy = 1    
+
             if (Simulation.RewardType == Reward.Tiered):
                 rewarded = False
                 for j in range(0,len(ObstacleAvoidanceModule.ranges)):
@@ -884,10 +882,33 @@ class ObstacleAvoidanceModule(Module):
                     self.instant_reward[i] = ObstacleAvoidanceModule.rewards[-1]
 
             elif (Simulation.RewardType == Reward.Continuous):
-                print('DAVID FILL OUT')
+                #use a large paddign to simplify logic for rinding fastest escape direction
+                padding = 10000.0
+                min_d_x = d_mid_x - sdmx*(0.5*width+padding)
+                min_d_y = d_mid_y - sdmy*(0.5*height+padding)
 
+                if(abs(min_d_x) < abs(min_d_y)): #fastest excape is in the x direction
+                    self.instant_reward[i] = sdmx*self.state_prime[i,0] - 4
+                else: #fastest escape is in the y direction
+                        self.instant_reward[i] = sdmy*self.state_prime[i,1] - 4
+                    
             elif (Simulation.RewardType == Reward.Hybrid):
-                print('DAVID FILL OUT')
+                #use a large paddign to simplify logic for rinding fastest escape direction
+                padding = 10000.0
+                min_d_x = d_mid_x - sdmx*(0.5*width+padding)
+                min_d_y = d_mid_y - sdmy*(0.5*height+padding)
+
+                if(abs(min_d_x) < abs(min_d_y)): #fastest excape is in the x direction
+                    if sdmx*self.state_prime[i,0] <= 4: #agent is within range of the obstacle
+                        self.instant_reward[i] = sdmx*self.state_prime[i,0] - 4
+                    else: #agent is out of range of obstacle
+                        self.instant_reward[i] = 0.0
+
+                else: #fastest escape is in the y direction
+                    if sdmy*self.state_prime[i,1] <= 4: #agent is within range of the obstacle
+                        self.instant_reward[i] = sdmy*self.state_prime[i,1] - 4
+                    else: #agent is out of range of obstacle
+                        self.instant_reward[i] = 0.0
 
     def get_module_weights(self):
 
