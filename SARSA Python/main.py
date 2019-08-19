@@ -76,11 +76,6 @@ def ReinitializeAgents(agents,bounds):
     # Initialize agent parameters
     for i in range(0,len(agents)):
         init_space = Simulation.init_space
-        
-
-
-
-        init_space = Simulation.init_space
 
         if (Simulation.ControllerType != Controller.GenAlg):
             agents[i].position = np.array([random.randint(init_space[0][0], init_space[0][1]),random.randint(init_space[1][0], init_space[1][1])], dtype='f')
@@ -276,7 +271,7 @@ def mainSARSA(simName,desc,trainingPath):
                     if Simulation.agents[0].modules[i].collapsable_Q:
                         for agnt in Simulation.agents:
                             for Q in agnt.modules[i].Q:
-                                Q.q_data = cp.copy(data[0]) #check here!
+                                Q.q_data = cp.copy(data[0])
                                 Q.q_updates = cp.copy(updates[0])
                     else:
                         for agnt in Simulation.agents:
@@ -431,9 +426,8 @@ def mainSARSA(simName,desc,trainingPath):
             for mod in agnt.modules:
                 mod.reset_init(e)
 
-        if (Simulation.ControllerType != Controller.GenAlg):
+        if (e%100 == 0 and Simulation.ControllerType != Controller.GenAlg):
             # There are occasional permission errors, this block will keep retrying until the dump succeeds
-            # TODO: Make this save every so often in case of errors so the history isn't lost
             agent_filename = filename+'/agents.pkl'
 
             max_dump_attempts = 5
@@ -469,6 +463,28 @@ def mainSARSA(simName,desc,trainingPath):
     #   Data Storage
     ##############################################################################
     if (Simulation.ControllerType != Controller.GenAlg):    
+        # There are occasional permission errors, this block will keep retrying until the dump succeeds
+        agent_filename = filename+'/agents.pkl'
+
+        max_dump_attempts = 5
+        dump_attempts = 0
+        pe = True
+        while pe:
+            pe = False
+            try:
+                with open(agent_filename,'wb') as f:
+                    pickle.dump(Simulation.agents,f)  
+            except Exception as e:
+                pe = True
+                dump_attempts = dump_attempts + 1
+                
+                print(e)
+                print('permission error while saving to disk, retrying...')
+                time.sleep(0.5)
+
+                if dump_attempts == max_dump_attempts:
+                    print('******PERMISSION ERROR, COULD NOT DUMP AGENTS TO DISK********')
+        
         # Export the visualizer as a *.gif
         if(Simulation.visualize):
             fps = 10
