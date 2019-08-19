@@ -5,9 +5,17 @@ import pickle
 import argparse
 import os.path
 import time
+import warnings
 
+import collections
+import numpy as np
+import scipy.stats as stat
+from scipy.stats import iqr
+
+
+
+warnings.filterwarnings("error")
 start = time.time()
-
 
 ##############################################################################
 #   Argument Parser
@@ -18,6 +26,26 @@ ap = argparse.ArgumentParser()
 ap.add_argument("--simName", type=str, default="SimulationResults", required=False,
 	help="simName == Name of Simulation or Test")
 args = vars(ap.parse_args())
+
+
+
+def sd_outlier(x, axis = None, bar = 1.5, side = 'both'):
+
+    if np.all(x == x[0]):
+        return np.zeros((len(x),), dtype=bool)
+
+    assert side in ['gt', 'lt', 'both'], 'Side should be `gt`, `lt` or `both`.'
+    
+    d_z = stat.zscore(x, axis = axis)
+
+    if side == 'gt':
+        return d_z > bar
+    elif side == 'lt':
+        return d_z < -bar
+    elif side == 'both':
+        return np.abs(d_z) > bar
+
+
 
 ##############################################################################
 #   Data 
@@ -31,136 +59,136 @@ with open(path+'/agents.pkl', 'rb') as f:
     agents = pickle.load(f)
 
 module_names = [] #list of class names for each module
-tables = [] #list of combined q tables
-states = [] #list of combined q states
+data = [] #list of combined q data
+updates = [] #list of combined q updates
 
 num_agents = len(agents)
+
+max_updates = 50 #assuming that the agent is fully trained for a given state after updating it this many times
 
 #iterate over each module, combining the q tables and q states form each agent
 #into a single q table and q states array
 for i in range(0,len(agents[0].modules)):
 
-    q_table = np.array([]) #temporary storage for the q table for this module
-    q_states = np.array([]) #temporary storage for the q states for this module
-    number_experienced = np.array([]) #the number of times each state shows up across all agents
     if(agents[0].modules[i].collapsable_Q):
-        #iterate over each agent
-        for agnt in agents:
-            #iterage over each state for this module for this state
-            for Q in agnt.modules[i].Q:
-                for j in range(0, Q.q_states.shape[0]):
 
-                    working_state = Q.q_states[j] #the current state being compared
-                    working_q_row = Q.q_table[j] #the corresponding qtable entry to the current state
+        q_data = np.empty((1,), dtype=object)
+        q_updates = np.empty((1,), dtype=object)
+        q_data_dict = {} # temporary storage for the q table for this module
+        q_data_filtering_dict = {}
+        q_updates_dict = {} 
+        q_updates_sum = {}
 
-                    #check for any entries in the current q_table for this module
-                    if q_states.shape[0] != 0:
-                        
-                        #check if the working state already exists in the q table for this module 
-                        matches = np.equal(q_states,[working_state]).all(1).nonzero()
+        for a in range(0,len(agents)):
+            for q in range(0,len(agents[a].modules[i].Q)):
+                Q = agents[a].modules[i].Q[q]
+                
+                for working_state, working_q_row in Q.q_data.items():
+                    working_updates = min(Q.q_updates[working_state],max_updates)
 
-                        if matches[0].size == 0:
-                            #working state not in q states for this module, add it along with the row
-                            q_states = np.vstack([q_states, working_state])
-                            q_table = np.vstack([q_table, working_q_row])
-                            number_experienced = np.vstack([number_experienced, np.array([1])])
+                    if working_updates != 0:
+
+                        if working_state in q_data_filtering_dict:
+                            for u in range(0,working_updates):
+                                q_data_filtering_dict[working_state].append(working_q_row)
+                            
+                            q_updates_dict[working_state] = max(q_updates_dict[working_state],working_updates) #TODO consider other ways of doing this
+
                         else:
+                            q_row_list = []
+                            
 
-                            #working state already in q states for this module, 
-                            #sum the working q row with the corresponding entry in the q table for this module
-                            #incerement the number of times this row has been updated
-                            matching_index = matches[0][0] 
-                            q_table[matching_index] = np.add(q_table[matching_index], working_q_row)
-                            number_experienced[matching_index] = np.add(number_experienced[matching_index], np.array([1]))
-                    
-                    else: #q_states.shape[0] != 0:
-                        #no entries found yet, initialize with current values
-                        q_states = working_state
-                        q_table = working_q_row
-                        number_experienced = np.array([1])  
-
+                            for u in range(0,working_updates):
+                                q_row_list.append(working_q_row)
+                            q_data_filtering_dict.update({working_state:q_row_list})
+                            q_updates_dict.update({working_state:working_updates})
         
 
-        #sanity check for duplicate q state entries
-        for d in range(0,q_states.shape[0]):
-            test_state = q_states[d]
-            for e in range(0,q_states.shape[0]):
-                if d != e:
-                    if np.equal(q_states[e],test_state).all():
-                        print('duplicate state found from single agent, there is most likely an error in the Qlearning class')
-                        print(test_state)
-                        print(q_states[e])
+        for working_state, working_q_row_list in q_data_filtering_dict.items():
+            filtered_q_row = np.zeros((len(working_q_row_list[0]),)) 
+            for a in range(0,len(working_q_row_list[0])):
+                
+                #collect all of the q_row values that occupy index a into a np array so it can be filtered
+                q_column = np.zeros((len(working_q_row_list),)) 
+                for l in range(0,len(working_q_row_list)):
+                    q_column[l] = working_q_row_list[l][a]
+                
+                
+                outlier_bools = sd_outlier(q_column)
+                filtered_column = np.extract(np.logical_not(outlier_bools), q_column)
+                filtered_q_row[a] = np.mean(filtered_column)
+                    
+            q_data_dict.update({working_state:filtered_q_row})
+    
+        q_data[0] = q_data_dict
+        q_updates[0] = q_updates_dict
 
-        #average the q rows based on the number of times they were updated
-        for d in range(0,q_states.shape[0]):
-            q_table[d] = np.divide(q_table[d],number_experienced[d])
-    else:
-        q_states = np.empty((len(agents[0].modules[i].Q),), dtype=object)
-        q_table = np.empty((len(agents[0].modules[i].Q),), dtype=object)
-        number_experienced = np.empty((len(agents[0].modules[i].Q),), dtype=object)
-
+    else: #Q not collapsable
+        q_data = np.empty((len(agents[0].modules[i].Q),), dtype=object)
+        q_updates = np.empty((len(agents[0].modules[i].Q),), dtype=object)
+        
         for q in range(0,len(agents[0].modules[i].Q)):
+
+            q_data_dict = {} # temporary storage for the q table for this module
+            q_data_filtering_dict = {}
+            q_updates_dict = {} 
+            
             for agnt in agents:
                 Q = agnt.modules[i].Q[q]
-                for j in range(0, Q.q_states.shape[0]):
-                    working_state = Q.q_states[j] #the current state being compared
-                    working_q_row = Q.q_table[j] #the corresponding qtable entry to the current state
+                
+                for working_state, working_q_row in Q.q_data.items():
+                    working_updates = min(Q.q_updates[working_state],max_updates)
 
-
-                    #check for any entries in the current q_table for this module for this Q
-                    if q_states[q] is not None:
-                        
-                        #check if the working state already exists in the q table for this module 
-                        matches = np.equal(q_states[q],[working_state]).all(1).nonzero()
-
-                        if matches[0].size == 0:
-                            #working state not in q states for this module, add it along with the row
-                            q_states[q] = np.vstack([q_states[q], working_state])
-                            q_table[q] = np.vstack([q_table[q], working_q_row])
-                            number_experienced[q] = np.vstack([number_experienced[q], np.array([1])])
+                    if working_updates != 0:
+                        if working_state in q_data_filtering_dict:
+                            for u in range(0,working_updates):  
+                                q_data_filtering_dict[working_state].append(working_q_row)
+                            q_updates_dict[working_state] = max(q_updates_dict[working_state],working_updates)
                         else:
-                            #working state already in q states for this module, 
-                            #sum the working q row with the corresponding entry in the q table for this module
-                            #incerement the number of times this row has been updated
-                            matching_index = matches[0][0] 
-                            q_table[q][matching_index] = np.add(q_table[q][matching_index], working_q_row)
-                            number_experienced[q][matching_index] = np.add(number_experienced[q][matching_index], np.array([1]))
+                            q_row_list = []
+                            for u in range(0,working_updates):
+                                q_row_list.append(working_q_row)
+                            q_data_filtering_dict.update({working_state:q_row_list})
+                            q_updates_dict.update({working_state:working_updates})
+
+            for working_state, working_q_row_list in q_data_filtering_dict.items():
+                filtered_q_row = np.zeros((len(working_q_row_list[0]),)) 
+                for a in range(0,len(working_q_row_list[0])):
                     
-                    else: #q_states[q] is None
-                        #no entries found yet, initialize with current values
-                        q_states[q] = working_state
-                        q_table[q] = working_q_row
-                        number_experienced[q] = np.array([1])     
+                    #collect all of the q_row values that occupy index a into a np array so it can be filtered
+                    q_column = np.zeros((len(working_q_row_list),)) 
+                    for l in range(0,len(working_q_row_list)):
+                        q_column[l] = working_q_row_list[l][a]
+                    
+                    outlier_bools = sd_outlier(q_column)
+                    filtered_column = np.extract(np.logical_not(outlier_bools), q_column)
+                    filtered_q_row[a] = np.mean(filtered_column)
 
-            # sanity check for duplicate q state entries
-            for d in range(0,q_states[q].shape[0]):
-                test_state = q_states[q][d]
-                for e in range(0,q_states[q].shape[0]):
-                    if d != e:
-                        if np.equal(q_states[q][e],test_state).all():
-                            print('duplicate state found from single agent, there is most likely an error in the Qlearning class')
-                            print(test_state)
-                            print(q_states[q][e])
+                q_data_dict.update({working_state:filtered_q_row})
 
-            #average the q rows based on the number of times they were updated
-            for d in range(0,q_states[q].shape[0]):
-                q_table[q][d] = np.divide(q_table[q][d],number_experienced[q][d])
-
-        print(q_table)
+            q_data[q] = q_data_dict
+            q_updates[q] = q_updates_dict
 
     #store the results in lists
     module_names.append(agents[0].modules[i].__class__.__name__)
-    tables.append(q_table)
-    states.append(q_states)
+    data.append(q_data)
+    updates.append(q_updates)
 
 for i in range(0,len(module_names)):
     save_data_filename = module_names[i] + '_training_data.pkl'
     with open(os.path.join(path, save_data_filename),'wb') as f:
-        pickle.dump([module_names[i], tables[i], states[i]],f)  
+        pickle.dump([module_names[i], data[i], updates[i]],f)  
 
 end = time.time()
-
 duration = end - start
 
 print('operation took')
 print(duration)
+
+for i in range(0,len(data)):
+    num_states = 0
+    for j in range(0,len(data[i])):
+        # for k in range data[i][j]:
+        num_states = num_states + len(data[i][j])
+
+    print(module_names[i] + ' found ' + str(num_states) + ' states')
