@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<launch>
+    <!-- UAV1 -->
+    <group ns="uav1">
+        <!-- OFFBOARD MULTI NODE -->
+        <node name="offboard_multi_node" pkg="offboard_multi" type="offboard_multi_node" args="-i 0 -s 5"></node>
+    </group>
+    <!-- UAV2 -->
+    <group ns="uav2">
+        <!-- OFFBOARD MULTI NODE -->
+        <node name="offboard_multi_node"  pkg="offboard_multi" type="offboard_multi_node" args="-i 1 -s 5"></node>
+    </group>
+    <!-- UAV3 -->
+    <group ns="uav3">
+        <!-- OFFBOARD MULTI NODE -->
+        <node name="offboard_multi_node"  pkg="offboard_multi" type="offboard_multi_node" args="-i 2 -s 5"></node>
+    </group>
+    <!-- UAV4 -->
+    <group ns="uav4">
+        <!-- OFFBOARD MULTI NODE -->
+        <node name="offboard_multi_node"  pkg="offboard_multi" type="offboard_multi_node" args="-i 3 -s 5"></node>
+    </group>
+    <!-- UAV5 -->
+    <group ns="uav5">
+        <!-- OFFBOARD MULTI NODE -->
+        <node name="offboard_multi_node"  pkg="offboard_multi" type="offboard_multi_node" args="-i 4 -s 5"></node>
+    </group>
+</launch>
