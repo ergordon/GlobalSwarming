@@ -6,6 +6,7 @@ import argparse
 import os.path
 import time
 import warnings
+from action import Action
 
 import collections
 import numpy as np
@@ -30,21 +31,24 @@ args = vars(ap.parse_args())
 
 
 def sd_outlier(x, axis = None, bar = 1.5, side = 'both'):
+    # print(x)
 
-    if np.all(x == x[0]):
-        return np.zeros((len(x),), dtype=bool)
+    # if np.all(x == x[0]):
+    #     return np.zeros((len(x),), dtype=bool)
 
     assert side in ['gt', 'lt', 'both'], 'Side should be `gt`, `lt` or `both`.'
     
-    d_z = stat.zscore(x, axis = axis)
+    try:
+        d_z = stat.zscore(x, axis = axis)
 
-    if side == 'gt':
-        return d_z > bar
-    elif side == 'lt':
-        return d_z < -bar
-    elif side == 'both':
-        return np.abs(d_z) > bar
-
+        if side == 'gt':
+            return d_z > bar
+        elif side == 'lt':
+            return d_z < -bar
+        elif side == 'both':
+            return np.abs(d_z) > bar
+    except:
+        return np.zeros((len(x),), dtype=bool)
 
 
 ##############################################################################
@@ -61,6 +65,7 @@ with open(path+'/agents.pkl', 'rb') as f:
 module_names = [] #list of class names for each module
 data = [] #list of combined q data
 updates = [] #list of combined q updates
+epsilon = [] #list of combined q epsilon
 
 num_agents = len(agents)
 
@@ -74,9 +79,12 @@ for i in range(0,len(agents[0].modules)):
 
         q_data = np.empty((1,), dtype=object)
         q_updates = np.empty((1,), dtype=object)
+        q_epsilon = np.empty((1,), dtype=object)
         q_data_dict = {} # temporary storage for the q table for this module
         q_data_filtering_dict = {}
-        q_updates_dict = {} 
+        q_updates_dict = {}
+        q_epsilon_dict = {} 
+        q_epsilon_cnt = {}
         q_updates_sum = {}
 
         for a in range(0,len(agents)):
@@ -85,6 +93,8 @@ for i in range(0,len(agents[0].modules)):
                 
                 for working_state, working_q_row in Q.q_data.items():
                     working_updates = min(Q.q_updates[working_state],max_updates)
+                    working_epsilon = Q.q_epsilon[working_state]
+                    # print(working_epsilon)
 
                     if working_updates != 0:
 
@@ -92,17 +102,27 @@ for i in range(0,len(agents[0].modules)):
                             for u in range(0,working_updates):
                                 q_data_filtering_dict[working_state].append(working_q_row)
                             
+                            # print(working_epsilon)
                             q_updates_dict[working_state] = max(q_updates_dict[working_state],working_updates) #TODO consider other ways of doing this
-
+                            
+                            # print(1/len(Action))
+                            q_epsilon_dict[working_state] = q_epsilon_dict[working_state] + working_epsilon  
+                            q_epsilon_cnt[working_state] = q_epsilon_cnt[working_state] + 1.0
                         else:
                             q_row_list = []
                             
-
+                            # print(working_epsilon)
                             for u in range(0,working_updates):
                                 q_row_list.append(working_q_row)
                             q_data_filtering_dict.update({working_state:q_row_list})
                             q_updates_dict.update({working_state:working_updates})
-        
+                            q_epsilon_dict.update({working_state:working_epsilon})
+                            q_epsilon_cnt.update({working_state:1.0})
+                         
+
+        for working_state, working_epsilon in q_epsilon_dict.items():
+            q_epsilon_dict[working_state] = working_epsilon / q_epsilon_cnt[working_state]
+            
 
         for working_state, working_q_row_list in q_data_filtering_dict.items():
             filtered_q_row = np.zeros((len(working_q_row_list[0]),)) 
@@ -122,34 +142,51 @@ for i in range(0,len(agents[0].modules)):
     
         q_data[0] = q_data_dict
         q_updates[0] = q_updates_dict
+        q_epsilon[0] = q_epsilon_dict
+        
 
+    #TODO Q epsilon for collapsable!!!  
     else: #Q not collapsable
         q_data = np.empty((len(agents[0].modules[i].Q),), dtype=object)
         q_updates = np.empty((len(agents[0].modules[i].Q),), dtype=object)
-        
+        q_epsilon = np.empty((len(agents[0].modules[i].Q),), dtype=object)
+
         for q in range(0,len(agents[0].modules[i].Q)):
 
             q_data_dict = {} # temporary storage for the q table for this module
             q_data_filtering_dict = {}
             q_updates_dict = {} 
-            
+            q_epsilon_dict = {} 
+            q_epsilon_cnt = {}
+        
+
             for agnt in agents:
                 Q = agnt.modules[i].Q[q]
                 
                 for working_state, working_q_row in Q.q_data.items():
                     working_updates = min(Q.q_updates[working_state],max_updates)
+                    working_epsilon = Q.q_epsilon[working_state]
+                    
 
                     if working_updates != 0:
                         if working_state in q_data_filtering_dict:
                             for u in range(0,working_updates):  
                                 q_data_filtering_dict[working_state].append(working_q_row)
                             q_updates_dict[working_state] = max(q_updates_dict[working_state],working_updates)
+                            q_epsilon_dict[working_state] = q_epsilon_dict[working_state] + working_epsilon  
+                            q_epsilon_cnt[working_state] = q_epsilon_cnt[working_state] + 1.0
                         else:
                             q_row_list = []
                             for u in range(0,working_updates):
                                 q_row_list.append(working_q_row)
                             q_data_filtering_dict.update({working_state:q_row_list})
                             q_updates_dict.update({working_state:working_updates})
+                            q_epsilon_dict.update({working_state:working_epsilon})
+                            q_epsilon_cnt.update({working_state:1.0})
+
+            for working_state, working_epsilon in q_epsilon_dict.items():
+                q_epsilon_dict[working_state] = working_epsilon / q_epsilon_cnt[working_state]
+            
 
             for working_state, working_q_row_list in q_data_filtering_dict.items():
                 filtered_q_row = np.zeros((len(working_q_row_list[0]),)) 
@@ -168,16 +205,19 @@ for i in range(0,len(agents[0].modules)):
 
             q_data[q] = q_data_dict
             q_updates[q] = q_updates_dict
+            q_epsilon[q] = q_epsilon_dict
 
     #store the results in lists
     module_names.append(agents[0].modules[i].__class__.__name__)
     data.append(q_data)
     updates.append(q_updates)
+    epsilon.append(q_epsilon)
+
 
 for i in range(0,len(module_names)):
     save_data_filename = module_names[i] + '_training_data.pkl'
     with open(os.path.join(path, save_data_filename),'wb') as f:
-        pickle.dump([module_names[i], data[i], updates[i]],f)  
+        pickle.dump([module_names[i], data[i], updates[i], epsilon[i]],f)  
 
 end = time.time()
 duration = end - start
@@ -188,7 +228,6 @@ print(duration)
 for i in range(0,len(data)):
     num_states = 0
     for j in range(0,len(data[i])):
-        # for k in range data[i][j]:
         num_states = num_states + len(data[i][j])
 
     print(module_names[i] + ' found ' + str(num_states) + ' states')

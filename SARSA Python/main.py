@@ -66,12 +66,27 @@ def ReinitializeAgents(agents,bounds):
     Simulation.target_episode_entries_count.append(Simulation.target_entries_count)
     Simulation.target_entries_count = 0
     
+    max_obstacle_size = 50
+    obs_width = max_obstacle_size
+    obs_height = max_obstacle_size
+    # obs_width = random.randint(1,max_obstacle_size)
+    # obs_height = random.randint(1,max_obstacle_size)
+    #bounds to initialize the agents inside of
+    # Simulation.init_space = [[-np.round(obs_width*0.5)-4,np.round(obs_width*0.5)+4],
+    #             [-np.round(obs_height*0.5)-4,np.round(obs_height*0.5)+4]]
+    Simulation.obstacles = np.array([[-np.round(obs_width*0.5),-np.round(obs_height*0.5),obs_width,obs_height]])
+
+
+
     # Reinitialize Setting Parameters
-    if (Simulation.Arena == Arena.Playground):
-        Simulation.obstacles = np.array([random.randint(arena_space[0][0], arena_space[0][1]),random.randint(arena_space[0][0], arena_space[0][1]), random.randint(1,Simulation.max_obstacle_size), random.randint(1,Simulation.max_obstacle_size)])
-        for i in range(1,Simulation.num_obstacles):
-            temp_obstacles = np.array([random.randint(arena_space[0][0], arena_space[0][1]),random.randint(arena_space[0][0], arena_space[0][1]), random.randint(1,Simulation.max_obstacle_size), random.randint(1,Simulation.max_obstacle_size)])
-            Simulation.obstacles = np.vstack((Simulation.obstacles, temp_obstacles))
+    # if (Simulation.Arena == Arena.Playground):
+    #     Simulation.obstacles = np.array([random.randint(arena_space[0][0], arena_space[0][1]),random.randint(arena_space[0][0], arena_space[0][1]), random.randint(1,Simulation.max_obstacle_size), random.randint(1,Simulation.max_obstacle_size)])
+    #     for i in range(1,Simulation.num_obstacles):
+    #         temp_obstacles = np.array([random.randint(arena_space[0][0], arena_space[0][1]),random.randint(arena_space[0][0], arena_space[0][1]), random.randint(1,Simulation.max_obstacle_size), random.randint(1,Simulation.max_obstacle_size)])
+    #         Simulation.obstacles = np.vstack((Simulation.obstacles, temp_obstacles))
+    
+    
+
 
     # Initialize agent parameters
     for i in range(0,len(agents)):
@@ -266,18 +281,21 @@ def mainSARSA(simName,desc,trainingPath):
                         print("Q learning data found, loading it now")  
 
                     with open(training_filename, 'rb') as f:
-                        [module_name, data, updates] = pickle.load(f)
+                        [module_name, data, updates, epsilon] = pickle.load(f)
 
                     if Simulation.agents[0].modules[i].collapsable_Q:
                         for agnt in Simulation.agents:
                             for Q in agnt.modules[i].Q:
                                 Q.q_data = cp.copy(data[0])
                                 Q.q_updates = cp.copy(updates[0])
+                                Q.q_epsilon = cp.copy(epsilon[0])
                     else:
                         for agnt in Simulation.agents:
                             for q in range(0,len(agnt.modules[i].Q)):
                                 agnt.modules[i].Q[q].q_data = cp.copy(data[q])
                                 agnt.modules[i].Q[q].q_updates = cp.copy(updates[q])
+                                agnt.modules[i].Q[q].q_epsilon = cp.copy(epsilon[q])
+                        
                         
 
 
@@ -349,8 +367,12 @@ def mainSARSA(simName,desc,trainingPath):
             if(Simulation.visualize):
                 plt.grid(linestyle='--', linewidth='0.5', color='grey')
                 plt.text(Simulation.search_space[0][0], Simulation.search_space[1][1]+1, ('Episode '+str(e)+' Iteration '+str(t)), dict(size=8))
-                for agnt in Simulation.agents:
+                # for agnt in Simulation.agents:
+                for a in range(0, len(Simulation.agents)):
+                    agnt = Simulation.agents[a]
                     plt.plot(agnt.position[0],agnt.position[1],'ro')
+                    plt.text(agnt.position[0],agnt.position[1],str(a))
+
                     plt.axis(axis_bounds)
                     
                     for mod in agnt.modules:
@@ -363,13 +385,18 @@ def mainSARSA(simName,desc,trainingPath):
                     images.append(image)
 
             # print('update state prime and select next action')
-            for agnt in Simulation.agents:
+            # for agnt in Simulation.agents:
+            for a in range(0, len(Simulation.agents)):
+                agnt = Simulation.agents[a]
+
                 for mod in agnt.modules:
                     # Find what the state (state_prime) would be if that action were taken
                     mod.update_state_prime()
+                    mod.check_state_transition()
                     # print('state prime is ', mod.state_prime)
 
                 # Select the next action (action_prime) for the agent to take 
+                # print('~~~~~~~~~~~~agent ' + str(a) + ', select next action~~~~~~~~~~~~~~~~~~')
                 agnt.select_next_action()
                 # print('next action is ', agnt.modules[0].action_prime)
 
@@ -377,6 +404,7 @@ def mainSARSA(simName,desc,trainingPath):
             for agnt in Simulation.agents:
                 for mod in agnt.modules:
                     if (Simulation.ControllerType != Controller.GenAlg):
+                        
                         # Determine the reward for executing the action (not prime) in the state (not prime)
                         #  Action (not prime) brings agent from state (not prime) to state_prime, and reward is calulated based on state_prime
                         mod.update_instant_reward()
@@ -482,7 +510,7 @@ def mainSARSA(simName,desc,trainingPath):
                 print('permission error while saving to disk, retrying...')
                 time.sleep(0.5)
 
-                if dump_attempts == max_dump_attempts:
+                if dump_attempts >= max_dump_attempts:
                     print('******PERMISSION ERROR, COULD NOT DUMP AGENTS TO DISK********')
         
         # Export the visualizer as a *.gif
@@ -516,7 +544,7 @@ def mainSARSA(simName,desc,trainingPath):
                     print('permission error while saving to disk, retrying...')
                     time.sleep(0.5)
 
-                    if dump_attempts == max_dump_attempts:
+                    if dump_attempts >= max_dump_attempts:
                         print('******PERMISSION ERROR, COULD NOT DUMP AGENT REWARDS TO DISK********')
 
         # Iterations-Reward Plot

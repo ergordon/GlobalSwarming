@@ -37,19 +37,21 @@ class Simulation:
     ControllerType = Controller.GreatestMass
 
     ## Target Parameters
-    TargetType = TargetPath.Planned
+    # TargetType = TargetPath.Planned
+    TargetType = TargetPath.Circle
 
     ## Reward Scheme
     RewardType = Reward.Tiered
 
-    testing = True
+    testing = False
+    continuous_steering = False
 
     getMetricPlots = False
 
     visualize = True             # Whether to show a plot animation of the agent positions
-    load_agents = False          # Whether to load the agents.pkl file (loads agents exactly as they upon completion of training)
-    load_training_data = True   # Whether to load the agent training data (loads q tables and states into the modules that exist in the agent initialization function)
-    take_best_action = True    # Whether to select next actions based on highest Q table entry or use Q table values as probabilities for each action 
+    load_agents = True          # Whether to load the agents.pkl file (loads agents exactly as they upon completion of training)
+    load_training_data = False   # Whether to load the agent training data (loads q tables and states into the modules that exist in the agent initialization function)
+    take_best_action = False    # Whether to select next actions based on highest Q table entry or use Q table values as probabilities for each action 
 
     # Genetic Algoritm Parameters
     sol_per_pop = 8         # Population Size
@@ -57,53 +59,63 @@ class Simulation:
     num_generations = 100   # Number of Generations
 
     if (Arena == Arena.Playground): # Custom Terrain. Edit These Ones 
-        num_agents = 10                # Number of agents to simulate
-        num_episodes = 500            # Number of times to run the training scenario
-        episode_length = 300           # Number of time steps in each training scenario [iterations]
+        num_agents = 4               # Number of agents to simulate
+        num_episodes = 360*3           # Number of times to run the training scenario
+        episode_length = 200           # Number of time steps in each training scenario [iterations]
         exploitation_rise_time = 0      # The amount of time over which we transition from exploration to exploitation [seconds]
 
         exploitation_rise_percent = 0  # The percentage of each episode over which we transition from exploration to exploitation
         
+        max_obstacle_size = 50
+        obs_width = max_obstacle_size
+        obs_height = max_obstacle_size
+        
+        # obs_width = random.randint(1,max_obstacle_size)
+        # obs_height = random.randint(1,max_obstacle_size)
+        
         #bounds to initialize the agents inside of
-        init_space = [[-40,-35],
-                    [-10,-5]]
+        # init_space = [[-np.round(obs_width*0.5)-4,np.round(obs_width*0.5)+4],
+        #             [-np.round(obs_height*0.5)-4,np.round(obs_height*0.5)+4]]
+        init_space = [[-30,30],
+                    [-30,30]]
 
         #bounds to simulate the agents within
         #exiting these bounds will end the episode immediately
-        search_space = [[-50,50],
-                        [-50,50]]
+        search_space = [[-60,60],
+                        [-60,60]]
 
         # Bounds to intilize the targets and obstacles within
         arena_space = [[-40,40],
                        [-40,40]]
 
         # Activate Modules
-        CohesionModule = False            # Cohesion module makes the agents stay together as a swarm
+        CohesionModule = True            # Cohesion module makes the agents stay together as a swarm
         CollisionAvoidanceModule = False  # Collision module prevents the agents from hitting each other
         OutOfBoundsModule = False        # Boundary module prevents the agents from leaving the search space
-        TargetSeekingModule = True      # Target module encourages agents to travel to waypoint
+        TargetSeekingModule = False      # Target module encourages agents to travel to waypoint
         ObstacleAvoidanceModule = False  # Obstacle module prevents the agents from hitting obstacles
 
         # These are the weights for each module. they should sum to 1. 
         # If they don't, they will be scaled accordingly during initialization
         # Also, there should be a weight entry for each module
+        # module_weights = [20,3,1.5,8]  # TODO: only do sanity checks against this if using Steve and Bucci controller
         module_weights = [1]  # TODO: only do sanity checks against this if using Steve and Bucci controller
-        module_priorities = [0, 1, 0, 0, 1]
+        module_priorities = [1, 1, 0, 1, 1]
 
         # Planned Target Trajectory
         if (TargetType == TargetPath.Planned):
             #target_array = np.array([[-40,40],[20,-10],[50,50],[40,-50]])
-            target_array = np.array([[-20,20],[0,-10],[20,30],[-5,-35]])
-            #target_array = np.array([[70,70]])
+            # target_array = np.array([[-20,20],[0,-10],[20,30],[-5,-35]])
+            target_array = np.array([[20,20]])
             targets = target_array[0]
-            changeTargetOnArrival = True
+            changeTargetOnArrival = False
             #target_array = np.array([[-20,20]])
             #target_array = np.array([[10,10],[-10,-10],[-10,10],[10,-10]])
 
         # Circular Target Trajectory
         elif (TargetType == TargetPath.Circle):
-            r = 60 # Target Location Circle Radius
-            n = 360   # Number of loops to complete
+            r = 0 # Target Location Circle Radius
+            n = num_episodes/360   # Number of loops to complete
             targets = np.array([r*np.cos(0), r*np.sin(0)])
             changeTargetOnArrival = False
 
@@ -113,23 +125,23 @@ class Simulation:
                                 random.randint(arena_space[1][0], arena_space[1][1])])
             changeTargetOnArrival = False
         
-        
         num_obstacles = 5
         max_obstacle_size = 1
-        obstacles = np.array([[-30,0,20,5], 
-                              [-30, -10, 10, 10],
-                              [10, 0, 10, 20],
-                              [-5, -25, 35, 5]])
+        # obstacles = np.array([[0,10,2,2], 
+        #                       [10, 0, 2, 2]])
+
+        # obstacles = np.array([[-10,-10,20,20]])
+        obstacles = np.array([[-np.round(obs_width*0.5),-np.round(obs_height*0.5),obs_width,obs_height]])
 
         #obstacles = np.array([random.randint(arena_space[0][0], arena_space[0][1]),random.randint(arena_space[0][0], arena_space[0][1]), random.randint(1,max_obstacle_size), random.randint(1,max_obstacle_size)])
-        for i in range(1,num_obstacles):
-            temp_obstacles = np.array([random.randint(arena_space[0][0], arena_space[0][1]),random.randint(arena_space[0][0], arena_space[0][1]), random.randint(1,max_obstacle_size), random.randint(1,max_obstacle_size)])
-            obstacles = np.vstack((obstacles, temp_obstacles))
+        # for i in range(1,num_obstacles):
+        #     temp_obstacles = np.array([random.randint(arena_space[0][0], arena_space[0][1]),random.randint(arena_space[0][0], arena_space[0][1]), random.randint(1,max_obstacle_size), random.randint(1,max_obstacle_size)])
+        #     obstacles = np.vstack((obstacles, temp_obstacles))
         
     if (Arena == Arena.SmallUrban): # Custom Terrain. Edit These Ones 
         num_agents = 4              # number of agents to simulate
         num_episodes = 1000               # number of times to run the training scenario
-        episode_length = 200          # number of time steps in each training scenario [iterations]
+        episode_length = 400          # number of time steps in each training scenario [iterations]
         exploitation_rise_time = 0     # the amount of time over which we transition from exploration to exploitation [seconds]
         exploitation_rise_percent = 0  # the percentage of each episode over which we transition from exploration to exploitation
 
@@ -160,7 +172,9 @@ class Simulation:
         # If they don't, they will be scaled accordingly during initialization
         # Also, there should be a weight entry for each module
         #module_weights = [0, 0.1, 0.0, 0.2, 0.7]
-        module_weights = [5.60187082e-04, 6.66628594e-01, 4.61904762e-02, 2.60290217e-01, 2.63305262e-02]
+        #module_weights = [cohesion, collision, bounds, target, obstacle]
+        # module_weights = [5.60187082e-04, 6.66628594e-01, 4.61904762e-02, 2.60290217e-01, 2.63305262e-02]
+        module_weights = [5.60187082e-04, 6.66628594e-0, 4.61904762e-02, 2.60290217e-01, 2.63305262e-0]
         module_priorities = [0, 1, 0, 0, 1]
 
         TargetType = TargetPath.Planned
