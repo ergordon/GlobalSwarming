@@ -192,9 +192,9 @@ class CohesionModule(Module):
         for i in range(0,len(state)):
             dist_squared = dist_squared + state[i]**2
         
-        if dist_squared < 20*20:
+        if dist_squared < 25*25:
             rounding_base = 1
-        elif dist_squared < 30*30:
+        elif dist_squared < 50*50:
             rounding_base = 5
         else:
             rounding_base = 10
@@ -213,33 +213,48 @@ class CohesionModule(Module):
         for i in range(0,len(self.tracked_agents)):
             centroid = centroid + self.tracked_agents[i].position 
         centroid = centroid / (len(self.tracked_agents)+1)
-
+        # centroid = np.array([0,0])
         state = centroid - self.parent_agent.position
+        
         dist_squared = 0
         for i in range(0,len(state)):
             dist_squared = dist_squared + state[i]**2
         
-        if dist_squared < 20*20:
+        if dist_squared < 25*25:
             rounding_base = 1
-        elif dist_squared < 30*30:
+        elif dist_squared < 50*50:
             rounding_base = 5
         else:
             rounding_base = 10
 
-        self.state[0] = Module.base_round(state,2,rounding_base) 
+
+        # print('state')
+        # print(state)
+        self.state_prime[0] = Module.base_round(state,2,rounding_base) 
         # Round to whole numbers for discretization
         # self.state_prime[0] = np.round(centroid - self.parent_agent.position, 0)
+        # print('self.state[0]')
+        # print(self.state[0])
 
     def check_state_transition(self):
-        transition = np.zeros((len(self.state),))
-        for i in range(0,len(self.state)):
-            if np.array_equal(self.state[i], self.state_prime[i]):
-                if self.action == Action.STAY:
-                    transition[i] = 1
-            else:
-                if self.action != Action.STAY:
-                    transition[i] = 1
+        transition = np.zeros((1,))
+        # for i in range(0,len(self.state)):
+        # print('checking transitions')
+        # print('self.state[0]')
+        # print(self.state[0])
+        # print('self.state_prime[0]')
+        # print(self.state_prime[0])
+        # print('self.action')
+        # print(self.action)
+        if np.array_equal(self.state[0], self.state_prime[0]):
+            if self.action == Action.STAY:
+                transition[0] = 1
+        else:
+            if self.action != Action.STAY:
+                transition[0] = 1
 
+        # print('self.state_transition')
+        # print(self.state_transition)
         self.state_transition = transition
 
 
@@ -594,19 +609,29 @@ class BoundaryModule(Module):
     def update_state_prime(self):
     
         for i in range(0,len(Simulation.search_space)):    
+            state_vector = Simulation.search_space[i][1] - self.parent_agent.position[i]
             discretization_base = 1
-            if self.state_prime[i*2] < 10:
+            if state_vector < 10.0:
+                discretization_base = 1
+            else:
+                discretization_base = 10.0
+            # print('upper bound')
+            # print(Simulation.search_space[i][1] - self.parent_agent.position[i])
+            # print(discretization_base)
+            self.state_prime[i*2] = Module.base_round(state_vector, 2, discretization_base) 
+
+            state_vector = Simulation.search_space[i][0] - self.parent_agent.position[i]
+            if(state_vector > -10.0):
                 discretization_base = 1
             else:
                 discretization_base = 10
-            self.state_prime[i*2] = Module.base_round(Simulation.search_space[i][1] - self.parent_agent.position[i], 2, discretization_base) 
+            # print('lower bound')
+            # print(Simulation.search_space[i][0] - self.parent_agent.position[i])
+            self.state_prime[i*2+1] = Module.base_round(state_vector, 2, discretization_base)  
 
-            if(self.state_prime[i*2+1] > -10):
-                discretization_base = 1
-            else:
-                discretization_base = 10
-            self.state_prime[i*2+1] = Module.base_round(Simulation.search_space[i][0] - self.parent_agent.position[i], 2, discretization_base)  
 
+        # print('self.state_prime')
+        # print(self.state_prime)
 
         # for i in range(0,len(Simulation.search_space)):   
         #     # Round to whole numbers for discretization
@@ -639,7 +664,9 @@ class BoundaryModule(Module):
                     if self.action != Action.STAY:
                         transition[i*2+1] = 1
 
-
+        # print('self.state_transition')
+        # print(self.state_transition)
+        
         self.state_transition = transition
 
     def get_module_weights(self):
