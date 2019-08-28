@@ -99,7 +99,6 @@ class Agent:
         ranked_if = False
         if ranked_if:
             #lists used for IF MMAS
-            #TODO split whole function up into smaller function so its more manageable
             aw_set = []
             importance_set = []
             module_tier_set = []

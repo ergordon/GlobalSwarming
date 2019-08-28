@@ -176,16 +176,79 @@ class CohesionModule(Module):
         else:
             Simulation.cohesionDist.append(dist_squared)
 
+    def get_centroid(self):
+        # centroid = np.array(self.parent_agent.position)
+        # for i in range(0,len(self.tracked_agents)):
+        #     centroid = centroid + self.tracked_agents[i].position 
+        # centroid = centroid / (len(self.tracked_agents)+1)
+        # # centroid = np.array([0,0])
+        
+        # weight_sum = 0
+        # weighted_centroid = np.zeros((len(centroid),))
+        
+        # state = centroid - self.parent_agent.position
+        # weight = 0
+        # for j in range(0,len(state)):
+        #     weight = weight + state[j]*state[j]
+        # inv_weight = 1
+        # if weight != 0:
+        #     inv_weight = 1/weight
+        # weight_sum = weight_sum + inv_weight 
+        # weighted_centroid = weighted_centroid + self.parent_agent.position*inv_weight
+
+        # for i in range(0,len(self.tracked_agents)):
+        #     weight = 0
+        #     state = centroid - self.tracked_agents[i].position
+        #     for j in range(0,len(state)):
+        #         weight = weight + state[j]*state[j]
+        #     inv_weight = 1
+        #     if weight != 0:
+        #         inv_weight = 1/weight
+        #     weight_sum = weight_sum + inv_weight
+        #     weighted_centroid = weighted_centroid + self.tracked_agents[i].position*inv_weight
+
+        
+        
+        
+        #set this to be the number of neigbors you want to track!!!
+        num_neighbors =  len(self.tracked_agents)
+        # print(num_neighbors)
+
+        num_n = min(num_neighbors, len(self.tracked_agents))
+        if num_n < len(self.tracked_agents):
+            squared_distances = np.zeros((len(self.tracked_agents),))
+            for i in range(0,len(self.tracked_agents)):
+                dist_squared = 0
+                dist_vector = self.tracked_agents[i].position - self.parent_agent.position
+                for j in range(0,len(dist_vector)):
+                    dist_squared = dist_squared + dist_vector[j]*dist_vector[j]
+                squared_distances[i] = dist_squared
+           
+            sort_index = min(num_neighbors, len(self.tracked_agents)-1)
+                
+            nearest_indices = np.argpartition(squared_distances, sort_index)[:num_n]
+        else:
+            nearest_indices = np.arange(len(self.tracked_agents))
+        # print('squared_distances')
+        # print(squared_distances)
+        # print('nearest_indices')
+        # print(nearest_indices)
+        # print(squared_distances[nearest_indices])
+        
+        centroid = np.array(self.parent_agent.position)
+        for i in range(0,num_n):
+            centroid = centroid + self.tracked_agents[nearest_indices[i]].position 
+        centroid = centroid / (num_n+1)
+        
+        return centroid
+        
+
     # Update the state that the agent is currently in
     #  for this module, it is the vector pointing from the agent to a tracked agent
     #  there is a separate state stored for each tracked agent
     def update_state(self):
-        # TODO make this the nearest n agents!!!
-        # Find the centroid of self and all tracked agents
-        centroid = np.array(self.parent_agent.position)
-        for i in range(0,len(self.tracked_agents)):
-            centroid = centroid + self.tracked_agents[i].position 
-        centroid = centroid / (len(self.tracked_agents)+1)
+        
+        centroid = self.get_centroid()        
 
         state = centroid - self.parent_agent.position
         dist_squared = 0
@@ -209,13 +272,9 @@ class CohesionModule(Module):
     #  for this module, it is the vector pointing from the agent to the swarm centroid
     # TODO: use the centroid of the agents within a defined range
     def update_state_prime(self):
-        centroid = np.array(self.parent_agent.position)
-        for i in range(0,len(self.tracked_agents)):
-            centroid = centroid + self.tracked_agents[i].position 
-        centroid = centroid / (len(self.tracked_agents)+1)
-        # centroid = np.array([0,0])
-        state = centroid - self.parent_agent.position
-        
+        centroid = self.get_centroid()        
+        state = centroid - self.parent_agent.position 
+
         dist_squared = 0
         for i in range(0,len(state)):
             dist_squared = dist_squared + state[i]**2
@@ -246,17 +305,28 @@ class CohesionModule(Module):
         # print(self.state_prime[0])
         # print('self.action')
         # print(self.action)
-        if np.array_equal(self.state[0], self.state_prime[0]):
-            if self.action == Action.STAY:
-                transition[0] = 1
-        else:
-            if self.action != Action.STAY:
-                transition[0] = 1
 
+        if self.action == Action.STAY:
+            transition[0] = 1
+        elif not np.array_equal(self.state[0], self.state_prime[0]): 
+            transition[0] = 1
+
+        # print('state, state prime')
+        # print(self.state[0])
+        # print(self.state_prime[0])
+        # if np.array_equal(self.state[0], self.state_prime[0]):
+        #     if self.action == Action.STAY:
+        #         transition[0] = 1
+        # else:
+        #     if self.action != Action.STAY:
+        #         transition[0] = 1
+
+        # print('self.action')
+        # print(self.action)
+        
+        self.state_transition = transition
         # print('self.state_transition')
         # print(self.state_transition)
-        self.state_transition = transition
-
 
     # Determine the reward for executing the action (not prime) in the state (not prime)
     # Action (not prime) brings agent from state (not prime) to state_prime, and reward is calulated based on state_prime
@@ -298,19 +368,25 @@ class CohesionModule(Module):
     # Draw a transparent circle around the centroid 
     def visualize(self):
         super().visualize() #inherited class function
-            
-        centroid = self.parent_agent.position
-        for i in range(0,len(self.tracked_agents)):
-            centroid = centroid + self.tracked_agents[i].position 
-        centroid = centroid / (len(self.tracked_agents)+1)
+
+        # weighted_centroid = weighted_centroid/weight_sum
+        # state = weighted_centroid - self.parent_agent.position
+        centroid = self.get_centroid()        
+        state = centroid - self.parent_agent.position 
         
         # Set marker size to be the diameter of the range
         mkr_size = np.sqrt(CohesionModule.ranges_squared[-1])
 
+        #draw a line from the agent to center of the circle
+        plt.plot([self.parent_agent.position[0],centroid[0]],[self.parent_agent.position[1],centroid[1]],'k-')
+
         # Plot range circle, mkrsize is the radius.
         circle = plt.Circle((centroid[0],centroid[1]), mkr_size, color='green', alpha=0.1/Simulation.num_agents)
+        # circle = plt.Circle((weighted_centroid[0],weighted_centroid[1]), mkr_size, color='green', alpha=0.1/Simulation.num_agents)
+        # circle = plt.Circle((centroid[0],centroid[1]), mkr_size, color='blue', alpha=0.1)
         ax = plt.gca()
         ax.set_aspect('equal')
+        # ax.add_artist(circle)
         ax.add_artist(circle)
 
 
@@ -1039,20 +1115,7 @@ class ObstacleAvoidanceModule(Module):
     # Update the state that the agent is currently in
     #  for this module, it is the the set of vectors pointing from the agent to each other agent in the swarm
     def update_state(self):
-        # state_vector = Simulation.targets - self.parent_agent.position
-        # dist_squared = 0
-        # for i in range(0,len(state_vector)):
-        #     dist_squared = dist_squared + state_vector[i]**2
         
-        # if dist_squared < 20.0*20.0:
-        #     rounding_base = 1
-        # elif dist_squared < 30.0*30.0:
-        #     rounding_base = 5
-        # else:
-        #     rounding_base = 10
-        
-        # self.state_prime[0] = Module.base_round(state_vector, 1, rounding_base)
-
         for i in range(0,len(Simulation.obstacles)): 
             obs_x = Simulation.obstacles[i][0]
             obs_y = Simulation.obstacles[i][1]
