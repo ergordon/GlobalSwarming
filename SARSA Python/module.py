@@ -306,10 +306,20 @@ class CohesionModule(Module):
         # print('self.action')
         # print(self.action)
 
-        if self.action == Action.STAY:
-            transition[0] = 1
-        elif not np.array_equal(self.state[0], self.state_prime[0]): 
-            transition[0] = 1
+
+        # transition = np.zeros((len(self.tracked_agents),))
+        # for i in range(0,len(self.state)):
+        if np.array_equal(self.state[0], self.state_prime[0]):
+            if self.action == Action.STAY:
+                transition[0] = 1
+        else:
+            if self.action != Action.STAY:
+                transition[0] = 1
+
+        # if self.action == Action.STAY:
+        #     transition[0] = 1
+        # elif not np.array_equal(self.state[0], self.state_prime[0]): 
+        #     transition[0] = 1
 
         # print('state, state prime')
         # print(self.state[0])

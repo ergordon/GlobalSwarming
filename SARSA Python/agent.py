@@ -63,21 +63,43 @@ class Agent:
     def take_action(self,act):
         
         step_size = 1#Simulation.agent_step_size
-        
+        step_angle = 0
+
         if Simulation.continuous_steering: 
             #NOTE: use self.action_weights
             pass
         else:
+        
             if act == Action.MOVE_PLUS_X :
-                self.position = self.position + [step_size,0]
-            elif  act == Action.MOVE_MINUS_X :
-                self.position = self.position + [-step_size,0]
+                step_angle = 0
+                # self.position = self.position + [step_size,0]
+            elif  act == Action.MOVE_PLUS_X_PLUS_Y :
+                step_angle = 0.25*np.pi
+                # self.position = self.position + [-step_size,0]
             elif  act == Action.MOVE_PLUS_Y :
-                self.position = self.position + [0,step_size]
+                step_angle = 0.5*np.pi
+                # self.position = self.position + [0,step_size]
+            elif  act == Action.MOVE_MINUS_X_PLUS_Y :
+                step_angle = 0.75*np.pi
+                # self.position = self.position + [0,-step_size]
+            elif  act == Action.MOVE_MINUS_X :
+                step_angle = np.pi
+                # self.position = self.position + [-step_size,0]
+            elif  act == Action.MOVE_MINUS_X_MINUX_Y :
+                step_angle = 1.25*np.pi
+                # self.position = self.position + [0,step_size]
             elif  act == Action.MOVE_MINUS_Y :
-                self.position = self.position + [0,-step_size]
+                step_angle = 1.5*np.pi
+                # self.position = self.position + [0,-step_size]
+            elif  act == Action.MOVE_PLUS_X_MINUS_Y :
+                step_angle = 1.75*np.pi
+                # self.position = self.position + [0,-step_size]
             else: #act == Action.STAY
-                self.position = self.position + [0,0]
+                step_size = 0
+                # self.position = self.position + [0,0]
+
+        step_vector = step_size*np.array([np.cos(step_angle), np.sin(step_angle)])
+        self.position = self.position + step_vector
 
     # Add the passed in incremental reward to the agents total reward
     def add_total_reward(self,incremental_reward):
