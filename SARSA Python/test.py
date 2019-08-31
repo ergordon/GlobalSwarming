@@ -1,7 +1,8 @@
 import numpy as np
 import module as module
 import agent as agent
-import action as action
+# import action as action
+from action import Action
 import matplotlib.pyplot as plt
 import pickle
 from simulation import Simulation
@@ -329,16 +330,372 @@ import time
 
 
 # load the saved data and see whats inside...
-training_filename = 'test/CohesionModule_training_data.pkl'
-with open(training_filename, 'rb') as f:
-    [module_name, table, states] = pickle.load(f)
+# training_filename = 'obstacle_tiered_retrain/ObstacleAvoidanceModule_training_data.pkl'
+# with open(training_filename, 'rb') as f:
+#     [module_name, q_data, q_updates] = pickle.load(f)
 
-print(module_name)
-print(table)
-print(states)
+# test_state = np.array([4,4,3])
+# print(q_data[0][tuple(test_state)])
+
+
+# print(module_name)
+# print(q_data)
+# print(q_updates)
 
 # myDict = {}
 # myDict.update({'A':1})
 # print(myDict['A'])
 # myDict['A'] = myDict['A'] + 1
 # print(myDict['A'])
+
+
+
+# x=[1,2,3]
+# y=[9,8,7]
+
+# plt.plot(x,y)
+# for a,b in zip(x, y): 
+#     plt.text(a, b, str(b))
+# plt.show()
+
+# T = 0.1
+
+# aw_min = np.array([1,0,0,0,0])
+# aw_max = np.array([1,1,1,1,0])
+
+# min_sum = 0
+# max_sum = 0
+
+# for i in range(0,len(aw_min)):
+#     min_sum = min_sum + np.exp(aw_min[i]/T)
+#     max_sum = max_sum + np.exp(aw_max[i]/T)
+
+# result_min = np.zeros((5,))
+# result_max = np.zeros((5,))
+
+# for i in range(0,len(aw_min)):
+#     result_min[i] = np.exp(aw_min[i]/T)/min_sum
+#     result_max[i] = np.exp(aw_max[i]/T)/max_sum
+
+# print('result_min', result_min)
+# print('result_max', result_max)
+
+
+
+
+
+# alpha = 0.7
+# gamma = 0.99
+# T = 1
+# r = 7
+# delta = 1/5
+# sigma = 1
+
+
+# Q_old = [1.22, 14.22, 3.11, 0, 3]
+
+
+
+# def normalize(vector, range): # range should be (lower_bound, upper_bound) 
+#         a = np.max(vector)
+#         c = np.min(vector)
+#         b = range[1]
+#         d = range[0]
+
+#         m = (b - d) / (a - c)
+#         pslope = (m * (vector - c)) + d
+#         return pslope
+
+# action_weights = np.array([ -900.36435528,  828.87761814,  926.55647586,  811.38502291, 1000])
+
+# if not min(action_weights) ==  max(action_weights):
+#     action_weights = normalize(action_weights, np.array([-1,1]))
+
+# action_weights = np.array([1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0])
+# action_weights = np.array([1,1,1,1,1,1,1,1,0])
+
+
+
+#############################
+# throttling T via epsilon. the logarithmic way.
+
+# num_div = 100
+# max_probs = np.zeros(num_div)
+# Tees = np.zeros(num_div)
+
+# T_i = 1.445
+# T_f = 0.285
+
+# for n in range(0,num_div):
+#     action_weights = np.array([1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0])
+
+    
+#     epsilon = float(n)/float(num_div) 
+#     # print(epsilon)
+#     # T = T_f - (1.0-epsilon)*(T_f - T_i)
+#     # T = T_f - (1.0-epsilon)*(T_f - T_i)
+#     T = T_f**epsilon * T_i**(1-epsilon)
+#     # max_probs[i] = 1
+#     Tees[n] = T
+
+#     for i in range(0,len(action_weights)):
+#         action_weights[i] = np.exp(action_weights[i]/T)
+
+#     sum_action_weights = np.sum(action_weights)        
+#     if sum_action_weights == 0:
+#         action_weights = np.ones(len(Action))/len(Action)
+#     elif sum_action_weights != 1:
+#         # print('not sum 1')
+#         action_weights = action_weights/sum_action_weights
+#     print(action_weights)
+#     max_probs[n] = action_weights[0]
+
+# plt.plot(Tees)
+# plt.plot(max_probs)
+# plt.show()
+# print('action_weights', action_weights)
+
+########################
+
+# T = 1.445 #.35
+# T = .58
+# T = 100000000000000000
+# T = 18000000000000000
+# aw_sum = 0
+# for i in range(0,len(action_weights)):
+#     action_weights[i] = np.exp(action_weights[i]/T)
+#     aw_sum = aw_sum + action_weights[i] 
+
+# T = 1
+# for i in range(0,len(action_weights)):
+#     action_weights[i] = np.exp(action_weights[i]/T)
+
+# sum_action_weights = np.sum(action_weights)        
+# if sum_action_weights == 0:
+#     action_weights = np.ones(len(Action))/len(Action)
+# elif sum_action_weights != 1:
+#     action_weights = action_weights/sum_action_weights
+
+
+
+# print('action_weights/aw_sum', action_weights)
+
+# action_weights = np.array([1,1,1,1,0])#,-1,-1,-1,1])
+
+# print('action_weights', action_weights)
+
+# # T = 1
+# # T = 100000000000000000
+# # T = 18000000000000000
+# aw_sum = 0
+# for i in range(0,len(action_weights)):
+#     action_weights[i] = np.exp(action_weights[i]/T)
+#     aw_sum = aw_sum + action_weights[i] 
+
+# print('action_weights/aw_sum',action_weights/aw_sum)
+
+
+
+
+# action_weights = np.array([ -900.36435528,  828.87761814,  926.55647586,  811.38502291, 1000])
+# asum = np.sum(np.absolute(action_weights)) #TODO fix infinity again
+# #TODO divide by the sum of the absolute values? 
+# if(asum != 0):
+#     action_weights = action_weights / asum
+
+# print(action_weights)
+
+# aw1 = np.array([-3.20645073, -0.32784625, -0.0580238,  -6.91932535, -0.91353664])
+# aw2 = np.array([585.87790536, 375.68208995, 291.0006224,  373.60879064, 577.79851454])
+# w1 = 20
+# w2 = 1
+
+# awsum = aw1+w1 + aw2+w2
+# print(awsum)
+
+# aw1 = np.array([-0.18400376,  -2.15344679, -40.3941463,   -0.15047648,  -0.84795454])
+# aw1 = np.array([529.58503617, 338.26526735, 326.68028439, 175.29753524, 560.492753])
+
+# awsum = aw1+w1 + aw2+w2
+# print(awsum)
+
+
+# a1 = np.array([1,1])
+# a2 = np.array([1,2])
+# print(np.array_equal(a1, a2))
+
+# def myround(x, base=5):
+#     return int(base * round(float(x)/base))
+
+# def my_round(x, prec=2, base=0.05): 
+#     return (base * (np.array(x) / base).round()).round(prec)
+
+# number = 143.356
+
+# print(my_round(number, 2, 1))
+
+
+# a = np.array([9, 4, 4, 3, 3, 9, 0, 4, 6, 0])    
+# ind = np.argpartition(a, -4)[-4:]
+# print(a[ind])
+
+# # for i in np.arange(0,len(x),2):
+# #     connectpoints(x,y,i,i+1)
+# x=[-1 ,0.5 ,1,-0.5]
+# y=[ 0.5,  1, -0.5, -1]
+
+# for i in np.arange(0,len(x),2):
+#     plt.plot(x[i:i+2],y[i:i+2],'k-')
+
+# plt.axis('equal')
+# plt.show()
+
+
+# MOVE_PLUS_X = 0
+# MOVE_PLUS_X_PLUS_Y = 1
+# MOVE_PLUS_Y = 2
+# MOVE_MINUS_X_PLUS_Y = 3
+# MOVE_MINUS_X = 4
+# MOVE_MINUS_X_MINUS_Y = 5
+# MOVE_MINUS_Y = 6
+# MOVE_PLUS_X_MINUS_Y = 7
+# STAY = 8
+
+action_headings = {}
+nearest_actions = {}
+opposite_action = {}
+
+
+# for i in range(0,len(Action)):
+for action_data in Action:
+    if not action_data == Action.STAY:
+        heading = float(action_data.value)/float(len(Action)-1)*2*np.pi
+        print(heading)
+        action_headings.update({action_data : heading})
+
+
+#TODO put this into a for loop
+    
+# #+X
+# nearest = np.array([action_headings[Action.MOVE_PLUS_X_PLUS_Y], action_headings[Action.MOVE_PLUS_X_MINUS_Y]])
+# opposite = action_headings[Action.MOVE_MINUS_X]
+# nearest_action_headings.update({Action.MOVE_PLUS_X:nearest})
+# opposite_action_headings.update({Action.MOVE_PLUS_X:opposite})
+# #+X+Y
+# nearest = np.array([action_headings[Action.MOVE_PLUS_Y], action_headings[Action.MOVE_PLUS_X]])
+# opposite = action_headings[Action.MOVE_MINUS_X_MINUS_Y]
+# nearest_action_headings.update({Action.MOVE_PLUS_X_PLUS_Y:nearest})
+# opposite_action_headings.update({Action.MOVE_PLUS_X_PLUS_Y:opposite})
+# #+Y
+# nearest = np.array([action_headings[Action.MOVE_MINUS_X_PLUS_Y], action_headings[Action.MOVE_PLUS_X_PLUS_Y]])
+# opposite = action_headings[Action.MOVE_MINUS_Y]
+# nearest_action_headings.update({Action.MOVE_PLUS_Y:nearest})
+# opposite_action_headings.update({Action.MOVE_PLUS_Y:opposite})
+# #-X+Y
+# nearest = np.array([action_headings[Action.MOVE_MINUS_X], action_headings[Action.MOVE_PLUS_Y]])
+# opposite = action_headings[Action.MOVE_PLUS_X_MINUS_Y]
+# nearest_action_headings.update({Action.MOVE_MINUS_X_PLUS_Y:nearest})
+# opposite_action_headings.update({Action.MOVE_MINUS_X_PLUS_Y:opposite})
+# #-X
+# nearest = np.array([action_headings[Action.MOVE_MINUS_X_MINUS_Y], action_headings[Action.MOVE_MINUS_X_PLUS_Y]])
+# opposite = action_headings[Action.MOVE_PLUS_X]
+# nearest_action_headings.update({Action.MOVE_MINUS_X:nearest})
+# opposite_action_headings.update({Action.MOVE_MINUS_X:opposite})
+# #-X-Y
+# nearest = np.array([action_headings[Action.MOVE_MINUS_Y], action_headings[Action.MOVE_MINUS_X]])
+# opposite = action_headings[Action.MOVE_PLUS_X_PLUS_Y]
+# nearest_action_headings.update({Action.MOVE_MINUS_X_MINUS_Y:nearest})
+# opposite_action_headings.update({Action.MOVE_MINUS_X_MINUS_Y:opposite})
+# #-Y
+# nearest = np.array([action_headings[Action.MOVE_PLUS_X_MINUS_Y], action_headings[Action.MOVE_MINUS_X_MINUS_Y]])
+# opposite = action_headings[Action.MOVE_PLUS_Y]
+# nearest_action_headings.update({Action.MOVE_MINUS_Y:nearest})
+# opposite_action_headings.update({Action.MOVE_MINUS_Y:opposite})
+# #+X-Y
+# nearest = np.array([action_headings[Action.MOVE_PLUS_X], action_headings[Action.MOVE_MINUS_Y]])
+# opposite = action_headings[Action.MOVE_MINUS_X_PLUS_Y]
+# nearest_action_headings.update({Action.MOVE_PLUS_X_MINUS_Y:nearest})
+# opposite_action_headings.update({Action.MOVE_PLUS_X_MINUS_Y:opposite})
+
+
+#+X
+nearest = np.array([Action.MOVE_PLUS_X_PLUS_Y, Action.MOVE_PLUS_X_MINUS_Y])
+opposite = Action.MOVE_MINUS_X
+nearest_actions.update({Action.MOVE_PLUS_X:nearest})
+opposite_action.update({Action.MOVE_PLUS_X:opposite})
+#+X+Y
+nearest = np.array([Action.MOVE_PLUS_Y, Action.MOVE_PLUS_X])
+opposite = Action.MOVE_MINUS_X_MINUS_Y
+nearest_actions.update({Action.MOVE_PLUS_X_PLUS_Y:nearest})
+opposite_action.update({Action.MOVE_PLUS_X_PLUS_Y:opposite})
+#+Y
+nearest = np.array([Action.MOVE_MINUS_X_PLUS_Y, Action.MOVE_PLUS_X_PLUS_Y])
+opposite = Action.MOVE_MINUS_Y
+nearest_actions.update({Action.MOVE_PLUS_Y:nearest})
+opposite_action.update({Action.MOVE_PLUS_Y:opposite})
+#-X+Y
+nearest = np.array([Action.MOVE_MINUS_X, Action.MOVE_PLUS_Y])
+opposite = Action.MOVE_PLUS_X_MINUS_Y
+nearest_actions.update({Action.MOVE_MINUS_X_PLUS_Y:nearest})
+opposite_action.update({Action.MOVE_MINUS_X_PLUS_Y:opposite})
+#-X
+nearest = np.array([Action.MOVE_MINUS_X_MINUS_Y, Action.MOVE_MINUS_X_PLUS_Y])
+opposite = Action.MOVE_PLUS_X
+nearest_actions.update({Action.MOVE_MINUS_X:nearest})
+opposite_action.update({Action.MOVE_MINUS_X:opposite})
+#-X-Y
+nearest = np.array([Action.MOVE_MINUS_Y, Action.MOVE_MINUS_X])
+opposite = Action.MOVE_PLUS_X_PLUS_Y
+nearest_actions.update({Action.MOVE_MINUS_X_MINUS_Y:nearest})
+opposite_action.update({Action.MOVE_MINUS_X_MINUS_Y:opposite})
+#-Y
+nearest = np.array([Action.MOVE_PLUS_X_MINUS_Y, Action.MOVE_MINUS_X_MINUS_Y])
+opposite = Action.MOVE_PLUS_Y
+nearest_actions.update({Action.MOVE_MINUS_Y:nearest})
+opposite_action.update({Action.MOVE_MINUS_Y:opposite})
+#+X-Y
+nearest = np.array([Action.MOVE_PLUS_X, Action.MOVE_MINUS_Y])
+opposite = Action.MOVE_MINUS_X_PLUS_Y
+nearest_actions.update({Action.MOVE_PLUS_X_MINUS_Y:nearest})
+opposite_action.update({Action.MOVE_PLUS_X_MINUS_Y:opposite})
+
+
+print(nearest_actions)
+print(opposite_action)
+
+action_weights = np.array([1.0, 0.8, 0.6, 0.4, 0.2, 0.4, 0.6, 0.8, 0.7])
+
+
+#handle direciton first. (other code exists for finding highest action index)
+action_best = Action.MOVE_PLUS_X
+action_CW = nearest_actions[action_best][0]
+action_CCW = nearest_actions[action_best][1]
+action_opposite = opposite_action[action_best]
+
+angle_best =  action_headings[action_best]
+angle_CW =   action_headings[action_best]
+if abs(angle_CW - angle_best) > np.pi:
+    angle_CW = 2*np.pi - angle_CW
+angle_CCW =  action_headings[action_best]
+if abs(angle_CCW - angle_best) > np.pi:
+    angle_CCW = 2*np.pi - angle_CCW
+angle_opposite = action_headings[action_best]
+
+weight_best = action_weights[action_best.value]
+weight_CW = action_weights[action_CW.value]
+weight_CCW = action_weights[action_CCW.value]
+weight_opposite = action_weights[action_opposite.value]
+weight_stay = action_weights[-1]
+
+#now calculate direction
+w_CCW = 1.0/(2+(weight_best - weight_CCW)**2)
+w_CW = 1.0/(2+(weight_best - weight_CW)**2)
+
+angle_actual = angle_best + w_CCW*(angle_CCW - angle_best) + w_CW*(angle_CW - angle_best)
+
+print('angle_actual',angle_actual)
+
+#now handle step size
+step_scalar =(weight_opposite*-1.0 + weight_best*1.0)/(weight_opposite + weight_best + weight_stay) 
+print('step_scalar',step_scalar)
+

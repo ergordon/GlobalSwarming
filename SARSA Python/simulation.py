@@ -31,29 +31,32 @@ class Reward(enum.Enum):
 class Simulation:
 
     ## Define Which Test Arena Being Used
-    Arena = Arena.Playground
+    # Arena = Arena.Playground
+    Arena = Arena.SmallUrban
 
     ## Multi-Module Action Selector (MMAS) to be activated.
-    ControllerType = Controller.GreatestMass
+    # ControllerType = Controller.GreatestMass
+    ControllerType = Controller.Importance
 
     ## Target Parameters
+    TargetType = TargetPath.Planned
     # TargetType = TargetPath.Random
-    TargetType = TargetPath.Circle
+    # TargetType = TargetPath.Circle
 
     ## Reward Scheme
     RewardType = Reward.Tiered
 
-    testing = False
-    continuous_steering = False
+    testing = True
+    continuous_steering = True
 
     Tokic_VDBE = True
 
     getMetricPlots = False
 
-    visualize = False           # Whether to show a plot animation of the agent positions
+    visualize = True           # Whether to show a plot animation of the agent positions
     load_agents = False         # Whether to load the agents.pkl file (loads agents exactly as they upon completion of training)
     load_training_data = True   # Whether to load the agent training data (loads q tables and states into the modules that exist in the agent initialization function)
-    take_best_action = False    # Whether to select next actions based on highest Q table entry or use Q table values as probabilities for each action 
+    take_best_action = True    # Whether to select next actions based on highest Q table entry or use Q table values as probabilities for each action 
 
     # Genetic Algoritm Parameters
     sol_per_pop = 8         # Population Size
@@ -61,9 +64,9 @@ class Simulation:
     num_generations = 100   # Number of Generations
 
     if (Arena == Arena.Playground): # Custom Terrain. Edit These Ones 
-        num_agents = 1               # Number of agents to simulate
-        num_episodes = 360*100           # Number of times to run the training scenario
-        episode_length = 300           # Number of time steps in each training scenario [iterations]
+        num_agents = 10               # Number of agents to simulate
+        num_episodes = 360*50           # Number of times to run the training scenario
+        episode_length = 200           # Number of time steps in each training scenario [iterations]
         exploitation_rise_time = 0      # The amount of time over which we transition from exploration to exploitation [seconds]
 
         exploitation_rise_percent = 0  # The percentage of each episode over which we transition from exploration to exploitation
@@ -78,31 +81,31 @@ class Simulation:
         #bounds to initialize the agents inside of
         # init_space = [[-np.round(obs_width*0.5)-4,np.round(obs_width*0.5)+4],
         #             [-np.round(obs_height*0.5)-4,np.round(obs_height*0.5)+4]]
-        init_space = [[-0,0],
-                    [-0,0]]
+        init_space = [[-5,5],
+                    [-5,5]]
 
         #bounds to simulate the agents within
         #exiting these bounds will end the episode immediately
-        search_space = [[-100,100],
-                        [-100,100]]
+        search_space = [[-50,50],
+                        [-50,50]]
 
         # Bounds to intilize the targets and obstacles within
-        arena_space = [[-20,20],
-                       [-20,20]]
+        arena_space = [[-30,30],
+                       [-30,30]]
 
         # Activate Modules
         CohesionModule = False            # Cohesion module makes the agents stay together as a swarm
-        CollisionAvoidanceModule = False  # Collision module prevents the agents from hitting each other
+        CollisionAvoidanceModule = True  # Collision module prevents the agents from hitting each other
         OutOfBoundsModule = False        # Boundary module prevents the agents from leaving the search space
         TargetSeekingModule = True      # Target module encourages agents to travel to waypoint
-        ObstacleAvoidanceModule = False  # Obstacle module prevents the agents from hitting obstacles
+        ObstacleAvoidanceModule = True  # Obstacle module prevents the agents from hitting obstacles
 
         # These are the weights for each module. they should sum to 1. 
         # If they don't, they will be scaled accordingly during initialization
         # Also, there should be a weight entry for each module
         # module_weights = [1,0.5,10,4,10]  # TODO: only do sanity checks against this if using Steve and Bucci controller
-        # module_weights =  [1.0/35.0, 1.0/8.0, 1.0, 1.0/90.0, 1.0/55.0]  # TODO: only do sanity checks against this if using Steve and Bucci controller
-        module_weights =  [1.0]  # TODO: only do sanity checks against this if using Steve and Bucci controller
+        module_weights =  [1.0/8.0, 1.0/90.0, 1.0/55.0]  # TODO: only do sanity checks against this if using Steve and Bucci controller
+        # module_weights =  [1.0]  # TODO: only do sanity checks against this if using Steve and Bucci controller
         module_priorities = [1, 1, 0, 1, 1]
 
         # Planned Target Trajectory
@@ -129,7 +132,7 @@ class Simulation:
                                 random.randint(arena_space[1][0], arena_space[1][1])])
             changeTargetOnArrival = False
         
-        num_obstacles = 5
+        num_obstacles = 7
         max_obstacle_size = 2
         # obstacles = np.array([[0,10,2,2], 
         #                       [10, 0, 2, 2]])
@@ -144,8 +147,8 @@ class Simulation:
         
     if (Arena == Arena.SmallUrban): # Custom Terrain. Edit These Ones 
         num_agents = 4              # number of agents to simulate
-        num_episodes = 2000               # number of times to run the training scenario
-        episode_length = 400          # number of time steps in each training scenario [iterations]
+        num_episodes = 1               # number of times to run the training scenario
+        episode_length = 2000          # number of time steps in each training scenario [iterations]
         exploitation_rise_time = 0     # the amount of time over which we transition from exploration to exploitation [seconds]
         exploitation_rise_percent = 0  # the percentage of each episode over which we transition from exploration to exploitation
 
@@ -175,7 +178,7 @@ class Simulation:
         # These are the weights for each module. they should sum to 1. 
         # If they don't, they will be scaled accordingly during initialization
         # Also, there should be a weight entry for each module
-        module_weights = [1, 1, 4, 1, 10]
+        module_weights = [1.0/35.0, 1.0/8.0, 1.0, 1.0/90.0, 1.0/55.0]
         #module_weights = [cohesion, collision, bounds, target, obstacle]
         # module_weights = [5.60187082e-04, 6.66628594e-01, 4.61904762e-02, 2.60290217e-01, 2.63305262e-02]
         # module_weights = [5.60187082e-04, 6.66628594e-0, 4.61904762e-02, 2.60290217e-01, 2.63305262e-0]
