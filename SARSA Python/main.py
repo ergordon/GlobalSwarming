@@ -85,7 +85,16 @@ def ReinitializeAgents(agents,bounds):
             temp_obstacles = np.array([random.randint(arena_space[0][0], arena_space[0][1]),random.randint(arena_space[0][0], arena_space[0][1]), random.randint(1,Simulation.max_obstacle_size), random.randint(1,Simulation.max_obstacle_size)])
             Simulation.obstacles = np.vstack((Simulation.obstacles, temp_obstacles))
     
-    
+    elif (Simulation.Arena == Arena.SmallUrban):
+        Simulation.obstacles = np.array([[-30,0,20,5], 
+                              [-30, -10, 10, 10],
+                              [10, 0, 10, 20],
+                              [-5, -25, 35, 5]])
+
+        if (Simulation.ControllerType != Controller.GenAlg):
+            for i in range(0,Simulation.num_obstacles):
+                temp_obstacles = np.array([random.randint(arena_space[0][0], arena_space[0][1]),random.randint(arena_space[0][0], arena_space[0][1]), 1, 1])
+                Simulation.obstacles = np.vstack((Simulation.obstacles, temp_obstacles))
 
 
     # Initialize agent parameters
@@ -347,181 +356,185 @@ def mainSARSA(simName,desc,trainingPath):
             agent_out_of_bounds = False
             Simulation.episode_iter_num = t
 
-            # print('agents take actions')
-            for a in range(0, len(Simulation.agents)):
-                agnt = Simulation.agents[a]
+            if Simulation.testing:
+                # print('agents take actions')
+                for agnt in Simulation.agents:
 
-                # Take the action determined in the last step
-                #  Update agent positions on plots
-                # print('state is', agnt.modules[0].state)
-                agnt.take_action(agnt.modules[0].action)
-                # print('taking action ', agnt.modules[0].action)
+                    # Take the action determined in the last step
+                    #  Update agent positions on plots
+                    # print('state is', agnt.modules[0].state)
+                    agnt.take_action(agnt.modules[0].action)
+                    # print('taking action ', agnt.modules[0].action)
 
-                # Check if any agent went out of search space.
-                #  Terminate episode if so
-                if not (checkInBounds(agnt.position,Simulation.search_space)):
-                    if (Simulation.ControllerType != Controller.GenAlg):
-                        print("agent left search space, ending episode")
-                    Simulation.boundary_collision_count = Simulation.boundary_collision_count + 1
-                    agent_out_of_bounds = True
+                    # Check if any agent went out of search space.
+                    #  Terminate episode if so
+                    if not (checkInBounds(agnt.position,Simulation.search_space)):
+                        if (Simulation.ControllerType != Controller.GenAlg):
+                            print("agent left search space, ending episode")
+                        Simulation.boundary_collision_count = Simulation.boundary_collision_count + 1
+                        agent_out_of_bounds = True
 
-            # print('update state prime and select next action')
-            # for agnt in Simulation.agents:
-            # for a in range(0, len(Simulation.agents)):
-            #     agnt = Simulation.agents[a]
+                if(Simulation.visualize):
+                    plt.grid(linestyle='--', linewidth='0.5', color='grey')
+                    plt.text(Simulation.search_space[0][0], Simulation.search_space[1][1]+1, ('Episode '+str(e)+' Iteration '+str(t)), dict(size=8))
+                    # for agnt in Simulation.agents:
+                    for a in range(0, len(Simulation.agents)):
+                        agnt = Simulation.agents[a]
+                        plt.plot(agnt.position[0],agnt.position[1],'ro')
+                        plt.text(agnt.position[0],agnt.position[1],str(a))
 
-                for mod in agnt.modules:
-                    # Find what the state (state_prime) would be if that action were taken
-                    mod.update_state_prime()
-                    mod.check_state_transition()
-                    # print('state prime is ', mod.state_prime)
-
-                # Select the next action (action_prime) for the agent to take 
-                # print('~~~~~~~~~~~~agent ' + str(a) + ', select next action~~~~~~~~~~~~~~~~~~')
-                # if e == 175:
-                #     print('agent action: ', agnt.modules[0].action)
-                agnt.select_next_action()
-                # print('next action is ', agnt.modules[0].action_prime)
-
-            # print('instant and total reward, update q, action == action prime, state == state prime')
-            # for agnt in Simulation.agents:
-                for mod in agnt.modules:
-                    if (Simulation.ControllerType != Controller.GenAlg):
+                        plt.axis(axis_bounds)
                         
-                        # Determine the reward for executing the action (not prime) in the state (not prime)
-                        #  Action (not prime) brings agent from state (not prime) to state_prime, and reward is calulated based on state_prime
-                        mod.update_instant_reward()
-                        # print('instant reward is ', mod.instant_reward[0])
+                        for mod in agnt.modules:
+                            mod.visualize()
+                    
+                    if (t%5 == 0):
+                        # Convert the figure into an array and append it to images array        
+                        image = np.frombuffer(fig.canvas.tostring_rgb(), dtype='uint8')
+                        image  = image.reshape(fig.canvas.get_width_height()[::-1] + (3,))
+                        images.append(image)
 
-                        # Add the reward for this action to the total reward earned by the agent 
-                        mod.update_total_reward()
-                        
-                        # Update the Q table
-                        mod.update_q()
-
-                    # Run additional functions specific to each module
-                    # For example, the collision module uses this to track collisions with other agents 
-                    mod.auxiliary_functions()
-
-                    # Prepare for next iteration
-                    mod.action = cp.copy(mod.action_prime)
-                    mod.state  = np.copy(mod.state_prime)
-
-            # Plotting for visualization
-            if(Simulation.visualize):
-                plt.grid(linestyle='--', linewidth='0.5', color='grey')
-                plt.text(Simulation.search_space[0][0], Simulation.search_space[1][1]+1, ('Episode '+str(e)+' Iteration '+str(t)), dict(size=8))
+                # print('update state prime and select next action')
                 # for agnt in Simulation.agents:
                 for a in range(0, len(Simulation.agents)):
                     agnt = Simulation.agents[a]
-                    plt.plot(agnt.position[0],agnt.position[1],'ro')
-                    plt.text(agnt.position[0],agnt.position[1],str(a))
 
-                    plt.axis(axis_bounds)
-                    
                     for mod in agnt.modules:
-                        mod.visualize()
-                
-                if (t%5 == 0):
-                    # Convert the figure into an array and append it to images array        
-                    image = np.frombuffer(fig.canvas.tostring_rgb(), dtype='uint8')
-                    image  = image.reshape(fig.canvas.get_width_height()[::-1] + (3,))
-                    images.append(image)
-                
-                plt.pause(1/frame_rate)
-                plt.clf()
-                plt.cla()
+                        # Find what the state (state_prime) would be if that action were taken
+                        mod.update_state_prime()
+                        mod.check_state_transition()
+                        # print('state prime is ', mod.state_prime)
 
-            # Criteria for ending the episode early.
-            if(agent_out_of_bounds):
-                break  
+                    # Select the next action (action_prime) for the agent to take 
+                    # print('~~~~~~~~~~~~agent ' + str(a) + ', select next action~~~~~~~~~~~~~~~~~~')
+                    agnt.select_next_action()
+                    # print('next action is ', agnt.modules[0].action_prime)
 
-            # # print('agents take actions')
-            # for agnt in Simulation.agents:
+                # print('instant and total reward, update q, action == action prime, state == state prime')
+                for agnt in Simulation.agents:
+                    for mod in agnt.modules:
+                        if (Simulation.ControllerType != Controller.GenAlg):
+                            
+                            # Determine the reward for executing the action (not prime) in the state (not prime)
+                            #  Action (not prime) brings agent from state (not prime) to state_prime, and reward is calulated based on state_prime
+                            mod.update_instant_reward()
+                            # print('instant reward is ', mod.instant_reward[0])
 
-            #     # Take the action determined in the last step
-            #     #  Update agent positions on plots
-            #     # print('state is', agnt.modules[0].state)
-            #     agnt.take_action(agnt.modules[0].action)
-            #     # print('taking action ', agnt.modules[0].action)
+                            # Add the reward for this action to the total reward earned by the agent 
+                            mod.update_total_reward()
+                            
+                            # Update the Q table
+                            mod.update_q()
 
-            #     # Check if any agent went out of search space.
-            #     #  Terminate episode if so
-            #     if not (checkInBounds(agnt.position,Simulation.search_space)):
-            #         if (Simulation.ControllerType != Controller.GenAlg):
-            #             print("agent left search space, ending episode")
-            #         Simulation.boundary_collision_count = Simulation.boundary_collision_count + 1
-            #         agent_out_of_bounds = True
+                        # Run additional functions specific to each module
+                        # For example, the collision module uses this to track collisions with other agents 
+                        mod.auxiliary_functions()
 
-            # if(Simulation.visualize):
-            #     plt.grid(linestyle='--', linewidth='0.5', color='grey')
-            #     plt.text(Simulation.search_space[0][0], Simulation.search_space[1][1]+1, ('Episode '+str(e)+' Iteration '+str(t)), dict(size=8))
-            #     # for agnt in Simulation.agents:
-            #     for a in range(0, len(Simulation.agents)):
-            #         agnt = Simulation.agents[a]
-            #         plt.plot(agnt.position[0],agnt.position[1],'ro')
-            #         plt.text(agnt.position[0],agnt.position[1],str(a))
+                        # Prepare for next iteration
+                        mod.action = cp.copy(mod.action_prime)
+                        mod.state  = np.copy(mod.state_prime)
 
-            #         plt.axis(axis_bounds)
+                # Plotting for visualization
+                if(Simulation.visualize):
+                    plt.pause(1/frame_rate)
+                    plt.clf()
+                    plt.cla()
+
+                # Criteria for ending the episode early.
+                if(agent_out_of_bounds):
+                    break    
+
+            else:
+                # print('agents take actions')
+                for a in range(0, len(Simulation.agents)):
+                    agnt = Simulation.agents[a]
+
+                    # Take the action determined in the last step
+                    #  Update agent positions on plots
+                    # print('state is', agnt.modules[0].state)
+                    agnt.take_action(agnt.modules[0].action)
+                    # print('taking action ', agnt.modules[0].action)
+
+                    # Check if any agent went out of search space.
+                    #  Terminate episode if so
+                    if not (checkInBounds(agnt.position,Simulation.search_space)):
+                        if (Simulation.ControllerType != Controller.GenAlg):
+                            print("agent left search space, ending episode")
+                        Simulation.boundary_collision_count = Simulation.boundary_collision_count + 1
+                        agent_out_of_bounds = True
+
+                # print('update state prime and select next action')
+                # for agnt in Simulation.agents:
+                # for a in range(0, len(Simulation.agents)):
+                #     agnt = Simulation.agents[a]
+
+                    for mod in agnt.modules:
+                        # Find what the state (state_prime) would be if that action were taken
+                        mod.update_state_prime()
+                        mod.check_state_transition()
+                        # print('state prime is ', mod.state_prime)
+
+                    # Select the next action (action_prime) for the agent to take 
+                    # print('~~~~~~~~~~~~agent ' + str(a) + ', select next action~~~~~~~~~~~~~~~~~~')
+                    # if e == 175:
+                    #     print('agent action: ', agnt.modules[0].action)
+                    agnt.select_next_action()
+                    # print('next action is ', agnt.modules[0].action_prime)
+
+                # print('instant and total reward, update q, action == action prime, state == state prime')
+                # for agnt in Simulation.agents:
+                    for mod in agnt.modules:
+                        if (Simulation.ControllerType != Controller.GenAlg):
+                            
+                            # Determine the reward for executing the action (not prime) in the state (not prime)
+                            #  Action (not prime) brings agent from state (not prime) to state_prime, and reward is calulated based on state_prime
+                            mod.update_instant_reward()
+                            # print('instant reward is ', mod.instant_reward[0])
+
+                            # Add the reward for this action to the total reward earned by the agent 
+                            mod.update_total_reward()
+                            
+                            # Update the Q table
+                            mod.update_q()
+
+                        # Run additional functions specific to each module
+                        # For example, the collision module uses this to track collisions with other agents 
+                        mod.auxiliary_functions()
+
+                        # Prepare for next iteration
+                        mod.action = cp.copy(mod.action_prime)
+                        mod.state  = np.copy(mod.state_prime)
+
+                # Plotting for visualization
+                if(Simulation.visualize):
+                    plt.grid(linestyle='--', linewidth='0.5', color='grey')
+                    plt.text(Simulation.search_space[0][0], Simulation.search_space[1][1]+1, ('Episode '+str(e)+' Iteration '+str(t)), dict(size=8))
+                    # for agnt in Simulation.agents:
+                    for a in range(0, len(Simulation.agents)):
+                        agnt = Simulation.agents[a]
+                        plt.plot(agnt.position[0],agnt.position[1],'ro')
+                        plt.text(agnt.position[0],agnt.position[1],str(a))
+
+                        plt.axis(axis_bounds)
+                        
+                        for mod in agnt.modules:
+                            mod.visualize()
                     
-            #         for mod in agnt.modules:
-            #             mod.visualize()
-                
-            #     if (t%5 == 0):
-            #         # Convert the figure into an array and append it to images array        
-            #         image = np.frombuffer(fig.canvas.tostring_rgb(), dtype='uint8')
-            #         image  = image.reshape(fig.canvas.get_width_height()[::-1] + (3,))
-            #         images.append(image)
+                    if (t%5 == 0):
+                        # Convert the figure into an array and append it to images array        
+                        image = np.frombuffer(fig.canvas.tostring_rgb(), dtype='uint8')
+                        image  = image.reshape(fig.canvas.get_width_height()[::-1] + (3,))
+                        images.append(image)
+                    
+                    plt.pause(1/frame_rate)
+                    plt.clf()
+                    plt.cla()
 
-            # # print('update state prime and select next action')
-            # # for agnt in Simulation.agents:
-            # for a in range(0, len(Simulation.agents)):
-            #     agnt = Simulation.agents[a]
+                # Criteria for ending the episode early.
+                if(agent_out_of_bounds):
+                    break 
 
-            #     for mod in agnt.modules:
-            #         # Find what the state (state_prime) would be if that action were taken
-            #         mod.update_state_prime()
-            #         mod.check_state_transition()
-            #         # print('state prime is ', mod.state_prime)
 
-            #     # Select the next action (action_prime) for the agent to take 
-            #     # print('~~~~~~~~~~~~agent ' + str(a) + ', select next action~~~~~~~~~~~~~~~~~~')
-            #     agnt.select_next_action()
-            #     # print('next action is ', agnt.modules[0].action_prime)
-
-            # # print('instant and total reward, update q, action == action prime, state == state prime')
-            # for agnt in Simulation.agents:
-            #     for mod in agnt.modules:
-            #         if (Simulation.ControllerType != Controller.GenAlg):
-                        
-            #             # Determine the reward for executing the action (not prime) in the state (not prime)
-            #             #  Action (not prime) brings agent from state (not prime) to state_prime, and reward is calulated based on state_prime
-            #             mod.update_instant_reward()
-            #             # print('instant reward is ', mod.instant_reward[0])
-
-            #             # Add the reward for this action to the total reward earned by the agent 
-            #             mod.update_total_reward()
-                        
-            #             # Update the Q table
-            #             mod.update_q()
-
-            #         # Run additional functions specific to each module
-            #         # For example, the collision module uses this to track collisions with other agents 
-            #         mod.auxiliary_functions()
-
-            #         # Prepare for next iteration
-            #         mod.action = cp.copy(mod.action_prime)
-            #         mod.state  = np.copy(mod.state_prime)
-
-            # # Plotting for visualization
-            # if(Simulation.visualize):
-            #     plt.pause(1/frame_rate)
-            #     plt.clf()
-            #     plt.cla()
-
-            # # Criteria for ending the episode early.
-            # if(agent_out_of_bounds):
-            #     break    
         
         if (Simulation.ControllerType != Controller.GenAlg):
             # Store the total reward for each agent at the end of each episode for algorithm performance analysis
