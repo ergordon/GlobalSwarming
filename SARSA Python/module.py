@@ -35,7 +35,7 @@ class Module:
         else:
             self.alpha = 0
 
-        self.tier = 0
+        self.mmas_tier = 0
 
         self.gamma = 0                  # Discount factor
 
@@ -164,7 +164,7 @@ class CohesionModule(Module):
         self.instant_reward = np.zeros((1,))
         self.state_transition = np.zeros((1,))
 
-        self.tier = 3
+        self.mmas_tier = 3
 
     def auxiliary_functions(self):
         dist_squared = 0
@@ -446,7 +446,7 @@ class CollisionModule(Module):
         self.collided = False
         self.resetPoint = 0
 
-        self.tier = 1
+        self.mmas_tier = 1
 
     # Visualization for this module. 
     # Draw a transparent circle for each tracked agent for each reward range 
@@ -647,7 +647,7 @@ class BoundaryModule(Module):
         self.state_prime = np.zeros((len(Simulation.search_space)*2,1))
         self.instant_reward = np.zeros(len(Simulation.search_space)*2)  
         self.state_transition = np.zeros(len(Simulation.search_space)*2)
-        self.tier = 0
+        self.mmas_tier = 0
 
 
 
@@ -847,7 +847,7 @@ class TargetSeekModule(Module):
         self.in_target = False           # Bool for tracking if agent is in the target. False = not in target
         #self.targets_entered = 0         # Number of targets entered for a single episode
         
-        self.tier = 2
+        self.mmas_tier = 2
 
     # Visualization for this module. 
     # Draw a transparent circle for each tracked agent for each reward range 
@@ -1030,7 +1030,7 @@ class TargetSeekModule(Module):
         if dist_squared < TargetSeekModule.ranges_squared[-1]*0.9:
             module_weights[0] = 0
         else:
-            module_weights[0] = 0.25
+            module_weights[0] = 0.35
 
         return module_weights
 
@@ -1075,7 +1075,7 @@ class ObstacleAvoidanceModule(Module):
         self.state_prime = np.zeros((len(Simulation.obstacles),len(Simulation.search_space)+1))
         self.instant_reward = np.zeros(len(Simulation.obstacles))
         self.state_transition = np.zeros(len(Simulation.obstacles))
-        self.tier = 0
+        self.mmas_tier = 0
 
 
     # Visualization for this module. 
