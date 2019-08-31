@@ -1,5 +1,6 @@
 import numpy as np
 from action import Action 
+from simulation import Simulation
 
 ##############################################################################
 #   Q learning class
@@ -42,7 +43,10 @@ class Qlearning:
         a_index = action.value        
         a_p_index = action_prime.value
         
-        sigma = 0.5
+        if Simulation.Tokic_VDBE:
+            sigma = 0.7
+        else:
+            sigma = 200.0
         delta = 1/len(Action)
 
         Q_s_a_old = Q_s[a_index]

@@ -1,6 +1,7 @@
 import numpy as np
 import module as module
 from action import Action
+from action import ActionHelper
 from simulation import Simulation
 from simulation import Controller
 import sys
@@ -28,7 +29,7 @@ class Agent:
         
         #the combined action weights determined during select_next_action()
         # stored for use with continuous steering
-        self.action_weights = np.array([])
+        self.action_weights = np.zeros(len(Action))
 
         # TODO: consider a priority system in addition to weighting functions. 
         # Also impose a restriciton on weightin functions to be in the range [0,1]
@@ -64,41 +65,97 @@ class Agent:
         
         step_size = 1#Simulation.agent_step_size
         step_angle = 0
+        step_scalar = 0
 
         if Simulation.continuous_steering: 
-            #NOTE: use self.action_weights
-            pass
+            #handle direciton first. (other code exists for finding highest action index)
+                
+            action_leading = act
+            if act == Action.STAY:
+                # print(self.action_weights)
+                # print(self.action_weights[:-1])
+                indices = np.argwhere(self.action_weights[:-1] == np.amax(self.action_weights[:-1]))
+                    
+                if(len(indices) == 1):
+                    action_leading = Action(np.argmax(self.action_weights[:-1]))
+                else:
+                    # If multiple entries in the Q table row are tied for highest, randomly select one of them
+                    index = random.randint(0,len(indices)-1)
+                    action_leading = Action(indices[index])    
+            
+            action_CW = ActionHelper.nearest_actions[action_leading][0]
+            action_CCW = ActionHelper.nearest_actions[action_leading][1]
+            action_opposite = ActionHelper.opposite_actions[action_leading]
+
+            angle_leading =  ActionHelper.action_headings[action_leading]
+            angle_CW =   ActionHelper.action_headings[action_leading]
+            if abs(angle_CW - angle_leading) > np.pi:
+                angle_CW = 2*np.pi - angle_CW
+            angle_CCW =  ActionHelper.action_headings[action_leading]
+            if abs(angle_CCW - angle_leading) > np.pi:
+                angle_CCW = 2*np.pi - angle_CCW
+            angle_opposite = ActionHelper.action_headings[action_leading]
+
+            weight_leading = self.action_weights[action_leading.value]
+            weight_CW = self.action_weights[action_CW.value]
+            weight_CCW = self.action_weights[action_CCW.value]
+            weight_opposite = self.action_weights[action_opposite.value]
+            weight_stay = self.action_weights[-1]
+
+            #calculate direction
+            w_CCW = 1.0/(2+(weight_leading - weight_CCW)**2)
+            w_CW = 1.0/(2+(weight_leading - weight_CW)**2)
+
+            step_angle = angle_leading + w_CCW*(angle_CCW - angle_leading) + w_CW*(angle_CW - angle_leading)
+
+            # print('step_angle', step_angle)
+
+
+            #handle step size scalar
+            #NOTE: not 100% sure this will always work how we want it to
+            if weight_opposite < weight_stay and act != Action.STAY:
+                if weight_opposite + weight_leading + weight_stay != 0:
+                    step_scalar = (weight_opposite*-1.0 + weight_leading*1.0)/(weight_opposite + weight_leading + weight_stay) 
+                else:
+                    step_scalar = 0
+            else:
+                if weight_leading + weight_stay != 0:
+                    step_scalar = (weight_leading*1.0)/(weight_leading + weight_stay)
+                else:
+                    step_scalar = 0
+            # print('step_scalar', step_scalar)
+
         else:
         
             if act == Action.MOVE_PLUS_X :
+                step_scalar = 1
                 step_angle = 0
-                # self.position = self.position + [step_size,0]
             elif  act == Action.MOVE_PLUS_X_PLUS_Y :
+                step_scalar = 1
                 step_angle = 0.25*np.pi
-                # self.position = self.position + [-step_size,0]
             elif  act == Action.MOVE_PLUS_Y :
+                step_scalar = 1
                 step_angle = 0.5*np.pi
-                # self.position = self.position + [0,step_size]
             elif  act == Action.MOVE_MINUS_X_PLUS_Y :
+                step_scalar = 1
                 step_angle = 0.75*np.pi
-                # self.position = self.position + [0,-step_size]
             elif  act == Action.MOVE_MINUS_X :
+                step_scalar = 1
                 step_angle = np.pi
-                # self.position = self.position + [-step_size,0]
-            elif  act == Action.MOVE_MINUS_X_MINUX_Y :
+            elif  act == Action.MOVE_MINUS_X_MINUS_Y :
+                step_scalar = 1
                 step_angle = 1.25*np.pi
-                # self.position = self.position + [0,step_size]
             elif  act == Action.MOVE_MINUS_Y :
+                step_scalar = 1
                 step_angle = 1.5*np.pi
-                # self.position = self.position + [0,-step_size]
             elif  act == Action.MOVE_PLUS_X_MINUS_Y :
+                step_scalar = 1
                 step_angle = 1.75*np.pi
-                # self.position = self.position + [0,-step_size]
             else: #act == Action.STAY
-                step_size = 0
-                # self.position = self.position + [0,0]
+                step_scalar = 0
+                
 
-        step_vector = step_size*np.array([np.cos(step_angle), np.sin(step_angle)])
+        step_vector = step_size*step_scalar*np.array([np.cos(step_angle), np.sin(step_angle)])
         self.position = self.position + step_vector
 
     # Add the passed in incremental reward to the agents total reward
@@ -459,7 +516,7 @@ class Agent:
     def greatest_mass_select_next_action(self):
         # print('selecting next action')
         T = 0
-        epsilon = -10000000
+        epsilon = 0
         action_weights = np.zeros(len(Action))
         
         transition = False
@@ -487,7 +544,7 @@ class Agent:
             
             # epsilon = epsilon + self.modules[i].get_epsilon()
             epsilon = max(epsilon,self.modules[i].get_epsilon())
-            # print(epsilon)
+            # print('epsilon',epsilon)
                 
             if(len(self.modules) == 1 and len(self.modules[0].Q) == 1):
                 # If only using one module with one q table, just use its action weights as is
@@ -496,61 +553,106 @@ class Agent:
                 for j in range(0,len(mod_action_weights)):
                     action_weights = action_weights + self.module_weights[i]*mod_action_weights[j]
                     
-
-        # print('action weights', action_weights)
-        if not max(action_weights) - min(action_weights) == 0:
-            action_weights = Agent.normalize(action_weights, np.array([-1,1]))
-        else:
-            action_weights = np.zeros(len(Action))
-        # print('normalized [-1,1] action weights', action_weights)
-
-        # print('pre T action weights are')
-        # print(action_weights)
+        
+        if Simulation.Tokic_VDBE:
             
-        # if self.modules[0].action == Action.STAY:
-        #     print('before T', action_weights )
-
-        # T = T/len(self.modules)
-
-        T = 1
-        for i in range(0,len(action_weights)):
-            action_weights[i] = np.exp(action_weights[i]/T)
-
-        sum_action_weights = np.sum(action_weights)        
-        if sum_action_weights == 0:
-            action_weights = np.ones(len(Action))/len(Action)
-        elif sum_action_weights != 1:
-            action_weights = action_weights/sum_action_weights
-
-        self.action_weights = action_weights
-
-        # epsilon = epsilon/len(self.modules)
-        ksi = random.uniform(0,1)
-
-        # Set state_prime to be the selected next action
-        if ksi >= epsilon or Simulation.take_best_action:
-            # print('taking best action')
-            # Take the action with the highest Q value
-            indices = np.argwhere(action_weights == np.amax(action_weights))
-            # if self.modules[0].action == Action.STAY:
-            #     print('random ints', indices)
-                
-            if(len(indices) == 1):
-                # if self.modules[0].action == Action.STAY:
-                #     print('only one :(', Action(np.argmax(action_weights)) )
-                action_prime = Action(np.argmax(action_weights))
+            if not max(action_weights) - min(action_weights) == 0:
+                action_weights = Agent.normalize(action_weights, np.array([-1,1]))
             else:
-                # If multiple entries in the Q table row are tied for highest, randomly select one of them
-                index = random.randint(0,len(indices)-1)
-                action_prime = Action(indices[index])
-        else:
-            # print('softmax')
-            # Use a discrete random variable distribution to select the next action
-            x=list(map(int,Action))
-            px=action_weights
-            sample=rv_discrete(values=(x,px)).rvs(size=1)
-            action_prime = Action(sample)
+                action_weights = np.zeros(len(Action))
 
+            T = 1
+            for i in range(0,len(action_weights)):
+                action_weights[i] = np.exp(action_weights[i]/T)
+
+            sum_action_weights = np.sum(action_weights)        
+            if sum_action_weights == 0:
+                action_weights = np.ones(len(Action))/len(Action)
+            elif sum_action_weights != 1:
+                action_weights = action_weights/sum_action_weights
+
+            self.action_weights = action_weights
+
+            # epsilon = epsilon/len(self.modules)
+            ksi = random.uniform(0,1)
+
+            # Set state_prime to be the selected next action
+            if ksi >= epsilon or Simulation.take_best_action:
+                # print('taking best action')
+                # Take the action with the highest Q value
+                indices = np.argwhere(action_weights == np.amax(action_weights))
+                # if self.modules[0].action == Action.STAY:
+                #     print('random ints', indices)
+                    
+                if(len(indices) == 1):
+                    # if self.modules[0].action == Action.STAY:
+                    #     print('only one :(', Action(np.argmax(action_weights)) )
+                    action_prime = Action(np.argmax(action_weights))
+                else:
+                    # If multiple entries in the Q table row are tied for highest, randomly select one of them
+                    index = random.randint(0,len(indices)-1)
+                    action_prime = Action(indices[index])
+            else:
+                # print('softmax')
+                # Use a discrete random variable distribution to select the next action
+                x=list(map(int,Action))
+                px=action_weights
+                sample=rv_discrete(values=(x,px)).rvs(size=1)
+                action_prime = Action(sample)
+        else:
+            
+            if not max(action_weights) - min(action_weights) == 0:
+                action_weights = Agent.normalize(action_weights, np.array([0,1]))
+            else:
+                action_weights = np.zeros(len(Action))
+
+            T_i = 1.5
+            T_f = 0.285
+
+            #i think this shouldnt happen
+            if epsilon > 1:
+                print('EPSILON > 1, INVESTIGATE')
+                epsilon = 1
+            if epsilon < 0:
+                print('EPSILON < 0, INVESTIGATE')
+                epsilon = 0
+
+            T = T_i - (1-epsilon)*(T_i - T_f)
+            for i in range(0,len(action_weights)):
+                action_weights[i] = np.exp(action_weights[i]/T)
+
+            sum_action_weights = np.sum(action_weights)        
+            if sum_action_weights == 0:
+                action_weights = np.ones(len(Action))/len(Action)
+            elif sum_action_weights != 1:
+                action_weights = action_weights/sum_action_weights
+
+            self.action_weights = action_weights
+
+            
+            # Set state_prime to be the selected next action
+            if Simulation.take_best_action:
+                # print('taking best action')
+                # Take the action with the highest Q value
+                indices = np.argwhere(action_weights == np.amax(action_weights))
+                # if self.modules[0].action == Action.STAY:
+                #     print('random ints', indices)
+                    
+                if(len(indices) == 1):
+                    # if self.modules[0].action == Action.STAY:
+                    #     print('only one :(', Action(np.argmax(action_weights)) )
+                    action_prime = Action(np.argmax(action_weights))
+                else:
+                    # If multiple entries in the Q table row are tied for highest, randomly select one of them
+                    index = random.randint(0,len(indices)-1)
+                    action_prime = Action(indices[index])
+            else:
+                # print('softmax')
+                # Use a discrete random variable distribution to select the next action
+                x=list(map(int,Action))
+                px=action_weights
+                sample=rv_discrete(values=(x,px)).rvs(size=1)
+                action_prime = Action(sample)
 
         # print('action weights: ' + str(action_weights))
         for mod in self.modules:

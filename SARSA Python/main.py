@@ -79,11 +79,11 @@ def ReinitializeAgents(agents,bounds):
 
 
     # Reinitialize Setting Parameters
-    if (Simulation.Arena == Arena.Playground):
-        Simulation.obstacles = np.array([random.randint(arena_space[0][0], arena_space[0][1]),random.randint(arena_space[0][0], arena_space[0][1]), random.randint(1,Simulation.max_obstacle_size), random.randint(1,Simulation.max_obstacle_size)])
-        for i in range(1,Simulation.num_obstacles):
-            temp_obstacles = np.array([random.randint(arena_space[0][0], arena_space[0][1]),random.randint(arena_space[0][0], arena_space[0][1]), random.randint(1,Simulation.max_obstacle_size), random.randint(1,Simulation.max_obstacle_size)])
-            Simulation.obstacles = np.vstack((Simulation.obstacles, temp_obstacles))
+    # if (Simulation.Arena == Arena.Playground):
+    #     Simulation.obstacles = np.array([random.randint(arena_space[0][0], arena_space[0][1]),random.randint(arena_space[0][0], arena_space[0][1]), random.randint(1,Simulation.max_obstacle_size), random.randint(1,Simulation.max_obstacle_size)])
+    #     for i in range(1,Simulation.num_obstacles):
+    #         temp_obstacles = np.array([random.randint(arena_space[0][0], arena_space[0][1]),random.randint(arena_space[0][0], arena_space[0][1]), random.randint(1,Simulation.max_obstacle_size), random.randint(1,Simulation.max_obstacle_size)])
+    #         Simulation.obstacles = np.vstack((Simulation.obstacles, temp_obstacles))
     
     
 
@@ -378,6 +378,8 @@ def mainSARSA(simName,desc,trainingPath):
 
                 # Select the next action (action_prime) for the agent to take 
                 # print('~~~~~~~~~~~~agent ' + str(a) + ', select next action~~~~~~~~~~~~~~~~~~')
+                # if e == 175:
+                #     print('agent action: ', agnt.modules[0].action)
                 agnt.select_next_action()
                 # print('next action is ', agnt.modules[0].action_prime)
 

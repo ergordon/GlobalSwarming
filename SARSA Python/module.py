@@ -31,7 +31,7 @@ class Module:
         self.instant_reward = []        # List of instantaneous rewards earned by the agent. 
 
         if Simulation.testing == False:
-            self.alpha = 0.7                # Learning rate. keep in range [0,1]. can be tuned to affect Q learning
+            self.alpha = 0.49                # Learning rate. keep in range [0,1]. can be tuned to affect Q learning
         else:
             self.alpha = 0
 
@@ -79,7 +79,7 @@ class Module:
 
         T = 1 
         if num_updates < max_updates:
-            T = 100.0 - (200.0-0.1)*num_updates/max_updates
+            T = 100.0 - (100.0-0.1)*num_updates/max_updates
         else:
             T = 0.1
 
@@ -926,7 +926,7 @@ class TargetSeekModule(Module):
         for i in range(0,len(state_vector)):
             dist_squared = dist_squared + state_vector[i]**2
         
-        if dist_squared < 20.0*20.0:
+        if dist_squared < 15.0*15.0:
             rounding_base = 1
         elif dist_squared < 30.0*30.0:
             rounding_base = 5
