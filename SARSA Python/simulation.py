@@ -15,8 +15,9 @@ class Arena(enum.Enum):
 
 class Controller(enum.Enum): 
     GreatestMass = 1  # Use Greatest Mass Controller
-    Importance = 2    # Use Importance Function
-    GenAlg = 3        # Use Greatest Mass but with GA to find weights
+    ImportanceRanked = 2    # Use Importance Function
+    ImportanceScaled = 3
+    GenAlg = 4        # Use Greatest Mass but with GA to find weights
 
 class Reward(enum.Enum): 
     Continuous = 1  # Continous reward Scheme
@@ -33,10 +34,10 @@ class Simulation:
     ## Define Which Test Arena Being Used
     # Arena = Arena.Playground
     Arena = Arena.SmallUrban
-
+    # Arena = Arena.Open
     ## Multi-Module Action Selector (MMAS) to be activated.
     # ControllerType = Controller.GreatestMass
-    ControllerType = Controller.Importance
+    ControllerType = Controller.ImportanceScaled
 
     ## Target Parameters
     TargetType = TargetPath.Planned
@@ -64,7 +65,7 @@ class Simulation:
     num_generations = 100   # Number of Generations
 
     if (Arena == Arena.Playground): # Custom Terrain. Edit These Ones 
-        num_agents = 10               # Number of agents to simulate
+        num_agents = 1               # Number of agents to simulate
         num_episodes = 360*50           # Number of times to run the training scenario
         episode_length = 200           # Number of time steps in each training scenario [iterations]
         exploitation_rise_time = 0      # The amount of time over which we transition from exploration to exploitation [seconds]
@@ -81,13 +82,13 @@ class Simulation:
         #bounds to initialize the agents inside of
         # init_space = [[-np.round(obs_width*0.5)-4,np.round(obs_width*0.5)+4],
         #             [-np.round(obs_height*0.5)-4,np.round(obs_height*0.5)+4]]
-        init_space = [[-5,5],
-                    [-5,5]]
+        init_space = [[-0,0],
+                    [-0,0]]
 
         #bounds to simulate the agents within
         #exiting these bounds will end the episode immediately
-        search_space = [[-50,50],
-                        [-50,50]]
+        search_space = [[-100,100],
+                        [-100,100]]
 
         # Bounds to intilize the targets and obstacles within
         arena_space = [[-30,30],
@@ -95,17 +96,17 @@ class Simulation:
 
         # Activate Modules
         CohesionModule = False            # Cohesion module makes the agents stay together as a swarm
-        CollisionAvoidanceModule = True  # Collision module prevents the agents from hitting each other
+        CollisionAvoidanceModule = False  # Collision module prevents the agents from hitting each other
         OutOfBoundsModule = False        # Boundary module prevents the agents from leaving the search space
         TargetSeekingModule = True      # Target module encourages agents to travel to waypoint
-        ObstacleAvoidanceModule = True  # Obstacle module prevents the agents from hitting obstacles
+        ObstacleAvoidanceModule = False  # Obstacle module prevents the agents from hitting obstacles
 
         # These are the weights for each module. they should sum to 1. 
         # If they don't, they will be scaled accordingly during initialization
         # Also, there should be a weight entry for each module
         # module_weights = [1,0.5,10,4,10]  # TODO: only do sanity checks against this if using Steve and Bucci controller
-        module_weights =  [1.0/8.0, 1.0/90.0, 1.0/55.0]  # TODO: only do sanity checks against this if using Steve and Bucci controller
-        # module_weights =  [1.0]  # TODO: only do sanity checks against this if using Steve and Bucci controller
+        # module_weights =  [1.0/8.0, 1.0/90.0, 1.0/55.0]  # TODO: only do sanity checks against this if using Steve and Bucci controller
+        module_weights =  [1.0]  # TODO: only do sanity checks against this if using Steve and Bucci controller
         module_priorities = [1, 1, 0, 1, 1]
 
         # Planned Target Trajectory
@@ -147,7 +148,7 @@ class Simulation:
         
     if (Arena == Arena.SmallUrban): # Custom Terrain. Edit These Ones 
         num_agents = 4              # number of agents to simulate
-        num_episodes = 100               # number of times to run the training scenario
+        num_episodes = 1000               # number of times to run the training scenario
         episode_length = 2000          # number of time steps in each training scenario [iterations]
         exploitation_rise_time = 0     # the amount of time over which we transition from exploration to exploitation [seconds]
         exploitation_rise_percent = 0  # the percentage of each episode over which we transition from exploration to exploitation
@@ -200,7 +201,7 @@ class Simulation:
 
         if (ControllerType != Controller.GenAlg):
             for i in range(0,num_obstacles):
-                temp_obstacles = np.array([random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), 1, 1])
+                temp_obstacles = np.array([random.randint(arena_space[0][0], arena_space[0][1]),random.randint(arena_space[0][0], arena_space[0][1]), 1, 1])
                 obstacles = np.vstack((obstacles, temp_obstacles))
 
     if (Arena == Arena.BigUrban): # Custom Terrain. Edit These Ones 
@@ -260,9 +261,9 @@ class Simulation:
         
     elif (Arena == Arena.Open): # Open Terrain
 
-        num_agents = 25                # number of agents to simulate
-        num_episodes = 5               # number of times to run the training scenario
-        episode_length = 1000          # number of time steps in each training scenario [iterations]
+        num_agents = 8                # number of agents to simulate
+        num_episodes = 1000               # number of times to run the training scenario
+        episode_length = 2000          # number of time steps in each training scenario [iterations]
         exploitation_rise_time = 0     # the amount of time over which we transition from exploration to exploitation [seconds]
         exploitation_rise_percent = 0  # the percentage of each episode over which we transition from exploration to exploitation
 
@@ -275,6 +276,9 @@ class Simulation:
         search_space = [[-60,60],
                         [-60,60]]
 
+        arena_space = [[-50,50],
+                        [-50,50]]
+
         # Activate Modules
         CohesionModule = True           # Cohesion module makes the agents stay together as a swarm
         CollisionAvoidanceModule = True # Collision module prevents the agents from hitting each other
@@ -285,18 +289,24 @@ class Simulation:
         # These are the weights for each module. they should sum to 1. 
         # If they don't, they will be scaled accordingly during initialization
         # Also, there should be a weight entry for each module
-        module_weights = [0.1, 0.2, 0.1, 0.8, 0.4]
+        module_weights = [1.0/35.0, 1.0/8.0, 1.0, 1.0/90.0, 1.0/55.0]
+        module_priorities = [0, 1, 0, 0, 1]
 
         TargetType = TargetPath.Planned
-        targets = np.array([-40,40],[20,-10],[50,50],[40,-50])
+        changeTargetOnArrival = True
+        target_array = np.array([[-40,40],[20,-10],[50,50],[40,-50]])
         targets = target_array[0]
 
         # Obstacles to Avoid
         ## [x, y, width, height]
+
+        num_obstacles = 25
+        max_obstacle_size = 1
         obstacles = np.array([random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), 1, 1])
-        for i in range(0,25):
-            temp_obstacles = np.array([random.randint(search_space[0][0], search_space[0][1]),random.randint(search_space[0][0], search_space[0][1]), 1, 1])
-            obstacles = np.vstack((obstacles, temp_obstacles))
+        if (ControllerType != Controller.GenAlg):
+            for i in range(0,num_obstacles):
+                temp_obstacles = np.array([random.randint(arena_space[0][0], arena_space[0][1]),random.randint(arena_space[0][0], arena_space[0][1]), 1, 1])
+                obstacles = np.vstack((obstacles, temp_obstacles))
 
 
     ##########################################

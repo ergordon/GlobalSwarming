@@ -175,7 +175,7 @@ class Agent:
 
 
     def ranked_importance_select_next_action(self):
-        ranked_if = False
+        ranked_if = True
         if ranked_if:
             #lists used for IF MMAS
             aw_set = []
@@ -208,7 +208,7 @@ class Agent:
             
             
             for i in range(0,len(aw_set)):
-                if not max(mod_action_weights[j]) - min(mod_action_weights[j]) == 0:
+                if not max(aw_set[i]) - min(aw_set[i]) == 0:
                     norm = Agent.normalize(aw_set[i], np.array([-1,1]))
                 else:
                     norm = np.zeros(len(Action))
@@ -242,7 +242,7 @@ class Agent:
                 combined_aw_list.append(np.array([]))
 
                 if t in module_tier_set:
-                    combined_aw = np.zeros(5)
+                    combined_aw = np.zeros(len(Action))
                     
                     for w in range(0,len(aw_set)):
                         if module_tier_set[w] <= t:
@@ -380,6 +380,7 @@ class Agent:
                             for c in range(0,len(choices_restricted)):
                                 if not choices_restricted[c]:
                                     action_to_take = choices[c]
+                                    self.action_weights = combined_aw_list[t]
                                     action_taken = True
                                     break
 
@@ -664,7 +665,9 @@ class Agent:
 
         if (Simulation.ControllerType == Controller.GreatestMass or Simulation.ControllerType == Controller.GenAlg): # Steve+Bucci Approach
             self.greatest_mass_select_next_action()
-        elif (Simulation.ControllerType == Controller.Importance): # Importance Function Approach
+        elif (Simulation.ControllerType == Controller.ImportanceRanked): # Importance Function Approach
+            self.ranked_importance_select_next_action()
+        elif (Simulation.ControllerType == Controller.ImportanceScaled): # Importance Function Approach
             self.biased_importance_select_next_action()
 
 

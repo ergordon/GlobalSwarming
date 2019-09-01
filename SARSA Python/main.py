@@ -175,8 +175,10 @@ def mainSARSA(simName,desc,trainingPath):
             
             if Simulation.ControllerType == Controller.GreatestMass:
                 file.write("Active Controller: Steve and Bucci Controller \n \n")
-            elif Simulation.ControllerType == Controller.Importance:
-                file.write("Active Controller: Importance Function \n \n")
+            elif Simulation.ControllerType == Controller.ImportanceScaled:
+                file.write("Active Controller: Importance Scaled Function \n \n")
+            elif Simulation.ControllerType == Controller.ImportanceRanked:
+                file.write("Active Controller: Importance Ranked Function \n \n")
             else:
                 file.write("Active Controller: Neural Network \n \n")
 
@@ -799,7 +801,7 @@ simName = str(args["simName"])
 description = str(args["description"])
 trainingPath = str(args["trainingPath"])
 
-if (Simulation.ControllerType == Controller.GreatestMass or Simulation.ControllerType == Controller.Importance):
+if (Simulation.ControllerType != Controller.GenAlg):
     mainSARSA(simName, description, trainingPath)
 
 elif (Simulation.ControllerType == Controller.GenAlg):
