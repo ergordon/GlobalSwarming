@@ -69,7 +69,13 @@ class Agent:
 
         if Simulation.continuous_steering: 
             #handle direciton first. (other code exists for finding highest action index)
-                
+
+            if not max(self.action_weights) - min(self.action_weights) == 0:
+                self.action_weights = Agent.normalize(self.action_weights, np.array([0,1]))
+            else:
+                self.action_weights = np.zeros(len(Action))
+
+
             action_leading = act
             if act == Action.STAY:
                 # print(self.action_weights)
@@ -541,6 +547,7 @@ class Agent:
             mod_action_weights = self.modules[i].get_action_weights()
             # print(str(self.modules[i].__class__.__name__) + 'module weights', mod_action_weights)
             # print('state_prime', self.modules[i].state_prime)
+            
             T = T + self.modules[i].get_T()
             
             # epsilon = epsilon + self.modules[i].get_epsilon()
@@ -573,6 +580,7 @@ class Agent:
                 action_weights = action_weights/sum_action_weights
 
             self.action_weights = action_weights
+            # print('action_weights',action_weights)
 
             # epsilon = epsilon/len(self.modules)
             ksi = random.uniform(0,1)

@@ -31,7 +31,7 @@ class Module:
         self.instant_reward = []        # List of instantaneous rewards earned by the agent. 
 
         if Simulation.testing == False:
-            self.alpha = 0.49                # Learning rate. keep in range [0,1]. can be tuned to affect Q learning
+            self.alpha = 0.7                # Learning rate. keep in range [0,1]. can be tuned to affect Q learning
         else:
             self.alpha = 0
 
@@ -154,7 +154,8 @@ class CohesionModule(Module):
             self.gamma = 0.99
         elif (Simulation.RewardType == Reward.Continuous or Simulation.RewardType == Reward.Hybrid):
             self.gamma = 0.0
-            
+        
+
         self.Q = np.empty((1,), dtype=object)
         self.Q[0] = Qlearning()
         self.collapsable_Q = True              # Whether or now the Q table array can be collapsed/combined into a single Q table
@@ -834,6 +835,9 @@ class TargetSeekModule(Module):
             self.gamma = 0.99
         elif (Simulation.RewardType == Reward.Continuous or Simulation.RewardType == Reward.Hybrid):
             self.gamma = 0.0
+
+
+        self.alpha = 0.0
 
         self.Q = np.empty((1,), dtype=object)
         self.Q[0] = Qlearning()
