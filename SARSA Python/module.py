@@ -31,7 +31,7 @@ class Module:
         self.instant_reward = []        # List of instantaneous rewards earned by the agent. 
 
         if Simulation.testing == False:
-            self.alpha = 0.49                # Learning rate. keep in range [0,1]. can be tuned to affect Q learning
+            self.alpha = 0.7                # Learning rate. keep in range [0,1]. can be tuned to affect Q learning
         else:
             self.alpha = 0
 
@@ -154,7 +154,8 @@ class CohesionModule(Module):
             self.gamma = 0.99
         elif (Simulation.RewardType == Reward.Continuous or Simulation.RewardType == Reward.Hybrid):
             self.gamma = 0.0
-            
+        
+
         self.Q = np.empty((1,), dtype=object)
         self.Q[0] = Qlearning()
         self.collapsable_Q = True              # Whether or now the Q table array can be collapsed/combined into a single Q table
@@ -835,6 +836,9 @@ class TargetSeekModule(Module):
         elif (Simulation.RewardType == Reward.Continuous or Simulation.RewardType == Reward.Hybrid):
             self.gamma = 0.0
 
+
+        self.alpha = 0.0
+
         self.Q = np.empty((1,), dtype=object)
         self.Q[0] = Qlearning()
         self.collapsable_Q = True       # Whether or now the Q table array can be collapsed/combined into a single Q table
@@ -1329,8 +1333,8 @@ class ObstacleAvoidanceModule(Module):
 
 
     def get_module_weights(self):
-
         module_weights = np.zeros((len(self.Q),1))
+        weights = [1.0,0.5,0.0]
 
         #find if within the largest range of any obstacle
         in_range = False
@@ -1342,12 +1346,43 @@ class ObstacleAvoidanceModule(Module):
             width = Simulation.obstacles[i][2]
             height = Simulation.obstacles[i][3]
 
-            padding = ObstacleAvoidanceModule.ranges[-1]+1
+            in_range = False
 
-            if (obs_x - padding <= agnt_x and agnt_x <= obs_x + width + padding and
-                obs_y - padding <= agnt_y and agnt_y <= obs_y + height + padding):
-                module_weights[i] = 1
-            else:
-                module_weights[i] = 0
+            for j in range(0,len(ObstacleAvoidanceModule.ranges)):
+                padding = ObstacleAvoidanceModule.ranges[j]
+                if (obs_x - padding <= agnt_x and agnt_x <= obs_x + width + padding and
+                    obs_y - padding <= agnt_y and agnt_y <= obs_y + height + padding):
+                    module_weights[i] = weights[j]
+                    in_range = True
+                    break
+                # else:
+                #     module_weights[i] = weights[j]
+            
+            if not in_range:
+                module_weights[i] = weights[-1]
 
         return module_weights
+
+    # def get_module_weights(self):
+
+    #     module_weights = np.zeros((len(self.Q),1))
+
+    #     #find if within the largest range of any obstacle
+    #     in_range = False
+    #     for i in range(0,len(Simulation.obstacles)):
+    #         obs_x = Simulation.obstacles[i][0]
+    #         obs_y = Simulation.obstacles[i][1]
+    #         agnt_x = self.parent_agent.position[0]
+    #         agnt_y = self.parent_agent.position[1]
+    #         width = Simulation.obstacles[i][2]
+    #         height = Simulation.obstacles[i][3]
+
+    #         padding = ObstacleAvoidanceModule.ranges[-1]+1
+
+    #         if (obs_x - padding <= agnt_x and agnt_x <= obs_x + width + padding and
+    #             obs_y - padding <= agnt_y and agnt_y <= obs_y + height + padding):
+    #             module_weights[i] = 1
+    #         else:
+    #             module_weights[i] = 0
+
+    #     return module_weights

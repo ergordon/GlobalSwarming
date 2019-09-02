@@ -102,7 +102,10 @@ def ReinitializeAgents(agents,bounds):
         init_space = Simulation.init_space
 
         if (Simulation.ControllerType != Controller.GenAlg):
-            agents[i].position = np.array([random.randint(init_space[0][0], init_space[0][1]),random.randint(init_space[1][0], init_space[1][1])], dtype='f')
+            # agents[i].position = np.array([random.randint(init_space[0][0], init_space[0][1]),random.randint(init_space[1][0], init_space[1][1])], dtype='f')
+            inits = ([init_space[0][0],init_space[1][0]],[init_space[0][0],init_space[1][1]], 
+                     [init_space[0][1],init_space[1][0]],[init_space[0][1],init_space[1][1]])
+            agents[i].position = np.array(inits[i], dtype='f')
         else:
             inits = ([init_space[0][0],init_space[1][0]],[init_space[0][0],init_space[1][1]], 
                      [init_space[0][1],init_space[1][0]],[init_space[0][1],init_space[1][1]])
@@ -250,10 +253,20 @@ def mainSARSA(simName,desc,trainingPath):
         # Initialize agent positions
         for i in range(0,Simulation.num_agents):
             if (Simulation.ControllerType != Controller.GenAlg):
+                # init_space = Simulation.init_space
+                # position = np.array([random.randint(init_space[0][0], init_space[0][1]),random.randint(init_space[1][0], init_space[1][1])], dtype='f')
+                # # position = np.array([2*i,2*i], dtype='f')
+                # Simulation.agents.append(Agent(position))
+
                 init_space = Simulation.init_space
-                position = np.array([random.randint(init_space[0][0], init_space[0][1]),random.randint(init_space[1][0], init_space[1][1])], dtype='f')
+
+                inits = ([init_space[0][0],init_space[1][0]],[init_space[0][0],init_space[1][1]], 
+                         [init_space[0][1],init_space[1][0]],[init_space[0][1],init_space[1][1]])
+
+                position = np.array(inits[i], dtype='f')
                 # position = np.array([2*i,2*i], dtype='f')
                 Simulation.agents.append(Agent(position))
+
             else:
                 init_space = Simulation.init_space
 
